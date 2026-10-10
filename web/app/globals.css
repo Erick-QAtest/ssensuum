@@ -413,6 +413,31 @@ svg { width: 1em; height: 1em; }
 .summary dd { margin: 0; font-weight: 700; text-align: right; color: var(--ink); }
 .summaryNote { color: #7d736d; margin-bottom: 0; }
 
+/* ========================= ADMIN ========================= */
+.adminCard { margin-top: 34px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: #fff; }
+.adminCard h2 { margin: 0 0 8px; color: var(--nogal); font-family: "DM Serif Display", Georgia, serif; font-size: 30px; font-weight: 400; }
+.adminRow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+.adminRow .primaryButton { margin-top: 0; }
+.adminRow input[type="file"] { flex: 1 1 200px; min-width: 0; max-width: 100%; }
+.adminRowSpread { justify-content: space-between; margin-top: 0; }
+.adminRow button:disabled { opacity: .45; cursor: not-allowed; }
+.adminSearch { flex: 1 1 240px; max-width: 360px; padding: 11px 16px; border: 1px solid var(--line); border-radius: var(--pill); background: #fff; color: var(--ink); }
+.adminStats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 24px 0 12px; }
+.adminStats div { padding: 14px 16px; border-radius: 14px; background: var(--cream); }
+.adminStats dt { color: #7d736d; font-size: 13px; }
+.adminStats dd { margin: 4px 0 0; color: var(--ink); font-size: 26px; font-weight: 700; }
+.adminTableWrap { margin-top: 16px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+.adminTable { width: 100%; border-collapse: collapse; font-size: 15px; }
+.adminTable th, .adminTable td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.adminTable th { background: var(--cream); color: #7d736d; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.adminTable tbody tr:last-child td { border-bottom: 0; }
+.adminTable td { color: var(--ink); }
+.adminBadge { display: inline-block; padding: 2px 10px; border-radius: var(--pill); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.adminBadge-invalid { background: #fff2f0; color: var(--danger); }
+.adminBadge-duplicate { background: var(--sand); color: var(--nogal-dark); }
+.adminBadge-warning { background: #fdf3d8; color: #7a5a12; }
+.successBox { padding: 16px; border: 1px solid #b9c7b1; background: #f1f6ee; color: var(--success); border-radius: 12px; margin: 20px 0; }
+
 @media (max-width: 1120px) {
   .fusionNavLinks { display: none; }
   .fusionNav { grid-template-columns: 1fr auto; }
@@ -496,6 +521,7 @@ svg { width: 1em; height: 1em; }
   .dateButton { flex: 0 0 74px; min-width: 74px; position: relative; z-index: 2; touch-action: manipulation; }
   .slotsGrid { grid-template-columns: repeat(2, 1fr); }
   .slotsGrid button, .therapistChoice, .secondaryButton { touch-action: manipulation; }
+  .adminCard { padding: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,4 @@
-import type { Service, Therapist } from './types';
+import type { Customer, CustomerImportResult, Service, Therapist } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -21,4 +21,21 @@ export async function getAvailability(serviceId: string, date: string, therapist
   if (therapistId) params.set('therapistId', therapistId);
   const body = await getJson<{ slots?: string[] }>(`/availability?${params.toString()}`, 'No se pudo consultar disponibilidad');
   return body.slots ?? [];
+}
+
+export function searchCustomers(query: string) {
+  const params = new URLSearchParams({ limit: '200' });
+  if (query.trim()) params.set('q', query.trim());
+  return getJson<Customer[]>(`/customers?${params.toString()}`, 'No se pudo cargar la lista de clientes');
+}
+
+export async function importCustomers(file: File, dryRun: boolean): Promise<CustomerImportResult> {
+  const body = new FormData();
+  body.append('file', file);
+  const response = await fetch(`${API}/customers/import?dryRun=${dryRun}`, { method: 'POST', body });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(typeof error?.detail === 'string' ? error.detail : 'No se pudo procesar el archivo');
+  }
+  return response.json();
 }

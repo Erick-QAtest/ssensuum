@@ -36,8 +36,10 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    email: Mapped[Optional[str]] = mapped_column(String(254), nullable=True)
     birthday: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 

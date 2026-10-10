@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -26,5 +27,25 @@ class ScheduleBlockCreate(BaseModel):
     starts_at: str = Field(alias="startsAt")
     ends_at: str = Field(alias="endsAt")
     reason: str
+
+    model_config = {"populate_by_name": True}
+
+
+class CustomerCreate(BaseModel):
+    phone: str
+    first_name: str = Field(alias="firstName")
+    last_name: str = Field(default="", alias="lastName")
+    email: Optional[str] = None
+    birthday: Optional[date] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class CustomerUpdate(BaseModel):
+    phone: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, alias="firstName")
+    last_name: Optional[str] = Field(default=None, alias="lastName")
+    email: Optional[str] = None
+    birthday: Optional[date] = None
 
     model_config = {"populate_by_name": True}

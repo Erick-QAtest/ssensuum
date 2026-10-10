@@ -1,5 +1,5 @@
 from .domain.rules import ensure_tz
-from .models import Reservation, ScheduleBlock, Service, Therapist
+from .models import Customer, Reservation, ScheduleBlock, Service, Therapist
 from .repositories.reservations import therapist_ids
 
 
@@ -49,4 +49,16 @@ def block_payload(block: ScheduleBlock) -> dict:
         "startsAt": ensure_tz(block.starts_at).isoformat(),
         "endsAt": ensure_tz(block.ends_at).isoformat(),
         "reason": block.reason,
+    }
+
+
+def customer_payload(customer: Customer) -> dict:
+    return {
+        "id": customer.id,
+        "phone": customer.phone,
+        "firstName": customer.first_name,
+        "lastName": customer.last_name,
+        "email": customer.email,
+        "birthday": customer.birthday,
+        "createdAt": customer.created_at.isoformat(),
     }
