@@ -5,16 +5,88 @@ import { useRouter } from 'next/navigation';
 import type { Service, Therapist } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+const MASSAGE = 'Masajes';
+const BARBER = 'Barbería';
+const AESTHETICS = 'Medicina estética';
 
 function money(value: number) {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(value);
 }
 
-const specialServices = new Set(['massage-special', 'four-hands', 'couples-massage']);
+function serviceButtonLabel(category: string) {
+  return category === AESTHETICS ? 'Agendar valoración' : 'Reservar';
+}
+
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="10" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m5 15 1.5-5h11L19 15M4 15h16v4H4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <circle cx="7" cy="19" r="1" fill="currentColor" />
+      <circle cx="17" cy="19" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3 19 6v5c0 4.7-2.8 8-7 10-4.2-2-7-5.3-7-10V6l7-3Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="m8.8 12 2 2 4.4-4.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ServiceRow({ service, onReserve, compact = false }: { service: Service; onReserve: () => void; compact?: boolean }) {
+  return (
+    <article className={`fusionServiceRow ${compact ? 'fusionServiceRowCompact' : ''}`} data-testid="service-card">
+      <div className="fusionServiceText">
+        <div className="fusionServiceTitleLine">
+          <h3>{service.name}</h3>
+          {service.id === 'massage-special' ? <span className="fusionTag">El más elegido</span> : null}
+          {service.therapistsRequired === 2 ? <span className="fusionTag fusionTagSoft">{service.name.toLowerCase().includes('pareja') ? 'Para dos personas' : 'Dos terapeutas'}</span> : null}
+        </div>
+        {!compact ? <p>{service.description}</p> : null}
+        <small>{service.durationMinutes >= 60 ? `${Math.round(service.durationMinutes / 60 * 10) / 10} h` : `${service.durationMinutes} min`}</small>
+      </div>
+      <div className="fusionServicePurchase">
+        <strong>{money(service.publicPrice)}</strong>
+        <span>público general</span>
+        <small>{money(service.memberPrice)} miembros</small>
+        <button type="button" className="fusionButton fusionButtonSmall" onClick={onReserve}>{serviceButtonLabel(service.category)}</button>
+      </div>
+    </article>
+  );
+}
 
 export function Catalog() {
   const router = useRouter();
@@ -31,7 +103,7 @@ export function Catalog() {
       fetch(`${API}/therapists`).then((r) => {
         if (!r.ok) throw new Error('No se pudo cargar el equipo');
         return r.json();
-      })
+      }),
     ])
       .then(([serviceRows, therapistRows]) => {
         setServices(serviceRows);
@@ -40,240 +112,198 @@ export function Catalog() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  const categories = useMemo(
-    () => Array.from(new Set(services.map((service) => service.category))),
-    [services]
-  );
+  const massageServices = useMemo(() => services.filter((service) => service.category === MASSAGE), [services]);
+  const barberServices = useMemo(() => services.filter((service) => service.category === BARBER), [services]);
+  const aestheticServices = useMemo(() => services.filter((service) => service.category === AESTHETICS), [services]);
+  const featuredMassage = massageServices.find((service) => service.id === 'massage-special') ?? massageServices[0];
 
-  const featured = services.find((service) => service.id === 'massage-special');
+  const reserve = (service: Service) => router.push(`/reservar?service=${service.id}`);
 
   return (
-    <main className="siteShell">
-      <div className="announcementBar" aria-label="Información del club">
-        <span>Col. Americana · Guadalajara</span>
-        <span className="announcementDot" aria-hidden="true" />
-        <span>Todos los días · 9:00 a 20:30</span>
-        <span className="announcementDot announcementDesktop" aria-hidden="true" />
-        <span className="announcementDesktop">3 cajones de estacionamiento</span>
-      </div>
-
-      <header className="siteHeader">
-        <a className="brand" href="#inicio" aria-label="SSENSUUM inicio">
-          <span className="brandMark">S</span>
-          <span className="brandText">
-            <strong>SSENSUUM</strong>
-            <small>PRIVATE MASSAGE CLUB</small>
-          </span>
+    <main className="fusionPage">
+      <nav className="fusionNav" aria-label="Navegación principal">
+        <a href="#inicio" className="fusionNavLogo" aria-label="SSENSUUM inicio">
+          <img src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
         </a>
+        <div className="fusionNavLinks">
+          <a href="#masajes">Masajes</a>
+          <a href="#barberia">Barbería</a>
+          <a href="#estetica">Medicina estética</a>
+          <a href="#membresia">Membresía</a>
+          <a href="#ubicacion">Nosotros</a>
+        </div>
+        <button type="button" className="fusionButton fusionNavCta" onClick={() => featuredMassage && reserve(featuredMassage)}>Reservar</button>
+      </nav>
 
-        <nav className="desktopNav" aria-label="Navegación principal">
-          <a href="#experiencias">Experiencias</a>
-          <a href="#metodo">Cómo funciona</a>
-          <a href="#equipo">Equipo</a>
-          <a href="#ubicacion">Ubicación</a>
-        </nav>
+      <header className="fusionHero" id="inicio">
+        <div className="fusionHeroCopy">
+          <img className="fusionHeroLogo" src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
+          <p className="fusionEyebrow">PRIVATE MASSAGE CLUB · GUADALAJARA</p>
+          <h1>Tu masaje,<br /><em>diseñado por ti.</em></h1>
+          <p className="fusionHeroLead">Elige técnica, presión, zonas y terapeuta. Una experiencia privada diseñada alrededor de cómo quieres sentirte al salir.</p>
+          <div className="fusionHeroActions">
+            <button type="button" className="fusionButton" disabled={!featuredMassage} onClick={() => featuredMassage && reserve(featuredMassage)}>
+              Reservar primera visita <ArrowIcon />
+            </button>
+            <a className="fusionButton fusionButtonOutline" href="#membresia">Soy miembro</a>
+          </div>
+          <div className="fusionReassurance"><ShieldIcon /><span><strong>$300 para confirmar</strong> · Si la presión o el ambiente no son lo que esperabas, lo ajustamos durante los primeros 10 minutos.</span></div>
+          <div className="fusionHeroTrust">
+            <span>Terapeuta por nombre</span>
+            <span>Espacio privado</span>
+            <span>Experiencia personalizada</span>
+          </div>
+        </div>
 
-        <a className="headerCta" href="#experiencias">Reservar</a>
+        <div className="fusionHeroVisual" aria-label="Masaje especial SSENSUUM">
+          <div className="fusionHeroPosterWrap">
+            <img src="/ssensuum/massage-special.jpg" alt="Carta de Masaje Especial SSENSUUM" />
+          </div>
+          <div className="fusionFirstVisitCard">
+            <span>PRIMERA VISITA</span>
+            <p>Masaje especial</p>
+            <strong>{featuredMassage ? money(featuredMassage.publicPrice) : '$1,500'}</strong>
+            <small>{featuredMassage ? `${money(featuredMassage.deposit)} de anticipo` : '$300 de anticipo'}</small>
+          </div>
+        </div>
       </header>
 
-      <section id="inicio" className="hero heroRedesign">
-        <div className="heroContent">
-          <div className="eyebrow">PRIVATE MASSAGE CLUB · GUADALAJARA</div>
-          <h1>Tu masaje.<br /><em>Tus reglas.</em></h1>
-          <p className="heroCopy">
-            Elige técnicas, presión, zonas y terapeuta. Una experiencia privada diseñada alrededor de cómo quieres sentirte al salir.
-          </p>
+      <div className="fusionIdentityStrip">
+        <strong>MASAJES · BARBERÍA · MEDICINA ESTÉTICA</strong>
+        <span>Mexicaltzingo 2122-B, Col. Americana, Guadalajara · Todos los días de 9:00 a.m. a 8:30 p.m.</span>
+      </div>
 
-          <div className="heroActions">
-            <a className="primaryCta" href="#experiencias">Elegir mi masaje</a>
-            <a className="textCta" href="#metodo">Ver cómo funciona <span aria-hidden="true">↘</span></a>
-          </div>
-
-          <div className="heroProof" aria-label="Beneficios de reserva">
-            <div><strong>01</strong><span>Elige a tu terapeuta</span></div>
-            <div><strong>02</strong><span>Confirma con anticipo</span></div>
-            <div><strong>03</strong><span>Ajustamos presión y ambiente</span></div>
-          </div>
+      <section className="fusionSection fusionClub" aria-labelledby="club-title">
+        <div className="fusionSectionHeading">
+          <h2 id="club-title">Así se siente el club</h2>
+          <p>La identidad que ya existe: masaje, barbería, estética y una experiencia privada en un mismo lugar.</p>
         </div>
-
-        <div className="heroVisual" aria-label="Experiencia SSENSUUM">
-          <div className="heroGlow" />
-          <div className="experienceCard experienceCardMain">
-            <span className="experienceLabel">PRIMERA VISITA</span>
-            <div>
-              <p>Masaje especial</p>
-              <strong>{featured ? money(featured.publicPrice) : '$1,500'}</strong>
-              <small>1 hora · anticipo {featured ? money(featured.deposit) : '$300'}</small>
-            </div>
-            <span className="experienceArrow">↗</span>
-          </div>
-          <div className="experienceCard experienceCardFloating">
-            <span className="pulseDot" />
-            <div><small>Diseñado por ti</small><strong>Técnica · presión · zonas</strong></div>
-          </div>
-          <div className="heroMonogram" aria-hidden="true">S</div>
+        <div className="fusionExperienceGrid">
+          <article className="fusionExperienceCard fusionExperienceBrand">
+            <img src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
+            <div><span>01</span><strong>Bienvenido a SSENSUUM</strong></div>
+          </article>
+          <article className="fusionExperienceCard">
+            <img src="/ssensuum/massage-special.jpg" alt="Masaje especial SSENSUUM" />
+            <div><span>02</span><strong>Masaje hecho a tu medida</strong></div>
+          </article>
+          <article className="fusionExperienceCard">
+            <img src="/ssensuum/barberia-menu.jpg" alt="Barbería SSENSUUM" />
+            <div><span>03</span><strong>Barbería dentro del club</strong></div>
+          </article>
+          <article className="fusionExperienceCard">
+            <img src="/ssensuum/estetica-menu.jpg" alt="Medicina estética SSENSUUM" />
+            <div><span>04</span><strong>Medicina estética</strong></div>
+          </article>
         </div>
       </section>
 
-      <section className="trustStrip" aria-label="Razones para elegir SSENSUUM">
-        <div><span className="trustIndex">01</span><strong>No es un spa genérico</strong><p>Tu sesión se configura contigo, no desde un menú rígido.</p></div>
-        <div><span className="trustIndex">02</span><strong>Sabes quién te atiende</strong><p>Elige terapeuta por nombre y especialidad antes de llegar.</p></div>
-        <div><span className="trustIndex">03</span><strong>Reserva con claridad</strong><p>Precio, duración y anticipo visibles antes de confirmar.</p></div>
-      </section>
-
-      <section id="experiencias" className="section experiencesSection" data-testid="catalog">
-        <div className="sectionHeader sectionHeaderEditorial">
+      <section className="fusionSection fusionCatalogSection" id="masajes" data-testid="catalog">
+        <div className="fusionSectionHeading fusionSectionHeadingActions">
           <div>
-            <span className="kicker">LA CARTA</span>
-            <h2>Elige la experiencia.<br />Nosotros cuidamos el resto.</h2>
+            <span className="fusionKicker">Carta SSENSUUM</span>
+            <h2>Carta de masajes</h2>
           </div>
-          <p>
-            Precios transparentes para público y miembros. Cada sesión muestra duración, anticipo y número de terapeutas.
-          </p>
+          <div className="fusionHeadingSide">
+            <p>Todas las sesiones duran una hora. Reserva con tres horas de anticipación y confirma con $300, o $600 cuando el servicio ocupa a dos terapeutas.</p>
+            <a href="#equipo" className="fusionPillLink">No sé cuál elegir</a>
+          </div>
         </div>
 
-        {error ? (
-          <div className="errorBox">{error}. Verifica que la API esté corriendo en localhost:8000.</div>
-        ) : null}
+        {error ? <div className="errorBox">{error}. Verifica que la API esté corriendo en localhost:8000.</div> : null}
 
-        {categories.map((category) => (
-          <div className="category categoryRedesign" key={category}>
-            <div className="categoryHeading">
-              <h3>{category}</h3>
-              <span>{services.filter((service) => service.category === category).length.toString().padStart(2, '0')} experiencias</span>
-            </div>
-
-            <div className="grid serviceGrid">
-              {services
-                .filter((service) => service.category === category)
-                .map((service) => (
-                  <article
-                    className={`card serviceCard ${specialServices.has(service.id) ? 'serviceCardFeatured' : ''}`}
-                    key={service.id}
-                    data-testid="service-card"
-                  >
-                    <div className="cardTop">
-                      <span className="serviceDuration">{service.durationMinutes} min</span>
-                      <div className="serviceBadges">
-                        {specialServices.has(service.id) ? <span className="badge badgeSolid">Recomendado</span> : null}
-                        {service.therapistsRequired === 2 ? <span className="badge">2 terapeutas</span> : null}
-                      </div>
-                    </div>
-
-                    <div className="serviceBody">
-                      <span className="serviceNumber">{service.id === 'massage-special' ? '01' : '·'}</span>
-                      <h4>{service.name}</h4>
-                      <p>{service.description}</p>
-                    </div>
-
-                    <div className="serviceFooter">
-                      <div className="prices pricesRedesign">
-                        <div><small>Público</small><strong>{money(service.publicPrice)}</strong></div>
-                        <div><small>Miembro</small><strong>{money(service.memberPrice)}</strong></div>
-                      </div>
-                      <button onClick={() => router.push(`/reservar?service=${service.id}`)}>
-                        Reservar <span aria-hidden="true">↗</span>
-                      </button>
-                    </div>
-                  </article>
-                ))}
-            </div>
+        <div className="fusionMenuLayout">
+          <aside className="fusionFeatureCard">
+            <img src="/ssensuum/massage-special.jpg" alt="Masaje especial SSENSUUM" />
+            {featuredMassage ? (
+              <button type="button" className="fusionButton fusionFeatureButton" onClick={() => reserve(featuredMassage)}>Reservar este masaje <ArrowIcon /></button>
+            ) : null}
+          </aside>
+          <div className="fusionServiceList">
+            {massageServices.map((service) => <ServiceRow key={service.id} service={service} onReserve={() => reserve(service)} />)}
           </div>
-        ))}
-      </section>
-
-      <section id="metodo" className="section methodSection">
-        <div className="methodIntro">
-          <span className="kicker">SIN FRICCIÓN</span>
-          <h2>Tres decisiones.<br />Tu sesión queda lista.</h2>
-          <p>No necesitas crear una cuenta para empezar. Primero eliges lo importante; después confirmas tu horario.</p>
-        </div>
-
-        <div className="methodSteps">
-          <article>
-            <span>01</span>
-            <div><h3>Elige tu experiencia</h3><p>Masaje, barbería o estética con precio y duración visibles.</p></div>
-          </article>
-          <article>
-            <span>02</span>
-            <div><h3>Elige a tu terapeuta</h3><p>Selecciona por nombre y fortalezas, o déjanos elegir por disponibilidad.</p></div>
-          </article>
-          <article>
-            <span>03</span>
-            <div><h3>Elige día y hora</h3><p>Solo mostramos horarios realmente disponibles. Confirmas con anticipo.</p></div>
-          </article>
         </div>
       </section>
 
-      <section className="guaranteeSection">
-        <div className="guaranteeMark" aria-hidden="true">10'</div>
-        <div className="guaranteeContent">
-          <span className="kicker kickerLight">GARANTÍA DE PRIMERA VISITA</span>
-          <h2>Si la presión o el ambiente no se sienten bien, lo ajustamos.</h2>
-          <p>
-            Durante los primeros diez minutos nos dices qué cambiar. La experiencia debe adaptarse a ti, no al revés.
-          </p>
+      <section className="fusionSection fusionSecondaryServices">
+        <div className="fusionSplitService" id="barberia">
+          <div className="fusionSplitHeader">
+            <div><span className="fusionKicker">Dentro del club</span><h2>Barbería</h2><p>Corte, barba y cuidado personal en el mismo lugar donde te das tu masaje.</p></div>
+          </div>
+          <div className="fusionSplitBody">
+            <img src="/ssensuum/barberia-menu.jpg" alt="Menú de barbería SSENSUUM" />
+            <div>{barberServices.map((service) => <ServiceRow key={service.id} service={service} compact onReserve={() => reserve(service)} />)}</div>
+          </div>
         </div>
-        <a className="outlineCta" href="#experiencias">Elegir experiencia</a>
+
+        <div className="fusionSplitService" id="estetica">
+          <div className="fusionSplitHeader">
+            <div><span className="fusionKicker">Valoración profesional</span><h2>Medicina estética</h2><p>Tratamientos faciales y corporales con valoración previa.</p></div>
+          </div>
+          <div className="fusionSplitBody">
+            <img src="/ssensuum/estetica-menu.jpg" alt="Menú de medicina estética SSENSUUM" />
+            <div>{aestheticServices.map((service) => <ServiceRow key={service.id} service={service} compact onReserve={() => reserve(service)} />)}</div>
+          </div>
+        </div>
       </section>
 
-      <section id="equipo" className="section teamSection teamRedesign">
-        <div className="sectionHeader sectionHeaderEditorial">
-          <div>
-            <span className="kicker">EL EQUIPO</span>
-            <h2>El terapeuta también<br />forma parte de la elección.</h2>
-          </div>
-          <p>Conoce sus fortalezas antes de reservar. Si no tienes preferencia, el sistema puede asignarte disponibilidad.</p>
+      <section className="fusionSection fusionTeamSection" id="equipo">
+        <div className="fusionSectionHeading">
+          <div><span className="fusionKicker">Tu terapeuta</span><h2>Sabes quién te va a atender.</h2></div>
+          <p>Elige por nombre y fortalezas, o deja la asignación a disponibilidad.</p>
         </div>
-
-        <div className="therapistGrid therapistGridRedesign">
+        <div className="fusionTherapistGrid">
           {therapists.map((therapist, index) => (
-            <article className="therapistPreview therapistPreviewRedesign" key={therapist.id}>
-              <div className="therapistPortrait" aria-hidden="true">
-                <span>{therapist.name.slice(0, 1)}</span>
-                <small>{String(index + 1).padStart(2, '0')}</small>
-              </div>
-              <div className="therapistInfo">
-                <span className="therapistRole">TERAPEUTA</span>
-                <strong>{therapist.name}</strong>
-                <p>{therapist.strengths}</p>
-              </div>
+            <article className="fusionTherapistCard" key={therapist.id}>
+              <span className="fusionTherapistIndex">0{index + 1}</span>
+              <div className="fusionTherapistAvatar">{therapist.name.slice(0, 1)}</div>
+              <div><h3>{therapist.name}</h3><p>{therapist.strengths}</p></div>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="ubicacion" className="locationSection">
-        <div className="locationPanel">
-          <span className="kicker">GUADALAJARA</span>
-          <h2>Tu espacio privado<br />en la Americana.</h2>
-          <p className="locationAddress">Mexicaltzingo 2122-B · Col. Americana</p>
-          <div className="locationMeta">
-            <div><small>HORARIO</small><strong>9:00 — 20:30</strong><span>Todos los días</span></div>
-            <div><small>ESTACIONAMIENTO</small><strong>3 cajones</strong><span>Señalizados para clientes</span></div>
+      <section className="fusionMembership" id="membresia">
+        <div className="fusionMembershipCopy">
+          <span className="fusionKicker fusionKickerLight">PRIVATE CLUB</span>
+          <h2>Membresía Private Club</h2>
+          <div className="fusionMembershipPrice">$3,000</div>
+          <p>al año, para una persona</p>
+          <ul>
+            <li>Masajes a $1,200 en lugar de $1,500.</li>
+            <li>Precio preferente en barbería y medicina estética.</li>
+            <li>Un masaje de regalo en la semana de tu cumpleaños.</li>
+            <li>Doce meses desde tu fecha de inicio.</li>
+          </ul>
+          <a className="fusionButton fusionButtonLight" href="tel:+523329434598">Quiero ser miembro <ArrowIcon /></a>
+        </div>
+        <div className="fusionMembershipVisual"><img src="/ssensuum/membership.jpg" alt="Credencial Membresía Private Club SSENSUUM" /></div>
+      </section>
+
+      <section className="fusionSection fusionLocation" id="ubicacion">
+        <div className="fusionSectionHeading">
+          <div><span className="fusionKicker">Colonia Americana</span><h2>Dónde estamos</h2></div>
+          <p>Tenemos tres cajones para clientes frente a la finca, señalados en azul.</p>
+        </div>
+        <div className="fusionLocationGrid">
+          <div className="fusionLocationImage"><img src="/ssensuum/location.jpg" alt="Fachada de SSENSUUM y cajones de estacionamiento" /></div>
+          <div className="fusionLocationInfo">
+            <h3>Mexicaltzingo 2122-B, Col. Americana</h3>
+            <p>Guadalajara, Jalisco. Abrimos todos los días de 9:00 a.m. a 8:30 p.m.</p>
+            <div className="fusionLocationFacts">
+              <div><PinIcon /><span>Mexicaltzingo 2122-B<br />Col. Americana, Guadalajara.</span></div>
+              <div><ClockIcon /><span>Todos los días<br />9:00 a.m. a 8:30 p.m.</span></div>
+              <div><CarIcon /><span>Estacionamiento para clientes<br />cajones 1, 2 y 3.</span></div>
+            </div>
+            <a className="fusionButton" href="https://maps.app.goo.gl/2CLVeFkfyoiGDQqv6" target="_blank" rel="noreferrer">Ver mapa y reseñas <ArrowIcon /></a>
           </div>
-          <a className="primaryCta locationCta" href="#experiencias">Reservar mi sesión</a>
-        </div>
-        <div className="locationVisual" aria-hidden="true">
-          <div className="mapGrid" />
-          <div className="mapPin"><span>S</span></div>
-          <p>COL. AMERICANA<br />GUADALAJARA</p>
         </div>
       </section>
 
-      <section className="closingSection">
-        <span className="kicker">TU PRIMERA VISITA</span>
-        <h2>Menos elegir “un masaje”.<br /><em>Más elegir cómo quieres sentirte.</em></h2>
-        <a className="closingCta" href="#experiencias">Ver la carta <span aria-hidden="true">↗</span></a>
-      </section>
-
-      <footer className="siteFooter">
-        <div className="footerBrand">
-          <span className="brandMark">S</span>
-          <div><strong>SSENSUUM</strong><small>PRIVATE MASSAGE CLUB</small></div>
-        </div>
-        <p>Mexicaltzingo 2122-B · Col. Americana · Guadalajara, Jal.</p>
-        <p>© {new Date().getFullYear()} SSENSUUM</p>
+      <footer className="fusionFooter">
+        <img src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
+        <div className="fusionFooterLinks"><a href="#masajes">Masajes</a><a href="#barberia">Barbería</a><a href="#estetica">Medicina estética</a><a href="#membresia">Membresía</a><a href="#ubicacion">Nosotros</a></div>
+        <button type="button" className="fusionButton" disabled={!featuredMassage} onClick={() => featuredMassage && reserve(featuredMassage)}>Reservar</button>
       </footer>
     </main>
   );

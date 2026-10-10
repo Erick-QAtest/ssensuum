@@ -30,3 +30,6 @@ coverage/
 
 # IDE
 .vscode/
+
+# Backups locales
+.fusion-backup/
