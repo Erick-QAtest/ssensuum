@@ -2,91 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Service, Therapist } from './types';
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
-const MASSAGE = 'Masajes';
-const BARBER = 'Barbería';
-const AESTHETICS = 'Medicina estética';
-
-function money(value: number) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function serviceButtonLabel(category: string) {
-  return category === AESTHETICS ? 'Agendar valoración' : 'Reservar';
-}
-
-function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="12" cy="10" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m5 15 1.5-5h11L19 15M4 15h16v4H4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <circle cx="7" cy="19" r="1" fill="currentColor" />
-      <circle cx="17" cy="19" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3 19 6v5c0 4.7-2.8 8-7 10-4.2-2-7-5.3-7-10V6l7-3Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="m8.8 12 2 2 4.4-4.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ServiceRow({ service, onReserve, compact = false }: { service: Service; onReserve: () => void; compact?: boolean }) {
-  return (
-    <article className={`fusionServiceRow ${compact ? 'fusionServiceRowCompact' : ''}`} data-testid="service-card">
-      <div className="fusionServiceText">
-        <div className="fusionServiceTitleLine">
-          <h3>{service.name}</h3>
-          {service.id === 'massage-special' ? <span className="fusionTag">El más elegido</span> : null}
-          {service.therapistsRequired === 2 ? <span className="fusionTag fusionTagSoft">{service.name.toLowerCase().includes('pareja') ? 'Para dos personas' : 'Dos terapeutas'}</span> : null}
-        </div>
-        {!compact ? <p>{service.description}</p> : null}
-        <small>{service.durationMinutes >= 60 ? `${Math.round(service.durationMinutes / 60 * 10) / 10} h` : `${service.durationMinutes} min`}</small>
-      </div>
-      <div className="fusionServicePurchase">
-        <strong>{money(service.publicPrice)}</strong>
-        <span>público general</span>
-        <small>{money(service.memberPrice)} miembros</small>
-        <button type="button" className="fusionButton fusionButtonSmall" onClick={onReserve}>{serviceButtonLabel(service.category)}</button>
-      </div>
-    </article>
-  );
-}
+import { ArrowIcon, CarIcon, ClockIcon, PinIcon, ShieldIcon } from '../../components/icons';
+import { getServices, getTherapists } from '../../lib/api';
+import { money } from '../../lib/format';
+import type { Service, Therapist } from '../../lib/types';
+import { AESTHETICS, BARBER, MASSAGE } from './categories';
+import { ServiceRow } from './ServiceRow';
 
 export function Catalog() {
   const router = useRouter();
@@ -95,16 +16,7 @@ export function Catalog() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API}/services`).then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar el catálogo');
-        return r.json();
-      }),
-      fetch(`${API}/therapists`).then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar el equipo');
-        return r.json();
-      }),
-    ])
+    Promise.all([getServices(), getTherapists()])
       .then(([serviceRows, therapistRows]) => {
         setServices(serviceRows);
         setTherapists(therapistRows);

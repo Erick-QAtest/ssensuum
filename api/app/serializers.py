@@ -1,0 +1,52 @@
+from .domain.rules import ensure_tz
+from .models import Reservation, ScheduleBlock, Service, Therapist
+from .repositories.reservations import therapist_ids
+
+
+def service_payload(service: Service) -> dict:
+    return {
+        "id": service.id,
+        "name": service.name,
+        "category": service.category,
+        "description": service.description,
+        "durationMinutes": service.duration_minutes,
+        "publicPrice": service.public_price,
+        "memberPrice": service.member_price,
+        "deposit": service.deposit,
+        "therapistsRequired": service.therapists_required,
+    }
+
+
+def therapist_payload(therapist: Therapist) -> dict:
+    return {
+        "id": therapist.id,
+        "name": therapist.name,
+        "strengths": therapist.strengths,
+        "photoUrl": therapist.photo_url,
+    }
+
+
+def reservation_payload(reservation: Reservation) -> dict:
+    return {
+        "id": reservation.id,
+        "customerId": reservation.customer_id,
+        "serviceId": reservation.service_id,
+        "therapistIds": therapist_ids(reservation),
+        "startsAt": ensure_tz(reservation.starts_at).isoformat(),
+        "endsAt": ensure_tz(reservation.ends_at).isoformat(),
+        "cabinId": reservation.cabin_id,
+        "source": reservation.source,
+        "status": reservation.status,
+        "depositAmount": reservation.deposit_amount,
+    }
+
+
+def block_payload(block: ScheduleBlock) -> dict:
+    return {
+        "id": block.id,
+        "therapistId": block.therapist_id,
+        "cabinId": block.cabin_id,
+        "startsAt": ensure_tz(block.starts_at).isoformat(),
+        "endsAt": ensure_tz(block.ends_at).isoformat(),
+        "reason": block.reason,
+    }

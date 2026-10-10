@@ -98,19 +98,27 @@ El RF-001 debe poder correr contra el producto local y el flujo RF-010/RF-011/RF
 ssensuum-product/
 ├── api/
 │   ├── app/
+│   │   ├── main.py            # app, CORS, manejo de errores, registro de routers
 │   │   ├── config.py
 │   │   ├── db.py
-│   │   ├── main.py
 │   │   ├── models.py
-│   │   ├── rules.py
 │   │   ├── schemas.py
-│   │   └── seed.py
+│   │   ├── serializers.py     # modelos -> JSON del contrato
+│   │   ├── seed.py
+│   │   ├── routers/           # capa HTTP: health, catalog, availability, reservations, admin
+│   │   ├── services/          # casos de uso: availability, reservations, agenda
+│   │   ├── repositories/      # consultas SQLAlchemy: catalog, reservations, blocks
+│   │   └── domain/            # reglas puras (rules.py) y errores de dominio (errors.py)
 │   ├── tests/
 │   ├── .env.example
 │   └── requirements.txt
 ├── web/
-│   ├── app/
-│   ├── components/
+│   ├── app/                   # rutas de Next.js
+│   ├── features/
+│   │   ├── catalog/           # Catalog, ServiceRow, categories
+│   │   └── booking/           # BookingClient, dates
+│   ├── components/            # UI compartida (icons)
+│   ├── lib/                   # api.ts (cliente HTTP), format.ts, types.ts
 │   ├── .env.local.example
 │   └── package.json
 ├── docs/
@@ -121,6 +129,8 @@ ssensuum-product/
     ├── dev.sh
     └── reset_dev_db.sh
 ```
+
+Dependencias en la API: `routers → services → repositories`, y todos pueden usar `domain`. Los servicios lanzan errores de `domain/errors.py`; `main.py` los convierte en respuestas HTTP.
 
 ---
 

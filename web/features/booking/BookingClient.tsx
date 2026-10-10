@@ -2,28 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { Service, Therapist } from './types';
-
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
-
-function localIsoDate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function next14Days() {
-  return Array.from({ length: 14 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() + index);
-    return date;
-  });
-}
-
-function money(value: number) {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(value);
-}
+import { getAvailability, getServices, getTherapists } from '../../lib/api';
+import { money } from '../../lib/format';
+import type { Service, Therapist } from '../../lib/types';
+import { localIsoDate, next14Days } from './dates';
 
 export function BookingClient({ serviceId }: { serviceId: string }) {
   const [services, setServices] = useState<Service[]>([]);
@@ -37,7 +19,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([fetch(`${API}/services`).then((r) => r.json()), fetch(`${API}/therapists`).then((r) => r.json())])
+    Promise.all([getServices(), getTherapists()])
       .then(([serviceRows, therapistRows]) => {
         setServices(serviceRows);
         setTherapists(therapistRows);
@@ -54,14 +36,8 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
       setSlots([]);
       return;
     }
-    const params = new URLSearchParams({ serviceId: service.id, date: dateIso });
-    if (therapistIds.length === 1) params.set('therapistId', therapistIds[0]);
-    fetch(`${API}/availability?${params.toString()}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('No se pudo consultar disponibilidad');
-        return r.json();
-      })
-      .then((body) => setSlots(body.slots ?? []))
+    getAvailability(service.id, dateIso, therapistIds.length === 1 ? therapistIds[0] : undefined)
+      .then(setSlots)
       .catch((e: Error) => setError(e.message));
   }, [service, dateIso, therapistIds]);
 

@@ -33,3 +33,6 @@ coverage/
 
 # Backups locales
 .fusion-backup/
+
+# TypeScript
+*.tsbuildinfo

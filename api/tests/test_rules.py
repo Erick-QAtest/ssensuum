@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app.rules import validate_minimum_lead_time
+from app.domain.rules import validate_minimum_lead_time
 
 TZ = ZoneInfo("America/Mexico_City")
 
