@@ -18,6 +18,8 @@ COLUMN_ALIASES: dict[str, set[str]] = {
     "last_name": {"apellido", "apellidos", "last name", "lastname"},
     "email": {"correo", "correo electronico", "email", "e mail", "mail"},
     "birthday": {"cumpleanos", "cumple", "fecha de nacimiento", "fecha nacimiento", "nacimiento", "birthday"},
+    "membership_expires_on": {"vence", "vencimiento", "membresia vence", "vence membresia", "vigencia", "membresia hasta"},
+    "notes": {"notas", "nota", "observaciones", "comentarios", "estado"},
 }
 _BIRTHDAY_FORMATS = ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d", "%Y-%m-%d %H:%M:%S")
 
@@ -47,8 +49,8 @@ def cell_text(value: Any) -> str:
     return str(value).strip()
 
 
-def parse_birthday(value: Any) -> Optional[date]:
-    """Devuelve la fecha o None si no se reconoce o no es creíble."""
+def parse_date(value: Any) -> Optional[date]:
+    """Devuelve la fecha o None si no se reconoce."""
     if isinstance(value, datetime):
         parsed: Optional[date] = value.date()
     elif isinstance(value, date):
@@ -62,6 +64,12 @@ def parse_birthday(value: Any) -> Optional[date]:
                 break
             except ValueError:
                 continue
+    return parsed
+
+
+def parse_birthday(value: Any) -> Optional[date]:
+    """Devuelve la fecha o None si no se reconoce o no es creíble."""
+    parsed = parse_date(value)
     if parsed is None or parsed.year < 1900 or parsed > date.today():
         return None
     return parsed

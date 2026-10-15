@@ -10,6 +10,8 @@ const COLUMN_LABELS: Record<string, string> = {
   lastName: 'Apellido',
   email: 'Correo',
   birthday: 'Cumpleaños',
+  membershipExpiresOn: 'Membresía vence',
+  notes: 'Notas',
 };
 const STATUS_LABELS = { duplicate: 'Duplicado', invalid: 'Error', warning: 'Aviso' };
 

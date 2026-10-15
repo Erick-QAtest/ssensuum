@@ -61,5 +61,7 @@ def customer_payload(customer: Customer) -> dict:
         "lastName": customer.last_name,
         "email": customer.email,
         "birthday": customer.birthday,
+        "membershipExpiresOn": customer.membership_expires_on,
+        "notes": customer.notes,
         "createdAt": customer.created_at.isoformat(),
     }

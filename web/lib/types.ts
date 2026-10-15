@@ -24,6 +24,8 @@ export type Customer = {
   lastName: string;
   email: string | null;
   birthday: string | null;
+  membershipExpiresOn: string | null;
+  notes: string | null;
   createdAt: string;
 };
 
@@ -38,7 +40,7 @@ export type CustomerImportIssue = {
 export type CustomerImportResult = {
   dryRun: boolean;
   fileName: string;
-  columns: Partial<Record<'phone' | 'firstName' | 'lastName' | 'email' | 'birthday', string>>;
+  columns: Partial<Record<'phone' | 'firstName' | 'lastName' | 'email' | 'birthday' | 'membershipExpiresOn' | 'notes', string>>;
   totalRows: number;
   valid: number;
   created: number;
@@ -47,7 +49,7 @@ export type CustomerImportResult = {
   warnings: number;
   issues: CustomerImportIssue[];
   issuesTruncated: boolean;
-  preview: Pick<Customer, 'phone' | 'firstName' | 'lastName' | 'email' | 'birthday'>[];
+  preview: Pick<Customer, 'phone' | 'firstName' | 'lastName' | 'email' | 'birthday' | 'membershipExpiresOn' | 'notes'>[];
 };
 
 export type ReservationStatus = 'PENDING_PAYMENT' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED' | 'NEEDS_ATTENTION' | 'RESCHEDULED';

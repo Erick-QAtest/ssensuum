@@ -42,6 +42,7 @@ def test_map_columns_accepts_common_headers():
         "phone": 2,
         "email": 3,
         "birthday": 4,
+        "notes": 5,
     }
 
 
@@ -145,3 +146,18 @@ def test_import_rejects_bad_files(client, name, content, detail):
 
 def test_import_requires_file(client):
     assert client.post("/customers/import").status_code == 422
+
+
+def test_import_reads_membership_expiry_and_notes(client):
+    phone = unique_phone()
+    content = xlsx([
+        ["Nombre", "Apellido", "Teléfono", "Membresía vence", "Notas"],
+        ["José", "Ceballos", phone, datetime(2026, 12, 12), "Cancelado"],
+    ])
+    body = upload(client, content, dry_run=False).json()
+    assert body["created"] == 1
+    assert body["columns"]["membershipExpiresOn"] == "Membresía vence"
+
+    customer = client.get("/customers", params={"q": phone}).json()[0]
+    assert customer["membershipExpiresOn"] == "2026-12-12"
+    assert customer["notes"] == "Cancelado"

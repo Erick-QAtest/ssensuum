@@ -37,6 +37,8 @@ class CustomerCreate(BaseModel):
     last_name: str = Field(default="", alias="lastName")
     email: Optional[str] = None
     birthday: Optional[date] = None
+    membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
+    notes: Optional[str] = None
 
     model_config = {"populate_by_name": True}
 
@@ -47,6 +49,8 @@ class CustomerUpdate(BaseModel):
     last_name: Optional[str] = Field(default=None, alias="lastName")
     email: Optional[str] = None
     birthday: Optional[date] = None
+    membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
+    notes: Optional[str] = None
 
     model_config = {"populate_by_name": True}
 

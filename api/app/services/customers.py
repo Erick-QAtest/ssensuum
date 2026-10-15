@@ -69,6 +69,8 @@ def create_customer(db: Session, payload: CustomerCreate) -> Customer:
         last_name=payload.last_name.strip(),
         email=_clean_email(payload.email),
         birthday=payload.birthday.isoformat() if payload.birthday else None,
+        membership_expires_on=payload.membership_expires_on.isoformat() if payload.membership_expires_on else None,
+        notes=(payload.notes or "").strip() or None,
     )
     return _save(db, customer)
 
@@ -93,5 +95,10 @@ def update_customer(db: Session, customer_id: str, payload: CustomerUpdate) -> C
         customer.email = _clean_email(changes["email"])
     if "birthday" in changes:
         customer.birthday = changes["birthday"].isoformat() if changes["birthday"] else None
+    if "membership_expires_on" in changes:
+        value = changes["membership_expires_on"]
+        customer.membership_expires_on = value.isoformat() if value else None
+    if "notes" in changes:
+        customer.notes = (changes["notes"] or "").strip() or None
 
     return _save(db, customer)

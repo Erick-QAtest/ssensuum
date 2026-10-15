@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ..domain.customer_import import cell_text, map_columns, parse_birthday, read_table
+from ..domain.customer_import import cell_text, map_columns, parse_birthday, parse_date, read_table
 from ..domain.customers import normalize_email, normalize_phone
 from ..domain.errors import ConflictError, ValidationError
 from ..models import Customer
@@ -13,7 +13,15 @@ from ..serializers import customer_payload
 
 MAX_ISSUES = 500
 PREVIEW_ROWS = 10
-FIELD_LABELS = {"phone": "phone", "first_name": "firstName", "last_name": "lastName", "email": "email", "birthday": "birthday"}
+FIELD_LABELS = {
+    "phone": "phone",
+    "first_name": "firstName",
+    "last_name": "lastName",
+    "email": "email",
+    "birthday": "birthday",
+    "membership_expires_on": "membershipExpiresOn",
+    "notes": "notes",
+}
 
 
 def import_customers(db: Session, filename: str, content: bytes, dry_run: bool) -> dict:
@@ -76,6 +84,12 @@ def import_customers(db: Session, filename: str, content: bytes, dry_run: bool) 
             birthday = parse_birthday(raw_birthday)
             if not birthday:
                 warnings.append(f"Cumpleaños no reconocido, se omite: {cell_text(raw_birthday)}")
+        membership = None
+        raw_membership = value(cells, "membership_expires_on")
+        if cell_text(raw_membership):
+            membership = parse_date(raw_membership)
+            if not membership:
+                warnings.append(f"Vencimiento de membresía no reconocido, se omite: {cell_text(raw_membership)}")
         if warnings:
             report(row_number, "warning", phone, name, warnings)
 
@@ -87,11 +101,21 @@ def import_customers(db: Session, filename: str, content: bytes, dry_run: bool) 
                 last_name=last_name,
                 email=email,
                 birthday=birthday.isoformat() if birthday else None,
+                membership_expires_on=membership.isoformat() if membership else None,
+                notes=cell_text(value(cells, "notes")) or None,
             )
         )
 
     preview = [
-        {"phone": c.phone, "firstName": c.first_name, "lastName": c.last_name, "email": c.email, "birthday": c.birthday}
+        {
+            "phone": c.phone,
+            "firstName": c.first_name,
+            "lastName": c.last_name,
+            "email": c.email,
+            "birthday": c.birthday,
+            "membershipExpiresOn": c.membership_expires_on,
+            "notes": c.notes,
+        }
         for c in customers[:PREVIEW_ROWS]
     ]
     created = 0

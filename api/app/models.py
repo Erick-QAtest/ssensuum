@@ -41,6 +41,8 @@ class Customer(Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     email: Mapped[Optional[str]] = mapped_column(String(254), nullable=True)
     birthday: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    membership_expires_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
