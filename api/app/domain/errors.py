@@ -20,3 +20,11 @@ class ValidationError(DomainError):
 
 class InconsistentDataError(DomainError):
     status_code = 500
+
+
+class PaymentsUnavailableError(DomainError):
+    status_code = 503
+
+
+class PaymentGatewayError(DomainError):
+    status_code = 502

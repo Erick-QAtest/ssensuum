@@ -1,7 +1,8 @@
 import json
 import threading
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -29,7 +30,7 @@ def get_reservation(db: Session, reservation_id: str) -> Reservation:
     return reservation
 
 
-def create_reservation(db: Session, payload: ReservationCreate) -> Reservation:
+def create_reservation(db: Session, payload: ReservationCreate, hold_expires_at: Optional[datetime] = None) -> Reservation:
     service = catalog_repo.get_service(db, payload.service_id)
     if not service:
         raise NotFoundError("Servicio no encontrado")
@@ -67,6 +68,7 @@ def create_reservation(db: Session, payload: ReservationCreate) -> Reservation:
             source=payload.source or "web",
             status="PENDING_PAYMENT",
             deposit_amount=service.deposit,
+            hold_expires_at=hold_expires_at,
         )
         return reservations_repo.save(db, reservation)
 
@@ -75,7 +77,7 @@ def reschedule_reservation(db: Session, reservation_id: str, payload: Reservatio
     reservation = get_reservation(db, reservation_id)
 
     if not can_reschedule(reservation.starts_at):
-        raise ValidationError("Con menos de 5 horas el anticipo se pierde")
+        raise ValidationError("Con menos de 3 horas el anticipo se pierde")
 
     service = catalog_repo.get_service(db, reservation.service_id)
     if not service:

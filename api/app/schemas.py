@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -28,3 +29,43 @@ class ScheduleBlockCreate(BaseModel):
     reason: str
 
     model_config = {"populate_by_name": True}
+
+
+class CustomerCreate(BaseModel):
+    phone: str
+    first_name: str = Field(alias="firstName")
+    last_name: str = Field(default="", alias="lastName")
+    email: Optional[str] = None
+    birthday: Optional[date] = None
+    membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
+    notes: Optional[str] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class CustomerUpdate(BaseModel):
+    phone: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, alias="firstName")
+    last_name: Optional[str] = Field(default=None, alias="lastName")
+    email: Optional[str] = None
+    birthday: Optional[date] = None
+    membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
+    notes: Optional[str] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class CheckoutCreate(BaseModel):
+    service_id: str = Field(alias="serviceId")
+    # Vacío = sin preferencia: se asigna terapeuta disponible.
+    therapist_ids: list[str] = Field(default_factory=list, alias="therapistIds")
+    starts_at: str = Field(alias="startsAt")
+    first_name: str = Field(alias="firstName")
+    phone: str
+
+    model_config = {"populate_by_name": True}
+
+
+class SiteEventCreate(BaseModel):
+    name: str
+    label: str = Field(default="", max_length=120)

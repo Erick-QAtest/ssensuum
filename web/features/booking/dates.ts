@@ -5,6 +5,12 @@ export function localIsoDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+export function longDateLabel(iso: string) {
+  const [year, month, day] = iso.split('-').map(Number);
+  const label = new Date(year, month - 1, day).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export function next14Days() {
   return Array.from({ length: 14 }, (_, index) => {
     const date = new Date();

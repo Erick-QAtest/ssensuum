@@ -242,14 +242,6 @@ svg { width: 1em; height: 1em; }
 .fusionHeadingSide { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
 .fusionPillLink { display: inline-flex; padding: 9px 18px; border: 1px solid var(--nogal); border-radius: var(--pill); color: var(--nogal); font-family: "Josefin Sans", sans-serif; font-size: .76rem; letter-spacing: .08em; text-decoration: none; }
 
-.fusionClub { padding-top: 72px; }
-.fusionExperienceGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.fusionExperienceCard { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 12px 34px rgba(78, 48, 32, .06); }
-.fusionExperienceCard img { width: 100%; height: 230px; object-fit: cover; object-position: center top; }
-.fusionExperienceBrand img { object-fit: contain; padding: 30px 22px; background: #fff; }
-.fusionExperienceCard > div { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
-.fusionExperienceCard span { color: var(--wood); font-family: "Josefin Sans", sans-serif; font-size: .7rem; }
-.fusionExperienceCard strong { color: var(--ink); font-size: .9rem; }
 
 .fusionCatalogSection { padding-top: 46px; }
 .fusionMenuLayout { display: grid; grid-template-columns: minmax(290px, 370px) 1fr; gap: clamp(34px, 5vw, 72px); align-items: start; }
@@ -294,8 +286,11 @@ svg { width: 1em; height: 1em; }
 
 .fusionTeamSection { padding-top: 80px; }
 .fusionTherapistGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.fusionTherapistCard { min-height: 230px; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
-.fusionTherapistIndex { color: var(--wood); font-family: "Josefin Sans", sans-serif; font-size: .72rem; }
+.fusionTherapistCard { display: flex; flex-direction: column; gap: 16px; padding: 14px 14px 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+.fusionTherapistCard > div { padding: 0 6px; }
+.fusionTherapistAvatar.hasPhoto { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 12px; object-fit: cover; object-position: center 20%; background: var(--sand); }
+.fusionTherapistAvatar:not(.hasPhoto) { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 12px; font-size: 4rem; }
+.fusionTherapistStrengths { color: var(--nogal-soft); font-weight: 600; }
 .fusionTherapistAvatar { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: var(--nogal); color: #fff; font-family: "DM Serif Display", Georgia, serif; font-size: 1.8rem; }
 .fusionTherapistCard h3 { margin: 0; color: var(--ink); font-family: "Josefin Sans", sans-serif; font-size: 1.22rem; }
 .fusionTherapistCard p { margin: 5px 0 0; font-size: .86rem; }
@@ -313,6 +308,7 @@ svg { width: 1em; height: 1em; }
   color: #fff;
 }
 .fusionMembership h2 { color: #fff; }
+.fusionMembershipMath { margin: 0 0 26px; padding: 16px 18px; border: 1px solid rgba(255, 255, 255, .25); border-radius: 14px; font-size: .95rem; }
 .fusionMembershipPrice { margin-top: 24px; font-family: "DM Serif Display", Georgia, serif; font-size: clamp(64px, 7vw, 104px); line-height: .9; }
 .fusionMembershipCopy > p { color: #eadfd8; }
 .fusionMembership ul { margin: 26px 0; padding-left: 20px; color: #f3e8e1; }
@@ -328,6 +324,7 @@ svg { width: 1em; height: 1em; }
 .fusionLocationFacts > div { display: flex; gap: 12px; align-items: flex-start; }
 .fusionLocationFacts svg { width: 22px; height: 22px; color: var(--nogal); flex: 0 0 auto; }
 .fusionLocationFacts span { font-size: .9rem; }
+.fusionLocationMap { display: block; width: 100%; height: 380px; margin-top: clamp(28px, 4vw, 48px); border: 0; border-radius: 24px; background: var(--sand); }
 
 .fusionFooter {
   display: grid;
@@ -413,11 +410,35 @@ svg { width: 1em; height: 1em; }
 .summary dd { margin: 0; font-weight: 700; text-align: right; color: var(--ink); }
 .summaryNote { color: #7d736d; margin-bottom: 0; }
 
+/* ========================= ADMIN ========================= */
+.adminCard { margin-top: 34px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: #fff; }
+.adminCard h2 { margin: 0 0 8px; color: var(--nogal); font-family: "DM Serif Display", Georgia, serif; font-size: 30px; font-weight: 400; }
+.adminRow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+.adminRow .primaryButton { margin-top: 0; }
+.adminRow input[type="file"] { flex: 1 1 200px; min-width: 0; max-width: 100%; }
+.adminRowSpread { justify-content: space-between; margin-top: 0; }
+.adminRow button:disabled { opacity: .45; cursor: not-allowed; }
+.adminSearch { flex: 1 1 240px; max-width: 360px; padding: 11px 16px; border: 1px solid var(--line); border-radius: var(--pill); background: #fff; color: var(--ink); }
+.adminStats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 24px 0 12px; }
+.adminStats div { padding: 14px 16px; border-radius: 14px; background: var(--cream); }
+.adminStats dt { color: #7d736d; font-size: 13px; }
+.adminStats dd { margin: 4px 0 0; color: var(--ink); font-size: 26px; font-weight: 700; }
+.adminTableWrap { margin-top: 16px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+.adminTable { width: 100%; border-collapse: collapse; font-size: 15px; }
+.adminTable th, .adminTable td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.adminTable th { background: var(--cream); color: #7d736d; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.adminTable tbody tr:last-child td { border-bottom: 0; }
+.adminTable td { color: var(--ink); }
+.adminBadge { display: inline-block; padding: 2px 10px; border-radius: var(--pill); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.adminBadge-invalid { background: #fff2f0; color: var(--danger); }
+.adminBadge-duplicate { background: var(--sand); color: var(--nogal-dark); }
+.adminBadge-warning { background: #fdf3d8; color: #7a5a12; }
+.successBox { padding: 16px; border: 1px solid #b9c7b1; background: #f1f6ee; color: var(--success); border-radius: 12px; margin: 20px 0; }
+
 @media (max-width: 1120px) {
   .fusionNavLinks { display: none; }
   .fusionNav { grid-template-columns: 1fr auto; }
   .fusionHero { grid-template-columns: 1fr 420px; }
-  .fusionExperienceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fusionSecondaryServices { grid-template-columns: 1fr; }
   .fusionTherapistGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -456,10 +477,6 @@ svg { width: 1em; height: 1em; }
   .fusionIdentityStrip strong { letter-spacing: .18em; font-size: .68rem; }
   .fusionSection { width: min(92vw, 680px); padding: 62px 0; }
   .fusionSectionHeading { margin-bottom: 28px; }
-  .fusionExperienceGrid { grid-template-columns: 1fr; }
-  .fusionExperienceCard img { height: 210px; }
-  .fusionFeatureCard { display: block; }
-  .fusionFeatureButton { width: calc(100% - 28px); margin: -68px 14px 0; }
   .fusionServiceRow,
   .fusionServiceRowCompact { grid-template-columns: 1fr; gap: 16px; padding: 24px 0; }
   .fusionServiceRow:first-child,
@@ -469,11 +486,12 @@ svg { width: 1em; height: 1em; }
   .fusionSecondaryServices { width: 94vw; }
   .fusionSplitService { padding: 28px 20px; }
   .fusionSplitBody { grid-template-columns: 1fr; }
-  .fusionSplitBody > img { max-height: 440px; width: min(320px, 100%); }
-  .fusionTherapistGrid { grid-template-columns: 1fr; }
+  .fusionSplitBody > img, .fusionFeatureCard { display: none; }
+  .fusionTherapistGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .fusionMembership { width: 94vw; grid-template-columns: 1fr; padding: 38px 24px; }
   .fusionMembershipVisual img { max-height: 470px; }
   .fusionLocation { width: 92vw; }
+  .fusionLocationMap { height: 300px; border-radius: 18px; }
   .fusionFooter { grid-template-columns: 1fr; }
   .fusionFooterLinks { grid-column: auto; grid-row: auto; flex-direction: column; gap: 10px; }
   .fusionFooter .fusionButton { width: 100%; }
@@ -496,9 +514,83 @@ svg { width: 1em; height: 1em; }
   .dateButton { flex: 0 0 74px; min-width: 74px; position: relative; z-index: 2; touch-action: manipulation; }
   .slotsGrid { grid-template-columns: repeat(2, 1fr); }
   .slotsGrid button, .therapistChoice, .secondaryButton { touch-action: manipulation; }
+  .adminCard { padding: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* ========================= WHATSAPP ========================= */
+.whatsappConfirm { align-items: center; justify-content: center; margin-top: 22px; text-decoration: none; }
+.whatsappFloat {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(27, 24, 22, .22);
+}
+.whatsappFloat svg { width: 30px; height: 30px; }
+@media (max-width: 640px) {
+  .whatsappConfirm { width: 100%; }
+}
+
+/* ========================= CHECKOUT ========================= */
+.checkoutFields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+.checkoutFields label { display: grid; gap: 6px; color: #7d736d; font-size: 14px; }
+.checkoutFields input { padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font-size: 16px; }
+.checkoutFields input:focus { outline: 2px solid var(--wood); outline-offset: 1px; }
+.checkoutButton { margin-top: 18px; }
+.summaryLink { display: inline-block; margin-top: 10px; color: var(--nogal); font-weight: 600; }
+.paymentResult { text-align: center; }
+.paymentResult .primaryButton { margin-inline: auto; justify-content: center; text-decoration: none; }
+.paymentResult .summary { text-align: left; }
+@media (max-width: 640px) {
+  .checkoutFields { grid-template-columns: 1fr; }
+  .checkoutButton { width: 100%; justify-content: center; }
+}
+
+/* ========================= LEGAL ========================= */
+.legalPage { max-width: 760px; color: var(--text); }
+.legalPage h1 { margin: 6px 0 4px; color: var(--nogal); font-family: "DM Serif Display", Georgia, serif; font-size: clamp(32px, 6vw, 44px); font-weight: 400; line-height: 1.1; }
+.legalPage h2 { margin: 34px 0 10px; color: var(--ink); font-size: 20px; }
+.legalPage li { margin-bottom: 8px; }
+.legalPage a, .summaryNote a { color: var(--nogal); font-weight: 600; }
+.legalUpdated { color: #8a7e75; font-size: 14px; }
+
+/* ========================= ADMIN: RESERVAS ========================= */
+.adminNav { display: flex; gap: 6px; margin: 4px 0 18px; border-bottom: 1px solid var(--line); }
+.adminNav a { padding: 10px 14px; color: #7d736d; font-weight: 600; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.adminNav a.active { color: var(--nogal); border-bottom-color: var(--nogal); }
+.adminStats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+.adminStats > div { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.adminStats strong { display: block; color: var(--nogal); font-family: "DM Serif Display", Georgia, serif; font-size: 30px; font-weight: 400; line-height: 1.1; }
+.adminStats span { color: #7d736d; font-size: 14px; }
+.adminStats .alert { border-color: var(--danger); }
+.adminStats .alert strong { color: var(--danger); }
+.adminSub { display: block; margin-top: 2px; color: #8a7e75; font-size: 13px; }
+.statusBadge { display: inline-block; padding: 3px 10px; border-radius: var(--pill); font-size: 13px; font-weight: 700; }
+.statusBadge.ok { background: #e6eee2; color: var(--success); }
+.statusBadge.wait { background: var(--sand); color: var(--nogal-soft); }
+.statusBadge.alert { background: #f6e1dd; color: var(--danger); }
+.adminAction { display: inline-block; white-space: nowrap; text-decoration: none; font-size: 14px; }
+@media (max-width: 640px) {
+  .adminStats { grid-template-columns: 1fr; }
+}
+
+.avatar.hasPhoto { object-fit: cover; object-position: center 20%; padding: 0; }
+
+/* ========================= CÓMO SE REALIZA ========================= */
+.fusionServiceDetails { margin-top: 8px; }
+.fusionServiceDetails summary { width: fit-content; color: var(--nogal); font-size: .85rem; font-weight: 600; cursor: pointer; }
+.fusionServiceDetails p { margin: 8px 0 0; font-size: .88rem; line-height: 1.55; }
+
+.fusionTherapistCard h3 .fusionTag, .therapistChoice strong .fusionTag { margin-left: 8px; vertical-align: middle; }

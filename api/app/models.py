@@ -19,6 +19,8 @@ class Service(Base):
     member_price: Mapped[int] = mapped_column(Integer, nullable=False)
     deposit: Mapped[int] = mapped_column(Integer, nullable=False)
     therapists_required: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Cómo se realiza el servicio, para quien quiere saber más antes de reservar.
+    details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
@@ -29,6 +31,8 @@ class Therapist(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     strengths: Mapped[str] = mapped_column(Text, nullable=False)
     photo_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_new: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True, default=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
@@ -36,9 +40,13 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     last_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    email: Mapped[Optional[str]] = mapped_column(String(254), nullable=True)
     birthday: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    membership_expires_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -55,6 +63,9 @@ class Reservation(Base):
     source: Mapped[str] = mapped_column(String(80), nullable=False, default="web")
     status: Mapped[str] = mapped_column(String(40), nullable=False, default="PENDING_PAYMENT")
     deposit_amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Mientras la reserva espera su pago, el horario queda apartado solo hasta esta hora.
+    hold_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    payment_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -67,3 +78,14 @@ class ScheduleBlock(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     reason: Mapped[str] = mapped_column(String(250), nullable=False)
+
+
+class SiteEvent(Base):
+    """Conteo anónimo de visitas y clics: sin IP, cookies ni datos personales."""
+
+    __tablename__ = "site_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)

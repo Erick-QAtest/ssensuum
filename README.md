@@ -17,6 +17,8 @@ MVP local de SSENSUUM diseñado para trabajar junto al framework de QA de Playwr
 - Servicios de 2 terapeutas y anticipo de $600
 - Agenda administrativa básica
 - Bloqueos de agenda
+- Registro de clientes con teléfono único
+- Importación de clientes desde Excel o CSV en `/admin/clientes`
 - Test IDs compatibles con `ssensuum-qa-framework`
 
 ## Qué NO incluye todavía
@@ -76,8 +78,8 @@ El script agrega datos QA conocidos del seed local:
 
 - `QA_SERVICE_ID=massage-special`
 - `QA_SERVICE_NAME=Masaje especial`
-- `QA_THERAPIST_ID=alex`
-- `QA_THERAPIST_NAME=Alex`
+- `QA_THERAPIST_ID=jessy`
+- `QA_THERAPIST_NAME=Jessy`
 - fecha de mañana
 - horario 12:00
 - slot libre para prueba de concurrencia
@@ -105,9 +107,9 @@ ssensuum-product/
 │   │   ├── schemas.py
 │   │   ├── serializers.py     # modelos -> JSON del contrato
 │   │   ├── seed.py
-│   │   ├── routers/           # capa HTTP: health, catalog, availability, reservations, admin
-│   │   ├── services/          # casos de uso: availability, reservations, agenda
-│   │   ├── repositories/      # consultas SQLAlchemy: catalog, reservations, blocks
+│   │   ├── routers/           # capa HTTP: health, catalog, availability, reservations, customers, admin
+│   │   ├── services/          # casos de uso: availability, reservations, customers, agenda
+│   │   ├── repositories/      # consultas SQLAlchemy: catalog, reservations, customers, blocks
 │   │   └── domain/            # reglas puras (rules.py) y errores de dominio (errors.py)
 │   ├── tests/
 │   ├── .env.example
@@ -116,7 +118,8 @@ ssensuum-product/
 │   ├── app/                   # rutas de Next.js
 │   ├── features/
 │   │   ├── catalog/           # Catalog, ServiceRow, categories
-│   │   └── booking/           # BookingClient, dates
+│   │   ├── booking/           # BookingClient, dates
+│   │   └── customers/         # CustomersPage, ImportPanel
 │   ├── components/            # UI compartida (icons)
 │   ├── lib/                   # api.ts (cliente HTTP), format.ts, types.ts
 │   ├── .env.local.example

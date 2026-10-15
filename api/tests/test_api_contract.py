@@ -13,12 +13,12 @@ def test_catalog_and_availability_contract():
         services = client.get("/services")
         assert services.status_code == 200
         names = {row["name"] for row in services.json()}
-        assert "Masaje especial" in names
+        assert "Masaje especial SSENSUUM" in names
 
         tomorrow = (datetime.now(TZ) + timedelta(days=1)).date().isoformat()
         availability = client.get(
             "/availability",
-            params={"serviceId": "massage-special", "date": tomorrow, "therapistId": "alex"},
+            params={"serviceId": "massage-special", "date": tomorrow, "therapistId": "jessy"},
         )
         assert availability.status_code == 200
         assert isinstance(availability.json()["slots"], list)

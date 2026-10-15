@@ -1,9 +1,50 @@
 import type { Metadata } from 'next';
+import { WhatsAppFloat } from '../components/WhatsAppFloat';
 import './globals.css';
 
+const DESCRIPTION = 'Masajes personalizados en Col. Americana, Guadalajara: tú eliges técnica, presión, zonas y terapeuta. Reserva en línea.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ssensuum.mx'),
   title: 'SSENSUUM · Private Massage Club',
-  description: 'Masajes, barbería y medicina estética en Col. Americana, Guadalajara. Reserva tu experiencia SSENSUUM.',
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    locale: 'es_MX',
+    siteName: 'SSENSUUM',
+    title: 'SSENSUUM · Private Massage Club en Guadalajara',
+    description: DESCRIPTION,
+    images: [{ url: '/ssensuum/location.jpg', width: 1200, height: 655, alt: 'Fachada de SSENSUUM en Col. Americana' }],
+  },
+  twitter: { card: 'summary_large_image' },
+};
+
+// Datos estructurados para Google (búsqueda local y Maps).
+const LOCAL_BUSINESS = {
+  '@context': 'https://schema.org',
+  '@type': 'DaySpa',
+  name: 'SSENSUUM',
+  description: DESCRIPTION,
+  url: 'https://ssensuum.mx',
+  image: 'https://ssensuum.mx/ssensuum/location.jpg',
+  logo: 'https://ssensuum.mx/ssensuum/brand-logo.jpg',
+  telephone: '+52 33 1068 1307',
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Mexicaltzingo 2122-B, Col. Americana',
+    addressLocality: 'Guadalajara',
+    addressRegion: 'Jalisco',
+    addressCountry: 'MX',
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: 20.6684, longitude: -103.3757 },
+  hasMap: 'https://maps.app.goo.gl/2CLVeFkfyoiGDQqv6',
+  openingHoursSpecification: [{
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    opens: '09:00',
+    closes: '20:30',
+  }],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -14,7 +55,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Josefin+Sans:wght@300;400;500;600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(LOCAL_BUSINESS) }} />
+        {children}
+        <WhatsAppFloat />
+      </body>
     </html>
   );
 }

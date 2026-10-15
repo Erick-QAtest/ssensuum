@@ -5,15 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .db import Base, SessionLocal, engine
+from .db import Base, SessionLocal, add_missing_columns, engine
 from .domain.errors import DomainError
-from .routers import admin, availability, catalog, health, reservations
+from .routers import admin, availability, catalog, checkout, customers, events, health, reservations
 from .seed import seed
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    add_missing_columns()
     with SessionLocal() as db:
         seed(db)
     yield
@@ -38,4 +39,7 @@ app.include_router(health.router)
 app.include_router(catalog.router)
 app.include_router(availability.router)
 app.include_router(reservations.router)
+app.include_router(customers.router)
 app.include_router(admin.router)
+app.include_router(checkout.router)
+app.include_router(events.router)
