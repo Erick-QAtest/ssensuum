@@ -286,8 +286,11 @@ svg { width: 1em; height: 1em; }
 
 .fusionTeamSection { padding-top: 80px; }
 .fusionTherapistGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.fusionTherapistCard { min-height: 230px; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
-.fusionTherapistIndex { color: var(--wood); font-family: "Josefin Sans", sans-serif; font-size: .72rem; }
+.fusionTherapistCard { display: flex; flex-direction: column; gap: 16px; padding: 14px 14px 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+.fusionTherapistCard > div { padding: 0 6px; }
+.fusionTherapistAvatar.hasPhoto { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 12px; object-fit: cover; object-position: center 20%; background: var(--sand); }
+.fusionTherapistAvatar:not(.hasPhoto) { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 12px; font-size: 4rem; }
+.fusionTherapistStrengths { color: var(--nogal-soft); font-weight: 600; }
 .fusionTherapistAvatar { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: var(--nogal); color: #fff; font-family: "DM Serif Display", Georgia, serif; font-size: 1.8rem; }
 .fusionTherapistCard h3 { margin: 0; color: var(--ink); font-family: "Josefin Sans", sans-serif; font-size: 1.22rem; }
 .fusionTherapistCard p { margin: 5px 0 0; font-size: .86rem; }
@@ -484,7 +487,7 @@ svg { width: 1em; height: 1em; }
   .fusionSplitService { padding: 28px 20px; }
   .fusionSplitBody { grid-template-columns: 1fr; }
   .fusionSplitBody > img, .fusionFeatureCard { display: none; }
-  .fusionTherapistGrid { grid-template-columns: 1fr; }
+  .fusionTherapistGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .fusionMembership { width: 94vw; grid-template-columns: 1fr; padding: 38px 24px; }
   .fusionMembershipVisual img { max-height: 470px; }
   .fusionLocation { width: 92vw; }
@@ -582,3 +585,5 @@ svg { width: 1em; height: 1em; }
 @media (max-width: 640px) {
   .adminStats { grid-template-columns: 1fr; }
 }
+
+.avatar.hasPhoto { object-fit: cover; object-position: center 20%; padding: 0; }

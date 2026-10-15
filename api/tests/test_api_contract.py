@@ -18,7 +18,7 @@ def test_catalog_and_availability_contract():
         tomorrow = (datetime.now(TZ) + timedelta(days=1)).date().isoformat()
         availability = client.get(
             "/availability",
-            params={"serviceId": "massage-special", "date": tomorrow, "therapistId": "alex"},
+            params={"serviceId": "massage-special", "date": tomorrow, "therapistId": "jessy"},
         )
         assert availability.status_code == 200
         assert isinstance(availability.json()["slots"], list)

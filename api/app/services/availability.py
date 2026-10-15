@@ -66,6 +66,17 @@ def free_therapists(
     return None
 
 
+def least_busy_first(db: Session, candidates: list[str], day: date_type) -> list[str]:
+    """Ordena a los terapeutas por cuántas reservas tienen ese día, para repartir "sin preferencia"."""
+    day_start = datetime.combine(day, time.min, tzinfo=TZ)
+    load = {therapist_id: 0 for therapist_id in candidates}
+    for reservation in reservations_repo.list_active_starting_between(db, day_start, day_start + timedelta(days=1)):
+        for therapist_id in reservations_repo.therapist_ids(reservation):
+            if therapist_id in load:
+                load[therapist_id] += 1
+    return sorted(candidates, key=lambda therapist_id: load[therapist_id])
+
+
 def build_slots(
     db: Session,
     service: Service,

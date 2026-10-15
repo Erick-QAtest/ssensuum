@@ -7,6 +7,7 @@ import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
 import { localIsoDate, longDateLabel, next14Days } from './dates';
+import { TherapistAvatar } from '../../components/TherapistAvatar';
 
 export function BookingClient({ serviceId }: { serviceId: string }) {
   const [services, setServices] = useState<Service[]>([]);
@@ -137,8 +138,8 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
                     });
                   }}
                 >
-                  <span className="avatar">{therapist.name[0]}</span>
-                  <span><strong>{therapist.name}</strong><small>{therapist.strengths}</small></span>
+                  <TherapistAvatar therapist={therapist} className="avatar" />
+                  <span><strong>{therapist.name}</strong>{therapist.strengths ? <small>{therapist.strengths}</small> : null}</span>
                 </button>
               ))}
             </div>

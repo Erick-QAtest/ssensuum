@@ -176,3 +176,16 @@ def test_admin_reservations_lists_paid_and_pending_with_customer(client, mp):
     assert by_id[paid_id]["serviceName"] == "Masaje especial SSENSUUM"
     assert by_id[paid_id]["therapistNames"]
     assert expired_id not in by_id
+
+
+def test_no_preference_spreads_bookings_across_therapists(client, mp):
+    date = day(12)
+    first = client.post("/checkout", json=checkout_body(date, "09:00")).json()["reservation"]["therapistIds"]
+    second = client.post("/checkout", json=checkout_body(date, "11:00")).json()["reservation"]["therapistIds"]
+    assert first != second
+
+
+def test_catalog_lists_only_current_team(client):
+    names = {row["name"] for row in client.get("/therapists").json()}
+    assert {"Jessy", "Borja", "Alemán"} <= names
+    assert "Alex" not in names

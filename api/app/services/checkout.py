@@ -13,7 +13,7 @@ from ..repositories import customers as customers_repo
 from ..repositories import reservations as reservations_repo
 from ..schemas import CheckoutCreate, ReservationCreate
 from . import mercadopago
-from .availability import free_therapists, has_conflict
+from .availability import free_therapists, has_conflict, least_busy_first
 from .reservations import create_reservation
 
 # Estados de Mercado Pago que deshacen un pago ya recibido.
@@ -48,7 +48,7 @@ def start_checkout(db: Session, payload: CheckoutCreate) -> tuple[Reservation, s
     if not therapist_ids:
         starts_at = parse_iso_datetime(payload.starts_at)
         ends_at = starts_at + timedelta(minutes=service.duration_minutes)
-        candidates = catalog_repo.active_therapist_ids(db)
+        candidates = least_busy_first(db, catalog_repo.active_therapist_ids(db), starts_at.date())
         therapist_ids = free_therapists(db, candidates, service.therapists_required, starts_at, ends_at) or []
         if not therapist_ids:
             raise ConflictError("Ese horario se acaba de ocupar. Elige otro, por favor.")

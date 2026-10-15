@@ -9,6 +9,7 @@ import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
 import { AESTHETICS, BARBER, MASSAGE } from './categories';
 import { ServiceRow } from './ServiceRow';
+import { TherapistAvatar } from '../../components/TherapistAvatar';
 
 export function Catalog() {
   const router = useRouter();
@@ -157,11 +158,14 @@ export function Catalog() {
           <p>Elige por nombre y fortalezas, o deja la asignación a disponibilidad.</p>
         </div>
         <div className="fusionTherapistGrid">
-          {therapists.map((therapist, index) => (
+          {therapists.map((therapist) => (
             <article className="fusionTherapistCard" key={therapist.id}>
-              <span className="fusionTherapistIndex">0{index + 1}</span>
-              <div className="fusionTherapistAvatar">{therapist.name.slice(0, 1)}</div>
-              <div><h3>{therapist.name}</h3><p>{therapist.strengths}</p></div>
+              <TherapistAvatar therapist={therapist} className="fusionTherapistAvatar" />
+              <div>
+                <h3>{therapist.name}</h3>
+                {therapist.strengths ? <p className="fusionTherapistStrengths">{therapist.strengths}</p> : null}
+                {therapist.bio ? <p>{therapist.bio}</p> : null}
+              </div>
             </article>
           ))}
         </div>

@@ -29,6 +29,7 @@ class Therapist(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     strengths: Mapped[str] = mapped_column(Text, nullable=False)
     photo_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 

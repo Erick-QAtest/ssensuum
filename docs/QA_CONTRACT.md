@@ -76,6 +76,6 @@ Terapeutas requeridos: 1
 Terapeuta estable:
 
 ```text
-ID: alex
-Nombre: Alex
+ID: jessy
+Nombre: Jessy
 ```

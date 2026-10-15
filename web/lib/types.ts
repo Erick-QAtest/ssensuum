@@ -15,6 +15,7 @@ export type Therapist = {
   name: string;
   strengths: string;
   photoUrl: string;
+  bio: string | null;
 };
 
 export type Customer = {

@@ -43,11 +43,24 @@ SERVICES = [
     Service(id="aesthetic-removal", name="Retiro de tatuajes y lunares", category="Medicina estética", description="Según tamaño. Desde.", duration_minutes=60, public_price=600, member_price=450, deposit=300, therapists_required=1),
 ]
 
+# Equipo actual. Al arrancar, la base se sincroniza con esta lista: quien ya no
+# aparece queda inactivo (sus reservas pasadas se conservan).
 THERAPISTS = [
-    Therapist(id="alex", name="Alex", strengths="Descontracturante · Tejido profundo · Deportivo"),
-    Therapist(id="diego", name="Diego", strengths="Sueco relajante · Aromaterapia · Deportivo"),
-    Therapist(id="mateo", name="Mateo", strengths="Tejido profundo · 4 manos · Parejas"),
-    Therapist(id="leo", name="Leo", strengths="Relajación · Drenaje · Masaje especial"),
+    {"id": "jairo", "name": "Jairo", "photo_url": "/ssensuum/equipo/jairo.jpg"},
+    {"id": "aleman", "name": "Alemán", "photo_url": "/ssensuum/equipo/aleman.jpg"},
+    {"id": "mazer", "name": "Mazer", "photo_url": "/ssensuum/equipo/mazer.jpg"},
+    {"id": "jessy", "name": "Jessy", "photo_url": "/ssensuum/equipo/jessy.jpg"},
+    {"id": "dany", "name": "Dany", "photo_url": "/ssensuum/equipo/dany.jpg"},
+    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg"},
+    {"id": "paul", "name": "Paul", "photo_url": ""},
+    {
+        "id": "borja",
+        "name": "Borja",
+        "photo_url": "/ssensuum/equipo/borja.jpg",
+        "strengths": "Profesionalismo · Técnica · Puntualidad",
+        "bio": "Formado en el trato profesional y la presentación impecable, Borja transmite orden y seguridad desde que entras a la sala. "
+        "Trabaja con técnica cuidada y atención constante, ideal si buscas una sesión seria, puntual y bien ejecutada.",
+    },
 ]
 
 
@@ -56,8 +69,20 @@ def seed(db: Session) -> None:
     if not has_services:
         db.add_all(SERVICES)
 
-    has_therapists = db.scalar(select(Therapist.id).limit(1))
-    if not has_therapists:
-        db.add_all(THERAPISTS)
+    sync_therapists(db)
 
     db.commit()
+
+
+def sync_therapists(db: Session) -> None:
+    current = {row["id"] for row in THERAPISTS}
+    for row in THERAPISTS:
+        therapist = db.get(Therapist, row["id"]) or Therapist(id=row["id"])
+        therapist.name = row["name"]
+        therapist.photo_url = row.get("photo_url", "")
+        therapist.strengths = row.get("strengths", "")
+        therapist.bio = row.get("bio")
+        therapist.active = True
+        db.add(therapist)
+    for therapist in db.scalars(select(Therapist).where(Therapist.id.not_in(current))).all():
+        therapist.active = False

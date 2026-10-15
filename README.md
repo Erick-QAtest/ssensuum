@@ -78,8 +78,8 @@ El script agrega datos QA conocidos del seed local:
 
 - `QA_SERVICE_ID=massage-special`
 - `QA_SERVICE_NAME=Masaje especial`
-- `QA_THERAPIST_ID=alex`
-- `QA_THERAPIST_NAME=Alex`
+- `QA_THERAPIST_ID=jessy`
+- `QA_THERAPIST_NAME=Jessy`
 - fecha de mañana
 - horario 12:00
 - slot libre para prueba de concurrencia
