@@ -6,7 +6,6 @@ import { ChevronIcon } from '../../components/icons';
 import { track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service } from '../../lib/types';
-import { whatsappUrl, WHATSAPP_MESSAGES } from '../../lib/whatsapp';
 import { CARTA_GROUPS, cartaGroupFor } from './content';
 
 function hours(minutes: number) {
@@ -44,15 +43,7 @@ export function CartaSection({ services }: { services: Service[] }) {
           <button type="button" className="btn btnOutline" aria-expanded={open} aria-controls="carta-list" onClick={() => setOpen(!open)}>
             {open ? 'Ocultar técnicas' : 'Ver todas las técnicas'}
           </button>
-          <a
-            className="btn btnOutline"
-            href={whatsappUrl(WHATSAPP_MESSAGES.help)}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => track('whatsapp_click', 'no-se-cual-elegir')}
-          >
-            No sé cuál elegir
-          </a>
+          <a className="btn btnOutline" href="/quiz">No sé cuál elegir</a>
         </div>
 
         <div id="carta-list" hidden={!open}>

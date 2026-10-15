@@ -95,6 +95,7 @@ export function Catalog() {
             <a className="btn" href="#equipo">Elige a tu terapeuta</a>
             <WhatsAppLink className="btn btnOutline" message={WHATSAPP_MESSAGES.member} label="soy-miembro">Soy miembro</WhatsAppLink>
           </div>
+          <a className="heroQuiz" href="/quiz">¿No sabes a quién elegir? Haz el quiz de 1 minuto</a>
           <ul className="chips">
             <li className="chip">Cabina privada</li>
             <li className="chip">Visita confidencial</li>

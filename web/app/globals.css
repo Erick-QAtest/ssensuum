@@ -534,3 +534,147 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .heroFaces img:last-child { margin-right: 0; }
+
+/* =====================================================================
+   QUIZ · ¿Qué terapeuta va contigo?
+   Una pregunta por pantalla, columna angosta, mismos tokens del sitio.
+   ===================================================================== */
+.heroQuiz {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+  color: var(--brown);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.quizShell { min-height: 100vh; padding: 20px var(--gutter) 64px; background: var(--bg); }
+.quizTop, .quizBody { max-width: 560px; margin-inline: auto; }
+.quizBody { margin-top: 12px; }
+.quizScreen { display: flex; flex-direction: column; gap: 20px; }
+.quizScreen > .label { margin: 0; }
+.quizScreen .heroFaces { margin-top: 0; }
+.quizTitle,
+.quizQuestion {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.quizTitle { font-size: clamp(40px, 11vw, 60px); }
+.quizQuestion { font-size: clamp(30px, 8vw, 42px); }
+.quizTitle em, .quizQuestion em { color: var(--em); }
+.quizQuestion:focus { outline: none; }
+.quizLead { margin: 0; font-size: 18px; }
+.quizNote { margin: 0; color: var(--muted); font-size: 15px; }
+.quizText { margin: 0; }
+
+.quizProgress { display: flex; gap: 6px; }
+.quizProgress span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.quizProgress span.on { background: var(--brown); }
+
+.quizOptions { display: flex; flex-direction: column; gap: 10px; }
+.quizOption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: left;
+}
+.quizOption small { color: var(--muted); font-size: 15px; font-weight: 400; }
+.quizOption:hover { border-color: var(--brown); }
+.quizOption[aria-pressed="true"] { border-color: var(--brown); background: var(--accent); }
+
+.quizLink {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.quizPanel { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.quizRow { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; padding: 20px; }
+.quizRowTherapist { align-items: center; }
+.quizRowTherapist > div { flex: 1 1 180px; }
+.quizBio { flex-basis: 100%; }
+.quizRow + .quizRow { border-top: 1px solid var(--line); }
+.quizRow > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.quizRow .label { margin: 0; }
+.quizRow .price { font-size: 30px; }
+.quizName { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink); font-family: var(--serif); font-size: 28px; font-weight: 400; line-height: 1.1; }
+.quizFace {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  background: var(--accent);
+}
+.quizInitial {
+  display: grid;
+  place-items: center;
+  background: var(--brown);
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 30px;
+}
+
+.quizSlots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.quizSlot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 1px solid var(--brown);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--ink);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.quizSlot span { color: var(--muted); font-size: 14px; font-weight: 600; }
+.quizSlot strong { font-size: 18px; }
+.quizSlot:hover { background: var(--accent); }
+
+.quizActions { display: flex; flex-direction: column; gap: 10px; }
+
+.quizSwitch { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; border: 0; }
+.quizSwitch legend { padding: 0; margin-bottom: 10px; }
+.quizPicks { display: flex; flex-wrap: wrap; gap: 8px; }
+.quizPick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 14px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.quizPick:last-child { padding-left: 14px; }
+.quizPick[aria-pressed="true"] { border-color: var(--brown); background: var(--accent); }
+.quizPickFace { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: top; background: var(--accent); }
+.quizPickFace.quizInitial { background: var(--brown); font-size: 16px; }

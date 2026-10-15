@@ -9,15 +9,20 @@ import { whatsappUrl } from '../../lib/whatsapp';
 import { localIsoDate, longDateLabel, next14Days } from './dates';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 
-export function BookingClient({ serviceId, therapistId }: { serviceId: string; therapistId?: string }) {
+// El quiz puede llegar con día y hora; solo se aceptan si caen dentro de los 14 días que se muestran.
+function bookableDate(date?: string) {
+  return date && next14Days().some((day) => localIsoDate(day) === date) ? date : '';
+}
+
+export function BookingClient({ serviceId, therapistId, initialDate, initialTime }: { serviceId: string; therapistId?: string; initialDate?: string; initialTime?: string }) {
   const [services, setServices] = useState<Service[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   // "Reservar con {nombre}" llega con el terapeuta ya elegido.
   const [therapistIds, setTherapistIds] = useState<string[]>(therapistId ? [therapistId] : []);
   const [noPreference, setNoPreference] = useState(!therapistId);
-  const [dateIso, setDateIso] = useState('');
+  const [dateIso, setDateIso] = useState(() => bookableDate(initialDate));
   const [slots, setSlots] = useState<string[]>([]);
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState(() => (bookableDate(initialDate) && /^\d{2}:\d{2}$/.test(initialTime ?? '') ? initialTime ?? '' : ''));
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
   const [slotsVersion, setSlotsVersion] = useState(0);
@@ -48,7 +53,11 @@ export function BookingClient({ serviceId, therapistId }: { serviceId: string; t
       return;
     }
     getAvailability(service.id, dateIso, therapistIds.length === 1 ? therapistIds[0] : undefined)
-      .then(setSlots)
+      .then((rows) => {
+        setSlots(rows);
+        // Una hora que ya no está libre (o que llegó del quiz y se ocupó) se quita.
+        setTime((current) => (current && !rows.includes(current) ? '' : current));
+      })
       .catch((e: Error) => setError(e.message));
   }, [service, dateIso, therapistIds, slotsVersion]);
 

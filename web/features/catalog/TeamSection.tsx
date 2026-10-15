@@ -32,6 +32,7 @@ export function TeamSection({ therapists }: { therapists: Therapist[] }) {
         <div className="sectionHead">
           <p className="label">Terapeutas</p>
           <h2 id="equipo-title">Elige quién te atiende.</h2>
+          <p className="sectionLead">¿No sabes a quién elegir? <a href="/quiz">Haz el quiz de 1 minuto</a> y te recomendamos terapeuta, masaje y horario.</p>
         </div>
         <ul className="team">
           {therapists.map((therapist) => (
