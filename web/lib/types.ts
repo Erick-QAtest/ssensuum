@@ -8,6 +8,7 @@ export type Service = {
   memberPrice: number;
   deposit: number;
   therapistsRequired: number;
+  details: string | null;
 };
 
 export type Therapist = {

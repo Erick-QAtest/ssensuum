@@ -43,16 +43,64 @@ SERVICES = [
     Service(id="aesthetic-removal", name="Retiro de tatuajes y lunares", category="Medicina estética", description="Según tamaño. Desde.", duration_minutes=60, public_price=600, member_price=450, deposit=300, therapists_required=1),
 ]
 
+# Cómo se realiza cada masaje (carta "Servicios y equipo" de SSENSUUM).
+SERVICE_DETAILS = {
+    "massage-special": "Un masaje hecho a tu medida: combinas diferentes técnicas y presiones en una misma sesión, y decides en qué zonas enfocarla: pies, espalda, piernas, glúteos y más.",
+    "swedish": "Se aplica con aceites sobre todo el cuerpo. El terapeuta combina deslizamientos, amasamiento, fricción y percusión en movimientos largos y rítmicos. La presión es ligera a media para soltar tensión superficial, activar la circulación e inducir calma.",
+    "descontracturante": "Se localizan nudos y contracturas (cuello, hombros, lumbar). Se trabaja con presión sostenida, amasamiento profundo y estiramientos cortos para liberar el músculo acortado y devolver movilidad.",
+    "four-hands": "Dos terapeutas trabajan tu cuerpo al mismo tiempo, en espejo y al mismo ritmo. Al recibir dos estímulos a la vez, el cuerpo deja de seguir el movimiento y se suelta antes. Eliges a los dos terapeutas al reservar.",
+    "deep-tissue": "Presión lenta y precisa sobre capas profundas y fascia. Se usa el antebrazo, los nudillos o el pulgar siguiendo la fibra muscular. Ideal para dolor crónico, postura y recuperación.",
+    "lymphatic": "Maniobras muy suaves, rítmicas y unidireccionales que siguen el flujo de la linfa hacia los ganglios. No es un masaje fuerte: estimula la eliminación de líquidos y reduce la inflamación.",
+    "sports": "Combina amasamiento, fricción transversal, movilizaciones y estiramientos. Se adapta a antes de competir (activar) o después del esfuerzo (recuperar), con enfoque en los grupos musculares de carga.",
+    "thai": "Sobre colchoneta o camilla, con ropa cómoda. El terapeuta usa palmas, pulgares y su propio peso para comprimir, estirar y abrir líneas de energía. Incluye posturas pasivas de yoga.",
+    "couples-massage": "Dos personas en la misma cabina, al mismo tiempo, cada quien con su terapeuta. Se trabaja la ruta completa de una hora en paralelo, con la música y la luz compartidas. Eligen a sus dos terapeutas al reservar.",
+    "aromatherapy": "Se elige una mezcla de aceites esenciales según el objetivo: calma, energía o respiración. El masaje sueco se realiza con ese aceite y el aroma acompaña la sesión.",
+    "bamboo": "Cañas de bambú templadas se ruedan y presionan sobre la musculatura. El cilindro permite una presión uniforme y profunda, deshace adherencias y deja una sensación de apertura.",
+}
+
 # Equipo actual. Al arrancar, la base se sincroniza con esta lista: quien ya no
 # aparece queda inactivo (sus reservas pasadas se conservan).
 THERAPISTS = [
-    {"id": "jairo", "name": "Jairo", "photo_url": "/ssensuum/equipo/jairo.jpg"},
-    {"id": "aleman", "name": "Alemán", "photo_url": "/ssensuum/equipo/aleman.jpg"},
-    {"id": "mazer", "name": "Mazer", "photo_url": "/ssensuum/equipo/mazer.jpg"},
-    {"id": "jessy", "name": "Jessy", "photo_url": "/ssensuum/equipo/jessy.jpg"},
-    {"id": "dany", "name": "Dany", "photo_url": "/ssensuum/equipo/dany.jpg"},
-    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg"},
-    {"id": "paul", "name": "Paul", "photo_url": ""},
+    {
+        "id": "aleman",
+        "name": "Alemán",
+        "photo_url": "/ssensuum/equipo/aleman.jpg",
+        "strengths": "Cercanía · Confianza · Calma",
+        "bio": "Su trato cálido y relajado te hace sentir en confianza desde el primer momento. Alemán crea un ambiente ligero y sin prisas, "
+        "ideal si buscas desconectarte, soltar el estrés y disfrutar de una sesión cercana y amable.",
+    },
+    {
+        "id": "mazer",
+        "name": "Mazer",
+        "photo_url": "/ssensuum/equipo/mazer.jpg",
+        "strengths": "Serenidad · Detalle · Escucha",
+        "bio": "De presencia serena y mirada atenta, Mazer trabaja con calma y cuidado en cada movimiento. Escucha lo que tu cuerpo necesita "
+        "y guía la sesión con paciencia, perfecta para quienes buscan una experiencia pausada y reparadora.",
+    },
+    {
+        "id": "jessy",
+        "name": "Jessy",
+        "photo_url": "/ssensuum/equipo/jessy.jpg",
+        "strengths": "Enfoque · Discreción · Constancia",
+        "bio": "Jessy transmite enfoque y seriedad profesional. Respeta tus tiempos y tu espacio, y mantiene un ritmo constante durante "
+        "toda la sesión: ideal si valoras la discreción y un masaje sin distracciones.",
+    },
+    {
+        "id": "dany",
+        "name": "Dany",
+        "photo_url": "/ssensuum/equipo/dany.jpg",
+        "strengths": "Seguridad · Energía · Calidez",
+        "bio": "Seguro y cercano a la vez, Dany combina energía y calidez en cada sesión. Su confianza te hace sentir en buenas manos, "
+        "ideal si buscas liberar la tensión acumulada y terminar la sesión con energía renovada.",
+    },
+    {
+        "id": "jairo",
+        "name": "Jairo",
+        "photo_url": "/ssensuum/equipo/jairo.jpg",
+        "strengths": "Equilibrio · Amabilidad · Atención",
+        "bio": "Amable y de trato tranquilo, Jairo encuentra el equilibrio entre relajación y bienestar. Está atento a cada detalle de tu "
+        "comodidad y adapta la sesión a tu ritmo para que vivas una experiencia a tu medida.",
+    },
     {
         "id": "borja",
         "name": "Borja",
@@ -61,6 +109,16 @@ THERAPISTS = [
         "bio": "Formado en el trato profesional y la presentación impecable, Borja transmite orden y seguridad desde que entras a la sala. "
         "Trabaja con técnica cuidada y atención constante, ideal si buscas una sesión seria, puntual y bien ejecutada.",
     },
+    {
+        "id": "chicano",
+        "name": "Chicano",
+        "photo_url": "/ssensuum/equipo/chicano.jpg",
+        "strengths": "Presencia · Temple · Confianza",
+        "bio": "De presencia tranquila y trato directo, Chicano genera confianza desde el saludo. Trabaja con seguridad y ritmo constante, "
+        "ideal si buscas una sesión firme, sin prisas y con buena comunicación.",
+    },
+    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg"},
+    {"id": "paul", "name": "Paul", "photo_url": ""},
 ]
 
 
@@ -70,6 +128,7 @@ def seed(db: Session) -> None:
         db.add_all(SERVICES)
 
     sync_therapists(db)
+    sync_service_details(db)
 
     db.commit()
 
@@ -86,3 +145,10 @@ def sync_therapists(db: Session) -> None:
         db.add(therapist)
     for therapist in db.scalars(select(Therapist).where(Therapist.id.not_in(current))).all():
         therapist.active = False
+
+
+def sync_service_details(db: Session) -> None:
+    for service_id, details in SERVICE_DETAILS.items():
+        service = db.get(Service, service_id)
+        if service:
+            service.details = details

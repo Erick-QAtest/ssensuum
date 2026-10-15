@@ -205,7 +205,8 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
               <div><dt>Hora</dt><dd>{time}</dd></div>
               <div><dt>Duración</dt><dd>{service.durationMinutes} min</dd></div>
               <div><dt>Total</dt><dd>{money(service.publicPrice)}</dd></div>
-              <div><dt>Anticipo</dt><dd>{money(service.deposit)}</dd></div>
+              <div><dt>Anticipo hoy</dt><dd>{money(service.deposit)}</dd></div>
+              <div><dt>Restante el día de tu cita</dt><dd>{money(service.publicPrice - service.deposit)}</dd></div>
             </dl>
             {paymentsOff ? (
               <>
@@ -229,7 +230,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
                   {paying ? 'Abriendo Mercado Pago…' : `Pagar anticipo ${money(service.deposit)}`}
                 </button>
                 <p className="summaryNote">
-                  Pago seguro con Mercado Pago. El anticipo se descuenta del total y puedes cancelar o cambiar tu horario sin costo hasta 3 horas antes.
+                  Pago seguro con Mercado Pago. El restante lo pagas en el club con tarjeta, transferencia, efectivo o terminal; si eres miembro, se ajusta a tu precio. Puedes cancelar o cambiar tu horario sin costo hasta 3 horas antes.
                   Al pagar aceptas los <Link href="/terminos" target="_blank">términos de reserva</Link> y el <Link href="/aviso-de-privacidad" target="_blank">aviso de privacidad</Link>.
                 </p>
                 <a className="summaryLink" href={confirmUrl} target="_blank" rel="noreferrer" onClick={() => track('whatsapp_click', 'reserva-alterna')}>¿Prefieres confirmar por WhatsApp?</a>

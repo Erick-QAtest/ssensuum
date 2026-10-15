@@ -180,7 +180,7 @@ export function Catalog() {
           <ul>
             <li>Masajes a $1,200 en lugar de $1,500.</li>
             <li>Precio preferente en barbería y medicina estética.</li>
-            <li>Un masaje de regalo en la semana de tu cumpleaños.</li>
+            <li>Un masaje de regalo en la semana de tu cumpleaños, sin costo y sin anticipo.</li>
             <li>Doce meses desde tu fecha de inicio.</li>
           </ul>
           <p className="fusionMembershipMath"><strong>Se paga sola:</strong> 5 masajes a precio de miembro ($1,500 de ahorro) más tu masaje de cumpleaños ($1,500) suman los $3,000. Cada visita extra es ahorro.</p>
@@ -192,7 +192,7 @@ export function Catalog() {
       <section className="fusionSection fusionLocation" id="ubicacion">
         <div className="fusionSectionHeading">
           <div><span className="fusionKicker">Colonia Americana</span><h2>Dónde estamos</h2></div>
-          <p>Tenemos tres cajones para clientes frente a la finca, señalados en azul.</p>
+          <p>Tenemos tres cajones para clientes frente a la finca, señalados en azul. Las zonas en rojo son accesos y deben quedar libres; si los tres cajones están ocupados, avísanos al llegar.</p>
         </div>
         <div className="fusionLocationGrid">
           <div className="fusionLocationImage"><img src="/ssensuum/location.jpg" alt="Fachada de SSENSUUM y cajones de estacionamiento" /></div>

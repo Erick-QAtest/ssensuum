@@ -19,6 +19,8 @@ class Service(Base):
     member_price: Mapped[int] = mapped_column(Integer, nullable=False)
     deposit: Mapped[int] = mapped_column(Integer, nullable=False)
     therapists_required: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Cómo se realiza el servicio, para quien quiere saber más antes de reservar.
+    details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 

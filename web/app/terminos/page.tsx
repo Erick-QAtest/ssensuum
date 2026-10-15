@@ -19,7 +19,8 @@ export default function TermsPage() {
         <ul>
           <li>Para confirmar tu reserva pagas un anticipo de <strong>$300</strong>, o de <strong>$600</strong> en servicios con dos terapeutas (masaje a 4 manos y masaje de parejas).</li>
           <li>El anticipo aplica para todos los clientes, <strong>incluidos los miembros del Private Club</strong>.</li>
-          <li>El anticipo <strong>se descuenta del total</strong> que pagas el día de tu servicio. Si eres miembro, se descuenta de tu precio de miembro.</li>
+          <li>El anticipo <strong>se descuenta del total</strong> que pagas el día de tu servicio. Si eres miembro, se descuenta de tu precio de miembro (por ejemplo, $1,200 − $300 = $900 restantes).</li>
+          <li>El restante se paga en el club con <strong>tarjeta, transferencia, efectivo o terminal bancaria</strong>.</li>
           <li>Los pagos en línea se procesan con Mercado Pago. Mientras pagas, tu horario queda apartado durante 15 minutos; si el pago no se completa en ese tiempo, el horario se libera.</li>
         </ul>
       </section>
@@ -47,6 +48,7 @@ export default function TermsPage() {
         <h2>Durante tu visita</h2>
         <ul>
           <li>Si la presión o el ambiente no son lo que esperabas, dínoslo: lo ajustamos durante los primeros 10 minutos de tu sesión.</li>
+          <li>El masaje de cumpleaños de la membresía Private Club es sin costo y sin anticipo, y se usa en la semana de tu cumpleaños. Si no asistes, se pierde el canje de ese año.</li>
           <li>Los tratamientos de medicina estética requieren una valoración previa y solo se realizan si el profesional de salud los considera adecuados para ti.</li>
         </ul>
       </section>

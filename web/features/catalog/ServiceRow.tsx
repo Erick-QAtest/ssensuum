@@ -16,6 +16,12 @@ export function ServiceRow({ service, onReserve, compact = false }: { service: S
           {service.therapistsRequired === 2 ? <span className="fusionTag fusionTagSoft">{service.name.toLowerCase().includes('pareja') ? 'Para dos personas' : 'Dos terapeutas'}</span> : null}
         </div>
         {!compact ? <p>{service.description}</p> : null}
+        {!compact && service.details ? (
+          <details className="fusionServiceDetails">
+            <summary>Cómo se realiza</summary>
+            <p>{service.details}</p>
+          </details>
+        ) : null}
         <small>{service.durationMinutes >= 60 ? `${Math.round(service.durationMinutes / 60 * 10) / 10} h` : `${service.durationMinutes} min`}</small>
       </div>
       <div className="fusionServicePurchase">

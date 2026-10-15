@@ -14,6 +14,7 @@ def service_payload(service: Service) -> dict:
         "memberPrice": service.member_price,
         "deposit": service.deposit,
         "therapistsRequired": service.therapists_required,
+        "details": service.details,
     }
 
 

@@ -587,3 +587,8 @@ svg { width: 1em; height: 1em; }
 }
 
 .avatar.hasPhoto { object-fit: cover; object-position: center 20%; padding: 0; }
+
+/* ========================= CÓMO SE REALIZA ========================= */
+.fusionServiceDetails { margin-top: 8px; }
+.fusionServiceDetails summary { width: fit-content; color: var(--nogal); font-size: .85rem; font-weight: 600; cursor: pointer; }
+.fusionServiceDetails p { margin: 8px 0 0; font-size: .88rem; line-height: 1.55; }
