@@ -1,0 +1,10 @@
+// Datos del responsable que aparecen en el aviso de privacidad y los términos.
+export const BUSINESS = {
+  commercialName: 'SSENSUUM',
+  // Nombre de la persona física o razón social dueña del negocio (como aparece ante el SAT).
+  legalName: 'José Alberto Gómez Díaz',
+  address: 'Mexicaltzingo 2122-B, Col. Americana, Guadalajara, Jalisco, México',
+  privacyEmail: 'sensum.gdl@gmail.com',
+  whatsappDisplay: '33 1068 1307',
+  lastUpdated: '15 de octubre de 2026',
+};

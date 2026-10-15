@@ -49,3 +49,24 @@ export type CustomerImportResult = {
   issuesTruncated: boolean;
   preview: Pick<Customer, 'phone' | 'firstName' | 'lastName' | 'email' | 'birthday'>[];
 };
+
+export type ReservationStatus = 'PENDING_PAYMENT' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED' | 'NEEDS_ATTENTION' | 'RESCHEDULED';
+
+export type Reservation = {
+  id: string;
+  serviceId: string;
+  therapistIds: string[];
+  startsAt: string;
+  endsAt: string;
+  status: ReservationStatus;
+  depositAmount: number;
+  holdExpiresAt: string | null;
+};
+
+export type CheckoutRequest = {
+  serviceId: string;
+  therapistIds: string[];
+  startsAt: string;
+  firstName: string;
+  phone: string;
+};

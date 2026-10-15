@@ -13,7 +13,7 @@ def test_catalog_and_availability_contract():
         services = client.get("/services")
         assert services.status_code == 200
         names = {row["name"] for row in services.json()}
-        assert "Masaje especial" in names
+        assert "Masaje especial SSENSUUM" in names
 
         tomorrow = (datetime.now(TZ) + timedelta(days=1)).date().isoformat()
         availability = client.get(

@@ -2,9 +2,10 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from ..domain.rules import TZ
 from ..models import Reservation
 
 INACTIVE_STATUSES = ["CANCELLED", "RESCHEDULED"]
@@ -29,6 +30,11 @@ def list_active_starting_between(db: Session, start: datetime, end: datetime) ->
                 Reservation.starts_at >= start,
                 Reservation.starts_at < end,
                 Reservation.status.not_in(INACTIVE_STATUSES),
+                or_(
+                    Reservation.status != "PENDING_PAYMENT",
+                    Reservation.hold_expires_at.is_(None),
+                    Reservation.hold_expires_at > datetime.now(TZ),
+                ),
             )
         ).all()
     )

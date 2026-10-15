@@ -2,21 +2,28 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { getAvailability, getServices, getTherapists } from '../../lib/api';
+import { ApiError, getAvailability, getServices, getTherapists, paymentsEnabled, startCheckout, track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
-import { localIsoDate, next14Days } from './dates';
+import { whatsappUrl } from '../../lib/whatsapp';
+import { localIsoDate, longDateLabel, next14Days } from './dates';
 
 export function BookingClient({ serviceId }: { serviceId: string }) {
   const [services, setServices] = useState<Service[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [therapistIds, setTherapistIds] = useState<string[]>([]);
-  const [noPreference, setNoPreference] = useState(false);
+  const [noPreference, setNoPreference] = useState(true);
   const [dateIso, setDateIso] = useState('');
   const [slots, setSlots] = useState<string[]>([]);
   const [time, setTime] = useState('');
   const [showSummary, setShowSummary] = useState(false);
   const [error, setError] = useState('');
+  const [slotsVersion, setSlotsVersion] = useState(0);
+  const [firstName, setFirstName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState('');
+  const [paymentsOff, setPaymentsOff] = useState(false);
 
   useEffect(() => {
     Promise.all([getServices(), getTherapists()])
@@ -24,8 +31,10 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
         setServices(serviceRows);
         setTherapists(therapistRows);
       })
-      .catch(() => setError('No pudimos conectar con la API local.'));
-  }, []);
+      .catch(() => setError('No pudimos cargar la información. Intenta de nuevo en un momento.'));
+    track('page_view', `reservar:${serviceId}`);
+    paymentsEnabled().then((enabled) => setPaymentsOff(!enabled)).catch(() => setPaymentsOff(true));
+  }, [serviceId]);
 
   const service = services.find((row) => row.id === serviceId);
   const selectedTherapists = therapists.filter((row) => therapistIds.includes(row.id));
@@ -39,7 +48,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
     getAvailability(service.id, dateIso, therapistIds.length === 1 ? therapistIds[0] : undefined)
       .then(setSlots)
       .catch((e: Error) => setError(e.message));
-  }, [service, dateIso, therapistIds]);
+  }, [service, dateIso, therapistIds, slotsVersion]);
 
   if (!service) {
     return (
@@ -48,6 +57,48 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
         <div className="bookingPanel"><p>Cargando servicio…</p></div>
       </main>
     );
+  }
+
+  const therapistLabel = noPreference ? 'Sin preferencia' : selectedTherapists.map((row) => row.name).join(' + ');
+  const confirmUrl = whatsappUrl([
+    'Hola SSENSUUM, quiero reservar:',
+    `• ${service.name}`,
+    `• ${dateIso ? longDateLabel(dateIso) : ''}, ${time} h`,
+    `• Terapeuta: ${therapistLabel}`,
+    'Mi nombre es: ',
+  ].join('\n'));
+
+  const phoneDigits = phone.replace(/\D/g, '');
+  const canPay = firstName.trim().length > 0 && phoneDigits.length >= 10 && !paying;
+
+  async function pay() {
+    if (!service) return;
+    setPaying(true);
+    setPayError('');
+    track('checkout_start', service.id);
+    try {
+      const { checkoutUrl } = await startCheckout({
+        serviceId: service.id,
+        therapistIds: noPreference ? [] : therapistIds,
+        // Guadalajara no tiene horario de verano: siempre UTC-6.
+        startsAt: `${dateIso}T${time}:00-06:00`,
+        firstName: firstName.trim(),
+        phone,
+      });
+      window.location.assign(checkoutUrl);
+    } catch (e) {
+      setPaying(false);
+      if (e instanceof ApiError && e.status === 503) {
+        setPaymentsOff(true);
+        return;
+      }
+      if (e instanceof ApiError && e.status === 409) {
+        setTime('');
+        setShowSummary(false);
+        setSlotsVersion((version) => version + 1);
+      }
+      setPayError(e instanceof Error ? e.message : 'No pudimos iniciar el pago');
+    }
   }
 
   const canContinue = Boolean(dateIso && time && (noPreference || therapistIds.length === service.therapistsRequired));
@@ -140,7 +191,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
           </div>
         </section>
 
-        <button className="primaryButton" disabled={!canContinue} onClick={() => setShowSummary(true)}>Continuar al resumen</button>
+        <button className="primaryButton" disabled={!canContinue} onClick={() => { setShowSummary(true); track('booking_summary', service.id); }}>Continuar al resumen</button>
 
         {showSummary ? (
           <section className="summary" data-testid="booking-summary">
@@ -148,14 +199,41 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
             <h2>Tu experiencia</h2>
             <dl>
               <div><dt>Servicio</dt><dd>{service.name}</dd></div>
-              <div><dt>Terapeuta</dt><dd>{noPreference ? 'Sin preferencia' : selectedTherapists.map((row) => row.name).join(' + ')}</dd></div>
-              <div><dt>Día</dt><dd>{dateIso}</dd></div>
+              <div><dt>Terapeuta</dt><dd>{therapistLabel}</dd></div>
+              <div><dt>Día</dt><dd>{longDateLabel(dateIso)}</dd></div>
               <div><dt>Hora</dt><dd>{time}</dd></div>
               <div><dt>Duración</dt><dd>{service.durationMinutes} min</dd></div>
               <div><dt>Total</dt><dd>{money(service.publicPrice)}</dd></div>
               <div><dt>Anticipo</dt><dd>{money(service.deposit)}</dd></div>
             </dl>
-            <p className="summaryNote">El cobro real del anticipo entra en el siguiente sprint.</p>
+            {paymentsOff ? (
+              <>
+                <a className="primaryButton whatsappConfirm" href={confirmUrl} target="_blank" rel="noreferrer" onClick={() => track('whatsapp_click', 'reserva-confirmar')}>Confirmar por WhatsApp</a>
+                <p className="summaryNote">Te respondemos por WhatsApp para confirmar tu horario y el anticipo de {money(service.deposit)}.</p>
+              </>
+            ) : (
+              <>
+                <div className="checkoutFields">
+                  <label>
+                    <span>Nombre</span>
+                    <input value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" placeholder="¿Cómo te llamas?" />
+                  </label>
+                  <label>
+                    <span>WhatsApp</span>
+                    <input type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel-national" placeholder="33 1234 5678" />
+                  </label>
+                </div>
+                {payError ? <div className="errorBox" role="alert">{payError}</div> : null}
+                <button type="button" className="primaryButton checkoutButton" disabled={!canPay} onClick={pay}>
+                  {paying ? 'Abriendo Mercado Pago…' : `Pagar anticipo ${money(service.deposit)}`}
+                </button>
+                <p className="summaryNote">
+                  Pago seguro con Mercado Pago. El anticipo se descuenta del total y puedes cancelar o cambiar tu horario sin costo hasta 3 horas antes.
+                  Al pagar aceptas los <Link href="/terminos" target="_blank">términos de reserva</Link> y el <Link href="/aviso-de-privacidad" target="_blank">aviso de privacidad</Link>.
+                </p>
+                <a className="summaryLink" href={confirmUrl} target="_blank" rel="noreferrer" onClick={() => track('whatsapp_click', 'reserva-alterna')}>¿Prefieres confirmar por WhatsApp?</a>
+              </>
+            )}
           </section>
         ) : null}
       </div>

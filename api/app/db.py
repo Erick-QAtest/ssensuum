@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import settings
@@ -19,3 +19,17 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def add_missing_columns() -> None:
+    """create_all no altera tablas existentes: agrega aquí las columnas nuevas (todas opcionales)."""
+    inspector = inspect(engine)
+    with engine.begin() as connection:
+        for table in Base.metadata.sorted_tables:
+            if not inspector.has_table(table.name):
+                continue
+            existing = {column["name"] for column in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name not in existing and column.nullable:
+                    column_type = column.type.compile(dialect=engine.dialect)
+                    connection.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {column.name} {column_type}'))

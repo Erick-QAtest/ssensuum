@@ -1,5 +1,6 @@
 from datetime import date as date_type
 from datetime import datetime, time, timedelta
+from itertools import combinations
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -51,6 +52,20 @@ def has_conflict(
     return False
 
 
+def free_therapists(
+    db: Session,
+    candidates: list[str],
+    required: int,
+    starts_at: datetime,
+    ends_at: datetime,
+) -> Optional[list[str]]:
+    """Primer grupo de `required` terapeutas libres en ese horario, o None."""
+    for group in combinations(candidates, required):
+        if not has_conflict(db, starts_at, ends_at, list(group), DEFAULT_CABIN_ID):
+            return list(group)
+    return None
+
+
 def build_slots(
     db: Session,
     service: Service,
@@ -68,20 +83,8 @@ def build_slots(
 
     while cursor <= final_start:
         end = cursor + timedelta(minutes=service.duration_minutes)
-        if validate_minimum_lead_time(cursor):
-            if service.therapists_required == 1:
-                available = any(not has_conflict(db, cursor, end, [tid], DEFAULT_CABIN_ID) for tid in therapists)
-            else:
-                available = False
-                for i, first in enumerate(therapists):
-                    for second in therapists[i + 1 :]:
-                        if not has_conflict(db, cursor, end, [first, second], DEFAULT_CABIN_ID):
-                            available = True
-                            break
-                    if available:
-                        break
-            if available:
-                slots.append(cursor.strftime("%H:%M"))
+        if validate_minimum_lead_time(cursor) and free_therapists(db, therapists, service.therapists_required, cursor, end):
+            slots.append(cursor.strftime("%H:%M"))
         cursor += timedelta(minutes=SLOT_STEP_MINUTES)
 
     return slots

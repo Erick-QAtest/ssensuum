@@ -57,6 +57,9 @@ class Reservation(Base):
     source: Mapped[str] = mapped_column(String(80), nullable=False, default="web")
     status: Mapped[str] = mapped_column(String(40), nullable=False, default="PENDING_PAYMENT")
     deposit_amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Mientras la reserva espera su pago, el horario queda apartado solo hasta esta hora.
+    hold_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    payment_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -69,3 +72,14 @@ class ScheduleBlock(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     reason: Mapped[str] = mapped_column(String(250), nullable=False)
+
+
+class SiteEvent(Base):
+    """Conteo anónimo de visitas y clics: sin IP, cookies ni datos personales."""
+
+    __tablename__ = "site_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)

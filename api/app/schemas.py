@@ -49,3 +49,19 @@ class CustomerUpdate(BaseModel):
     birthday: Optional[date] = None
 
     model_config = {"populate_by_name": True}
+
+
+class CheckoutCreate(BaseModel):
+    service_id: str = Field(alias="serviceId")
+    # Vacío = sin preferencia: se asigna terapeuta disponible.
+    therapist_ids: list[str] = Field(default_factory=list, alias="therapistIds")
+    starts_at: str = Field(alias="startsAt")
+    first_name: str = Field(alias="firstName")
+    phone: str
+
+    model_config = {"populate_by_name": True}
+
+
+class SiteEventCreate(BaseModel):
+    name: str
+    label: str = Field(default="", max_length=120)

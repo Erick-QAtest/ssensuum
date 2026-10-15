@@ -1,4 +1,4 @@
-from .domain.rules import ensure_tz
+from .domain.rules import ensure_tz, hold_expired
 from .models import Customer, Reservation, ScheduleBlock, Service, Therapist
 from .repositories.reservations import therapist_ids
 
@@ -36,8 +36,9 @@ def reservation_payload(reservation: Reservation) -> dict:
         "endsAt": ensure_tz(reservation.ends_at).isoformat(),
         "cabinId": reservation.cabin_id,
         "source": reservation.source,
-        "status": reservation.status,
+        "status": "EXPIRED" if reservation.status == "PENDING_PAYMENT" and hold_expired(reservation.hold_expires_at) else reservation.status,
         "depositAmount": reservation.deposit_amount,
+        "holdExpiresAt": ensure_tz(reservation.hold_expires_at).isoformat() if reservation.hold_expires_at else None,
     }
 
 

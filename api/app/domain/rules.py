@@ -8,8 +8,9 @@ CLOSE_TIME = time(20, 30)
 LAST_ONE_HOUR_START = time(19, 30)
 SLOT_STEP_MINUTES = 30
 MINIMUM_LEAD_TIME = timedelta(hours=3)
-RESCHEDULE_CUTOFF = timedelta(hours=5)
+RESCHEDULE_CUTOFF = timedelta(hours=3)
 DEFAULT_CABIN_ID = "cabin-1"
+PAYMENT_HOLD = timedelta(minutes=15)
 
 
 def ensure_tz(dt: datetime) -> datetime:
@@ -42,3 +43,10 @@ def validate_opening_hours(starts_at: datetime, duration_minutes: int) -> bool:
 def can_reschedule(current_start: datetime, now: Optional[datetime] = None) -> bool:
     current = ensure_tz(now or datetime.now(TZ))
     return ensure_tz(current_start) - current >= RESCHEDULE_CUTOFF
+
+
+def hold_expired(hold_expires_at: Optional[datetime], now: Optional[datetime] = None) -> bool:
+    if hold_expires_at is None:
+        return False
+    current = ensure_tz(now or datetime.now(TZ))
+    return ensure_tz(hold_expires_at) <= current
