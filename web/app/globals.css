@@ -562,3 +562,23 @@ svg { width: 1em; height: 1em; }
 .legalPage li { margin-bottom: 8px; }
 .legalPage a, .summaryNote a { color: var(--nogal); font-weight: 600; }
 .legalUpdated { color: #8a7e75; font-size: 14px; }
+
+/* ========================= ADMIN: RESERVAS ========================= */
+.adminNav { display: flex; gap: 6px; margin: 4px 0 18px; border-bottom: 1px solid var(--line); }
+.adminNav a { padding: 10px 14px; color: #7d736d; font-weight: 600; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.adminNav a.active { color: var(--nogal); border-bottom-color: var(--nogal); }
+.adminStats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+.adminStats > div { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.adminStats strong { display: block; color: var(--nogal); font-family: "DM Serif Display", Georgia, serif; font-size: 30px; font-weight: 400; line-height: 1.1; }
+.adminStats span { color: #7d736d; font-size: 14px; }
+.adminStats .alert { border-color: var(--danger); }
+.adminStats .alert strong { color: var(--danger); }
+.adminSub { display: block; margin-top: 2px; color: #8a7e75; font-size: 13px; }
+.statusBadge { display: inline-block; padding: 3px 10px; border-radius: var(--pill); font-size: 13px; font-weight: 700; }
+.statusBadge.ok { background: #e6eee2; color: var(--success); }
+.statusBadge.wait { background: var(--sand); color: var(--nogal-soft); }
+.statusBadge.alert { background: #f6e1dd; color: var(--danger); }
+.adminAction { display: inline-block; white-space: nowrap; text-decoration: none; font-size: 14px; }
+@media (max-width: 640px) {
+  .adminStats { grid-template-columns: 1fr; }
+}

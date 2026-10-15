@@ -1,4 +1,4 @@
-import type { CheckoutRequest, Customer, CustomerImportResult, Reservation, Service, Therapist } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, Reservation, Service, Therapist } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -92,4 +92,9 @@ export function track(name: TrackEvent, label = '') {
 
 export function retryCheckout(reservationId: string) {
   return postJson<{ reservation: Reservation; checkoutUrl: string }>(`/checkout/${encodeURIComponent(reservationId)}/retry`, undefined, 'No pudimos reintentar el pago');
+}
+
+export function getAdminReservations(from: string, days: number) {
+  const params = new URLSearchParams({ from, days: String(days) });
+  return getJson<{ items: AdminReservation[] }>(`/admin/reservations?${params.toString()}`, 'No se pudieron cargar las reservas').then((body) => body.items);
 }

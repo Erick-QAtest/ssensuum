@@ -70,3 +70,10 @@ export type CheckoutRequest = {
   firstName: string;
   phone: string;
 };
+
+export type AdminReservation = Reservation & {
+  paymentId: string | null;
+  serviceName: string;
+  therapistNames: string[];
+  customer: Customer | null;
+};

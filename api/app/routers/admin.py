@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..schemas import ScheduleBlockCreate
-from ..serializers import block_payload, reservation_payload
+from ..serializers import block_payload, customer_payload, reservation_payload
 from ..services import agenda as agenda_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -16,6 +16,29 @@ def admin_agenda(requested_date: date = Query(alias="date"), db: Session = Depen
     return {
         "date": requested_date.isoformat(),
         "items": [reservation_payload(row) for row in agenda_service.agenda_for(db, requested_date)],
+    }
+
+
+@router.get("/reservations")
+def admin_reservations(
+    start: date = Query(alias="from"),
+    days: int = Query(default=7, ge=1, le=62),
+    db: Session = Depends(get_db),
+) -> dict:
+    items = agenda_service.reservations_overview(db, start, days)
+    return {
+        "from": start.isoformat(),
+        "days": days,
+        "items": [
+            {
+                **reservation_payload(item["reservation"]),
+                "paymentId": item["reservation"].payment_id,
+                "serviceName": item["serviceName"],
+                "therapistNames": item["therapistNames"],
+                "customer": customer_payload(item["customer"]) if item["customer"] else None,
+            }
+            for item in items
+        ],
     }
 
 

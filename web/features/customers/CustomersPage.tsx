@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { searchCustomers } from '../../lib/api';
 import type { Customer } from '../../lib/types';
+import { AdminNav } from '../../components/AdminNav';
 import { ImportPanel } from './ImportPanel';
 
 function formatPhone(phone: string) {
@@ -34,6 +35,7 @@ export function CustomersPage() {
           <span className="kicker">Administración</span>
           <h1>Clientes</h1>
         </div>
+        <AdminNav current="clientes" />
 
         <ImportPanel onImported={() => load(query)} />
 
@@ -50,7 +52,7 @@ export function CustomersPage() {
             />
           </div>
 
-          {error ? <div className="errorBox" role="alert">{error}. Verifica que la API esté corriendo en localhost:8000.</div> : null}
+          {error ? <div className="errorBox" role="alert">{error}</div> : null}
           {customers === null && !error ? <p className="muted">Cargando clientes…</p> : null}
           {customers?.length === 0 ? <p className="muted">{query.trim() ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes registrados.'}</p> : null}
 

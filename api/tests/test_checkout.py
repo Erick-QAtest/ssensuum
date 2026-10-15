@@ -157,3 +157,22 @@ def test_retry_refused_once_hold_expired(client, mp):
     expire_hold(reservation_id)
 
     assert client.post(f"/checkout/{reservation_id}/retry").status_code == 409
+
+
+def test_admin_reservations_lists_paid_and_pending_with_customer(client, mp):
+    date = day(11)
+    body = checkout_body(date, "10:00", firstName="Lucía")
+    paid_id = client.post("/checkout", json=body).json()["reservation"]["id"]
+    mp["payments"]["555"] = approved(paid_id)
+    client.post("/payments/555/sync")
+    expired_id = client.post("/checkout", json=checkout_body(date, "12:00")).json()["reservation"]["id"]
+    expire_hold(expired_id)
+
+    items = client.get("/admin/reservations", params={"from": date, "days": 1}).json()["items"]
+    by_id = {item["id"]: item for item in items}
+    assert by_id[paid_id]["status"] == "CONFIRMED"
+    assert by_id[paid_id]["paymentId"] == "555"
+    assert by_id[paid_id]["customer"]["firstName"] == "Lucía"
+    assert by_id[paid_id]["serviceName"] == "Masaje especial SSENSUUM"
+    assert by_id[paid_id]["therapistNames"]
+    assert expired_id not in by_id
