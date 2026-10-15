@@ -22,8 +22,6 @@ export function cartaGroupFor(service: Service): CartaGroupKey {
 }
 
 export const CLUB_RULES = [
-  { lead: 'Sensual, nunca sexual:', text: 'no hay contacto sexual ni servicios adicionales.' },
-  { lead: 'Si se cruza ese límite,', text: 'la sesión termina en ese momento y sin reembolso.' },
   { lead: 'Respeto total:', text: 'tu terapeuta puede ajustar o detener la sesión si algo no se siente bien.' },
   { lead: 'Tu visita es confidencial.', text: '' },
 ];
