@@ -189,3 +189,9 @@ def test_catalog_lists_only_current_team(client):
     names = {row["name"] for row in client.get("/therapists").json()}
     assert {"Jessy", "Borja", "Alemán"} <= names
     assert "Alex" not in names
+
+
+def test_new_therapists_are_flagged(client):
+    flags = {row["name"]: row["isNew"] for row in client.get("/therapists").json()}
+    assert flags["Kevin"] is True and flags["Paul"] is True
+    assert flags["Jessy"] is False

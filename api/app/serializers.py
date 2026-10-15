@@ -25,6 +25,7 @@ def therapist_payload(therapist: Therapist) -> dict:
         "strengths": therapist.strengths,
         "photoUrl": therapist.photo_url,
         "bio": therapist.bio,
+        "isNew": bool(therapist.is_new),
     }
 
 

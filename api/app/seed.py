@@ -117,8 +117,8 @@ THERAPISTS = [
         "bio": "De presencia tranquila y trato directo, Chicano genera confianza desde el saludo. Trabaja con seguridad y ritmo constante, "
         "ideal si buscas una sesión firme, sin prisas y con buena comunicación.",
     },
-    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg"},
-    {"id": "paul", "name": "Paul", "photo_url": ""},
+    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg", "is_new": True},
+    {"id": "paul", "name": "Paul", "photo_url": "", "is_new": True},
 ]
 
 
@@ -141,6 +141,7 @@ def sync_therapists(db: Session) -> None:
         therapist.photo_url = row.get("photo_url", "")
         therapist.strengths = row.get("strengths", "")
         therapist.bio = row.get("bio")
+        therapist.is_new = row.get("is_new", False)
         therapist.active = True
         db.add(therapist)
     for therapist in db.scalars(select(Therapist).where(Therapist.id.not_in(current))).all():

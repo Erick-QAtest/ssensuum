@@ -162,9 +162,10 @@ export function Catalog() {
             <article className="fusionTherapistCard" key={therapist.id}>
               <TherapistAvatar therapist={therapist} className="fusionTherapistAvatar" />
               <div>
-                <h3>{therapist.name}</h3>
+                <h3>{therapist.name}{therapist.isNew ? <span className="fusionTag">Nuevo</span> : null}</h3>
                 {therapist.strengths ? <p className="fusionTherapistStrengths">{therapist.strengths}</p> : null}
                 {therapist.bio ? <p>{therapist.bio}</p> : null}
+                {therapist.isNew && !therapist.bio ? <p>Recién se integra al equipo SSENSUUM.</p> : null}
               </div>
             </article>
           ))}

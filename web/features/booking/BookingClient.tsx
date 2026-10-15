@@ -139,7 +139,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
                   }}
                 >
                   <TherapistAvatar therapist={therapist} className="avatar" />
-                  <span><strong>{therapist.name}</strong>{therapist.strengths ? <small>{therapist.strengths}</small> : null}</span>
+                  <span><strong>{therapist.name}{therapist.isNew ? <span className="fusionTag">Nuevo</span> : null}</strong>{therapist.strengths ? <small>{therapist.strengths}</small> : null}</span>
                 </button>
               ))}
             </div>

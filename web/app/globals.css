@@ -592,3 +592,5 @@ svg { width: 1em; height: 1em; }
 .fusionServiceDetails { margin-top: 8px; }
 .fusionServiceDetails summary { width: fit-content; color: var(--nogal); font-size: .85rem; font-weight: 600; cursor: pointer; }
 .fusionServiceDetails p { margin: 8px 0 0; font-size: .88rem; line-height: 1.55; }
+
+.fusionTherapistCard h3 .fusionTag, .therapistChoice strong .fusionTag { margin-left: 8px; vertical-align: middle; }
