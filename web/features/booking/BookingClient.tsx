@@ -9,11 +9,12 @@ import { whatsappUrl } from '../../lib/whatsapp';
 import { localIsoDate, longDateLabel, next14Days } from './dates';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 
-export function BookingClient({ serviceId }: { serviceId: string }) {
+export function BookingClient({ serviceId, therapistId }: { serviceId: string; therapistId?: string }) {
   const [services, setServices] = useState<Service[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const [therapistIds, setTherapistIds] = useState<string[]>([]);
-  const [noPreference, setNoPreference] = useState(true);
+  // "Reservar con {nombre}" llega con el terapeuta ya elegido.
+  const [therapistIds, setTherapistIds] = useState<string[]>(therapistId ? [therapistId] : []);
+  const [noPreference, setNoPreference] = useState(!therapistId);
   const [dateIso, setDateIso] = useState('');
   const [slots, setSlots] = useState<string[]>([]);
   const [time, setTime] = useState('');
@@ -139,7 +140,7 @@ export function BookingClient({ serviceId }: { serviceId: string }) {
                   }}
                 >
                   <TherapistAvatar therapist={therapist} className="avatar" />
-                  <span><strong>{therapist.name}{therapist.isNew ? <span className="fusionTag">Nuevo</span> : null}</strong>{therapist.strengths ? <small>{therapist.strengths}</small> : null}</span>
+                  <span><strong>{therapist.name}{therapist.isNew ? <span className="tag">Nuevo</span> : null}</strong>{therapist.strengths ? <small>{therapist.strengths}</small> : null}</span>
                 </button>
               ))}
             </div>

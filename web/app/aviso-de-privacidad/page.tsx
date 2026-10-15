@@ -98,9 +98,8 @@ export default function PrivacyNoticePage() {
         <h2>6. Uso de tecnologías en este sitio</h2>
         <p>
           Este sitio no usa cookies de publicidad ni de rastreo. Para mejorar el sitio contamos de forma anónima las visitas y
-          los clics en botones como “Reservar” o “WhatsApp”, sin guardar tu dirección IP ni ningún dato que te identifique. Para mostrar las tipografías usamos Google Fonts y, en la sección
-          “Dónde estamos”, un mapa de Google Maps. Al cargarlos, Google puede recibir datos técnicos como tu dirección IP y usar sus
-          propias cookies, conforme a su política de privacidad.
+          los clics en botones como “Reservar” o “WhatsApp”, sin guardar tu dirección IP ni ningún dato que te identifique. Para mostrar las tipografías usamos Google Fonts, y el botón “Ver mapa”
+          abre Google Maps. Al usarlos, Google puede recibir datos técnicos como tu dirección IP, conforme a su política de privacidad.
         </p>
       </section>
 

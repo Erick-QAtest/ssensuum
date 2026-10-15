@@ -22,3 +22,10 @@ def test_catalog_and_availability_contract():
         )
         assert availability.status_code == 200
         assert isinstance(availability.json()["slots"], list)
+
+
+def test_massages_include_how_it_works():
+    with TestClient(app) as client:
+        services = {row["id"]: row for row in client.get("/services").json()}
+        assert services["swedish"]["details"]
+        assert services["massage-special"]["details"]

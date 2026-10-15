@@ -2,34 +2,23 @@ import { money } from '../../lib/format';
 import type { Service } from '../../lib/types';
 import { AESTHETICS } from './categories';
 
-function serviceButtonLabel(category: string) {
-  return category === AESTHETICS ? 'Agendar valoración' : 'Reservar';
+function duration(minutes: number) {
+  return minutes % 60 === 0 ? `${minutes / 60} h` : `${minutes} min`;
 }
 
-export function ServiceRow({ service, onReserve, compact = false }: { service: Service; onReserve: () => void; compact?: boolean }) {
+// Fila compacta para barbería y medicina estética.
+export function ServiceRow({ service, onReserve }: { service: Service; onReserve: () => void }) {
+  const saving = service.publicPrice - service.memberPrice;
   return (
-    <article className={`fusionServiceRow ${compact ? 'fusionServiceRowCompact' : ''}`} data-testid="service-card">
-      <div className="fusionServiceText">
-        <div className="fusionServiceTitleLine">
-          <h3>{service.name}</h3>
-          {service.id === 'massage-special' ? <span className="fusionTag">El más elegido</span> : null}
-          {service.therapistsRequired === 2 ? <span className="fusionTag fusionTagSoft">{service.name.toLowerCase().includes('pareja') ? 'Para dos personas' : 'Dos terapeutas'}</span> : null}
-        </div>
-        {!compact ? <p>{service.description}</p> : null}
-        {!compact && service.details ? (
-          <details className="fusionServiceDetails">
-            <summary>Cómo se realiza</summary>
-            <p>{service.details}</p>
-          </details>
-        ) : null}
-        <small>{service.durationMinutes >= 60 ? `${Math.round(service.durationMinutes / 60 * 10) / 10} h` : `${service.durationMinutes} min`}</small>
-      </div>
-      <div className="fusionServicePurchase">
-        <strong>{money(service.publicPrice)}</strong>
-        <span>público general</span>
-        <small>{money(service.memberPrice)} miembros</small>
-        <button type="button" className="fusionButton fusionButtonSmall" onClick={onReserve}>{serviceButtonLabel(service.category)}</button>
-      </div>
-    </article>
+    <li className="compactItem" data-testid="service-card">
+      <h4>{service.name} <span className="memberPrice">· {duration(service.durationMinutes)}</span></h4>
+      <p>
+        {money(service.publicPrice)} · <a className="memberPrice" href="#membresia">{money(service.memberPrice)} miembros</a>
+        {saving > 0 ? ` · ahorras ${money(saving)}` : ''}
+      </p>
+      <button type="button" className="btn" onClick={onReserve}>
+        {service.category === AESTHETICS ? 'Agendar valoración' : 'Reservar'}
+      </button>
+    </li>
   );
 }

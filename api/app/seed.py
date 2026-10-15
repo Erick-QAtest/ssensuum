@@ -126,6 +126,7 @@ def seed(db: Session) -> None:
     has_services = db.scalar(select(Service.id).limit(1))
     if not has_services:
         db.add_all(SERVICES)
+        db.flush()
 
     sync_therapists(db)
     sync_service_details(db)
