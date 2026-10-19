@@ -185,8 +185,12 @@ svg { width: 1em; height: 1em; }
 }
 .hero h1 em { color: var(--hero-ink); }
 .heroLead { margin: 14px 0 0; max-width: 640px; color: var(--hero-text); font-size: 18px; }
-.heroMedia { margin: 24px 0 0; overflow: hidden; border-radius: var(--r-lg); background: var(--accent); aspect-ratio: 4 / 3; }
-.heroMedia img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; }
+.heroGrid { display: grid; grid-template-areas: "copy" "media" "actions"; }
+.heroCopy { grid-area: copy; }
+.heroActions { grid-area: actions; }
+/* La foto se muestra completa, sin recortes: el alto sale de su propia proporción. */
+.heroMedia { grid-area: media; margin: 24px 0 0; overflow: hidden; border-radius: var(--r-lg); background: var(--accent); }
+.heroMedia img { display: block; width: 100%; height: auto; }
 .heroVideo { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; color: var(--hero-ink); font-size: 17px; text-decoration: none; }
 .heroVideo svg { flex: none; width: 26px; height: 26px; color: var(--hero-ink); }
 .heroVideo small { margin-left: auto; color: var(--hero-text); font-size: 14px; }
@@ -423,9 +427,17 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .club { padding-bottom: 0; }
   .section { padding: 88px 0; }
   .hero { padding: 56px 0 56px; }
-  .heroMedia { aspect-ratio: auto; height: min(56vh, 620px); }
-  /* En formato ancho se encuadra el logo y los espejos. */
-  .heroMedia img { object-position: 50% 27%; }
+  /* Texto a la izquierda y la foto vertical completa a la derecha. */
+  .heroGrid {
+    grid-template-areas: "copy media" "actions media";
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 1fr 1fr;
+    column-gap: 56px;
+  }
+  .heroCopy { align-self: end; }
+  .heroActions { align-self: start; max-width: 520px; }
+  .heroMedia { margin: 0; }
+  .heroMedia img { width: auto; height: min(78vh, 760px); }
   .location { grid-template-columns: 1.1fr .9fr; gap: 48px; }
   .complements { grid-template-columns: 1fr 1fr; gap: 48px; }
   .firstVisit { grid-template-columns: 1fr auto; align-items: center; padding: 32px; }

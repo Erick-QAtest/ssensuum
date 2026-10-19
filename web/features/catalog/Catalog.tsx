@@ -81,28 +81,32 @@ export function Catalog() {
 
       {/* 2. Hero */}
       <section className="hero" id="inicio">
-        <div className="wrap">
-          <p className="heroLabel">Private Massage Club · Guadalajara</p>
-          <h1>Tú eliges <em>quién te&nbsp;atiende.</em></h1>
-          <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta, personaliza tu experiencia y reserva a tu ritmo.</p>
+        <div className="wrap heroGrid">
+          <div className="heroCopy">
+            <p className="heroLabel">Private Massage Club · Guadalajara</p>
+            <h1>Tú eliges <em>quién te&nbsp;atiende.</em></h1>
+            <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta, personaliza tu experiencia y reserva a tu ritmo.</p>
+          </div>
           <figure className="heroMedia">
-            <img src="/ssensuum/hero-cabina.webp" alt="Cabina privada de SSENSUUM con camilla, espejos y el logo en la pared" fetchPriority="high" />
+            <img src="/ssensuum/hero-cabina.webp" width={768} height={1365} alt="Cabina privada de SSENSUUM con camilla, espejos y el logo en la pared" fetchPriority="high" />
           </figure>
-          {BUSINESS.experienceVideoUrl ? (
-            <a className="heroVideo" href={BUSINESS.experienceVideoUrl} target="_blank" rel="noreferrer">
-              <PlayIcon />
-              <span>Conoce la experiencia SSENSUUM</span>
-              <small>Video</small>
+          <div className="heroActions">
+            {BUSINESS.experienceVideoUrl ? (
+              <a className="heroVideo" href={BUSINESS.experienceVideoUrl} target="_blank" rel="noreferrer">
+                <PlayIcon />
+                <span>Conoce la experiencia SSENSUUM</span>
+                <small>Video</small>
+              </a>
+            ) : null}
+            <a className="heroCta" href="#equipo" onClick={() => track('reserve_click', 'hero')}>
+              Elegir terapeuta <ArrowIcon />
             </a>
-          ) : null}
-          <a className="heroCta" href="#equipo" onClick={() => track('reserve_click', 'hero')}>
-            Elegir terapeuta <ArrowIcon />
-          </a>
-          <a className="heroScroll" href="#equipo" aria-label="Ver a los terapeutas"><ArrowDownIcon /></a>
-          <p className="heroMeta">
-            <PeopleIcon />
-            {therapists.length ? `${therapists.length} terapeutas · ` : ''}Atención personalizada
-          </p>
+            <a className="heroScroll" href="#equipo" aria-label="Ver a los terapeutas"><ArrowDownIcon /></a>
+            <p className="heroMeta">
+              <PeopleIcon />
+              {therapists.length ? `${therapists.length} terapeutas · ` : ''}Atención personalizada
+            </p>
+          </div>
         </div>
       </section>
 
