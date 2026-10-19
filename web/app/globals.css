@@ -195,8 +195,8 @@ svg { width: 1em; height: 1em; }
 .heroActions { grid-area: actions; }
 /* La foto se muestra completa, sin recortes: el alto sale de su propia proporción. */
 .heroMedia { grid-area: media; display: flex; justify-content: center; margin: 24px 0 0; }
-/* En celular la foto se limita en alto (sigue completa) para dejar ver lo que sigue. */
-.heroMedia img { display: block; width: auto; max-width: 100%; height: auto; max-height: 50svh; border-radius: var(--r-lg); background: var(--accent); }
+/* La foto se muestra completa: en celular ocupa todo el ancho. */
+.heroMedia img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); background: var(--accent); }
 .heroVideo { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; color: var(--hero-ink); font-size: 17px; text-decoration: none; }
 .heroVideo svg { flex: none; width: 26px; height: 26px; color: var(--hero-ink); }
 .heroVideo small { margin-left: auto; color: var(--hero-text); font-size: 14px; }
@@ -447,7 +447,7 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .heroCopy { align-self: end; }
   .heroActions { align-self: start; max-width: 520px; }
   .heroMedia { margin: 0; }
-  .heroMedia img { max-height: none; height: min(78vh, 760px); }
+  .heroMedia img { width: auto; height: min(78vh, 760px); }
   .location { grid-template-columns: 1.1fr .9fr; gap: 48px; }
   .complements { grid-template-columns: 1fr 1fr; gap: 48px; }
   .firstVisit { grid-template-columns: 1fr auto; align-items: center; padding: 32px; }
