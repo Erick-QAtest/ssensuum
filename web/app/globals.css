@@ -504,6 +504,21 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .adminBadge-duplicate, .statusBadge.wait { background: var(--accent); color: var(--brown-dark); }
 .adminBadge-warning { background: var(--accent); color: var(--brown-dark); }
 .statusBadge.ok { background: var(--accent); color: var(--success); }
+.recordForm { margin-top: 8px; }
+.recordGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+.recordForm label { display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
+.recordForm input, .recordForm select { min-height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font-size: 16px; }
+.recordFieldset { margin: 20px 0 0; padding: 0; border: 0; }
+.recordFieldset legend { margin-bottom: 8px; color: var(--ink); font-weight: 700; }
+.recordFieldset .recordGrid { margin-top: 0; }
+.recordChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.recordTips { margin-top: 20px; padding: 16px; border-radius: var(--r-sm); background: var(--bg); }
+.recordTips h3 { margin: 0 0 8px; color: var(--ink); font-size: 16px; }
+.recordTips p { margin: 0; }
+.recordTips input, .recordTips select { background: var(--surface); }
+.recordNotes { margin-top: 16px; }
+.recordActions { white-space: nowrap; }
+.linkButton { min-height: 44px; margin-left: 6px; padding: 0 8px; border: 0; background: none; color: var(--danger); font-size: 14px; font-weight: 700; }
 
 @media (max-width: 899px) {
   .datesRow { grid-template-columns: repeat(14, 74px); }
@@ -526,6 +541,7 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .checkoutButton, .whatsappConfirm { width: 100%; justify-content: center; }
   .adminCard { padding: 18px; }
   .adminStats { grid-template-columns: 1fr; }
+  .recordGrid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -89,3 +89,26 @@ class SiteEvent(Base):
     name: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+
+class ServiceRecord(Base):
+    """Registro de cada servicio atendido: quién vino, qué se hizo, con quién y cuánto se cobró."""
+
+    __tablename__ = "service_records"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    customer_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True, index=True)
+    customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    customer_phone: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    service_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    # Se guarda el nombre tal como estaba al cobrar, por si el catálogo cambia después.
+    service_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    therapist_ids_json: Mapped[str] = mapped_column(Text, nullable=False)
+    paid_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
+    # [{"therapistId": "...", "amount": 200}]: la propina de cada terapeuta por separado.
+    tips_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    tip_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

@@ -82,3 +82,37 @@ export type AdminReservation = Reservation & {
   therapistNames: string[];
   customer: Customer | null;
 };
+
+export type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia' | 'mercadopago';
+
+export type TipEntry = { therapistId: string; amount: number };
+
+export type ServiceRecordInput = {
+  customerName: string;
+  customerPhone: string;
+  serviceId: string;
+  therapistIds: string[];
+  paidAt: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  tips: TipEntry[];
+  tipMethod: PaymentMethod | null;
+  notes: string | null;
+};
+
+export type ServiceRecord = ServiceRecordInput & {
+  id: string;
+  customerId: string | null;
+  serviceName: string;
+  therapistNames: string[];
+  tipTotal: number;
+  createdAt: string;
+};
+
+export type ServiceRecordSummary = {
+  count: number;
+  amount: number;
+  tips: number;
+  byPaymentMethod: Partial<Record<PaymentMethod, number>>;
+  tipsByTherapist: { therapistId: string; therapistName: string; amount: number; count: number }[];
+};

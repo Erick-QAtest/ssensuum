@@ -1,5 +1,6 @@
 from .domain.rules import ensure_tz, hold_expired
-from .models import Customer, Reservation, ScheduleBlock, Service, Therapist
+from .models import Customer, Reservation, ScheduleBlock, Service, ServiceRecord, Therapist
+from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
 
@@ -67,4 +68,27 @@ def customer_payload(customer: Customer) -> dict:
         "membershipExpiresOn": customer.membership_expires_on,
         "notes": customer.notes,
         "createdAt": customer.created_at.isoformat(),
+    }
+
+
+def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> dict:
+    ids = records_repo.therapist_ids(record)
+    tips = records_repo.tips(record)
+    return {
+        "id": record.id,
+        "customerId": record.customer_id,
+        "customerName": record.customer_name,
+        "customerPhone": record.customer_phone,
+        "serviceId": record.service_id,
+        "serviceName": record.service_name,
+        "therapistIds": ids,
+        "therapistNames": [therapist_names.get(tid, tid) for tid in ids],
+        "paidAt": ensure_tz(record.paid_at).isoformat(),
+        "amount": record.amount,
+        "paymentMethod": record.payment_method,
+        "tips": tips,
+        "tipTotal": sum(tip["amount"] for tip in tips),
+        "tipMethod": record.tip_method,
+        "notes": record.notes,
+        "createdAt": record.created_at.isoformat(),
     }

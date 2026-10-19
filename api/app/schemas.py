@@ -69,3 +69,25 @@ class CheckoutCreate(BaseModel):
 class SiteEventCreate(BaseModel):
     name: str
     label: str = Field(default="", max_length=120)
+
+
+class TipEntry(BaseModel):
+    therapist_id: str = Field(alias="therapistId")
+    amount: int = Field(ge=0)
+
+    model_config = {"populate_by_name": True}
+
+
+class ServiceRecordCreate(BaseModel):
+    customer_name: str = Field(alias="customerName", max_length=200)
+    customer_phone: str = Field(alias="customerPhone")
+    service_id: str = Field(alias="serviceId")
+    therapist_ids: list[str] = Field(alias="therapistIds")
+    paid_at: str = Field(alias="paidAt")
+    amount: int = Field(ge=0)
+    payment_method: str = Field(alias="paymentMethod")
+    tips: list[TipEntry] = Field(default_factory=list)
+    tip_method: Optional[str] = Field(default=None, alias="tipMethod")
+    notes: Optional[str] = None
+
+    model_config = {"populate_by_name": True}

@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, Reservation, Service, Therapist } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Therapist } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -46,9 +46,9 @@ export class ApiError extends Error {
   }
 }
 
-async function postJson<T>(path: string, body: unknown, errorMessage: string): Promise<T> {
+async function sendJson<T>(method: string, path: string, body: unknown, errorMessage: string): Promise<T> {
   const response = await fetch(`${API}${path}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -56,7 +56,11 @@ async function postJson<T>(path: string, body: unknown, errorMessage: string): P
     const error = await response.json().catch(() => null);
     throw new ApiError(typeof error?.detail === 'string' ? error.detail : errorMessage, response.status);
   }
-  return response.json();
+  return response.status === 204 ? (undefined as T) : response.json();
+}
+
+function postJson<T>(path: string, body: unknown, errorMessage: string) {
+  return sendJson<T>('POST', path, body, errorMessage);
 }
 
 export function startCheckout(request: CheckoutRequest) {
@@ -97,4 +101,19 @@ export function retryCheckout(reservationId: string) {
 export function getAdminReservations(from: string, days: number) {
   const params = new URLSearchParams({ from, days: String(days) });
   return getJson<{ items: AdminReservation[] }>(`/admin/reservations?${params.toString()}`, 'No se pudieron cargar las reservas').then((body) => body.items);
+}
+
+export function getServiceRecords(from: string, days: number) {
+  const params = new URLSearchParams({ from, days: String(days) });
+  return getJson<{ items: ServiceRecord[]; summary: ServiceRecordSummary }>(`/admin/records?${params.toString()}`, 'No se pudo cargar el registro');
+}
+
+export function saveServiceRecord(input: ServiceRecordInput, id?: string) {
+  return id
+    ? sendJson<ServiceRecord>('PUT', `/admin/records/${encodeURIComponent(id)}`, input, 'No se pudo guardar el registro')
+    : postJson<ServiceRecord>('/admin/records', input, 'No se pudo guardar el registro');
+}
+
+export function deleteServiceRecord(id: string) {
+  return sendJson<void>('DELETE', `/admin/records/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar el registro');
 }
