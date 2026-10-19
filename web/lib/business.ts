@@ -9,4 +9,6 @@ export const BUSINESS = {
   // Cambiar por el enlace directo de reseñas de Google Business (g.page/r/…/review) cuando esté.
   reviewUrl: 'https://maps.app.goo.gl/2CLVeFkfyoiGDQqv6',
   lastUpdated: '15 de octubre de 2026',
+  // Enlace al video de la experiencia (Instagram, YouTube…). Vacío = no se muestra en el hero.
+  experienceVideoUrl: '',
 };

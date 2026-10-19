@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CarIcon, ClockIcon, PinIcon, WhatsAppIcon } from '../../components/icons';
+import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
+import { BUSINESS } from '../../lib/business';
 import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
@@ -50,7 +51,6 @@ export function Catalog() {
   const massages = useMemo(() => services.filter((service) => service.category === MASSAGE && service.id !== SPECIAL_ID), [services]);
   const barber = useMemo(() => services.filter((service) => service.category === BARBER), [services]);
   const aesthetics = useMemo(() => services.filter((service) => service.category === AESTHETICS), [services]);
-  const faces = therapists.filter((therapist) => therapist.photoUrl);
 
   // Barbería y medicina estética se coordinan por WhatsApp.
   const reserveByWhatsapp = (service: Service) => {
@@ -82,25 +82,27 @@ export function Catalog() {
       {/* 2. Hero */}
       <section className="hero" id="inicio">
         <div className="wrap">
-          <p className="label">Club privado · Guadalajara</p>
+          <p className="heroLabel">Private Massage Club · Guadalajara</p>
           <h1>Tú eliges <em>quién te&nbsp;atiende.</em></h1>
-          <p className="heroLead">Masaje privado para hombres en la Col. Americana. Eliges terapeuta, técnica, presión y zonas, a tu ritmo.</p>
-          {faces.length ? (
-            <a className="heroFaces" href="#equipo">
-              <span>{faces.map((therapist) => <img key={therapist.id} src={therapist.photoUrl} alt="" />)}</span>
-              <small>Conoce a los {therapists.length} terapeutas</small>
+          <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta, personaliza tu experiencia y reserva a tu ritmo.</p>
+          <figure className="heroMedia">
+            <img src="/ssensuum/hero-cabina.webp" alt="Cabina privada de SSENSUUM con camilla, espejos y el logo en la pared" fetchPriority="high" />
+          </figure>
+          {BUSINESS.experienceVideoUrl ? (
+            <a className="heroVideo" href={BUSINESS.experienceVideoUrl} target="_blank" rel="noreferrer">
+              <PlayIcon />
+              <span>Conoce la experiencia SSENSUUM</span>
+              <small>Video</small>
             </a>
           ) : null}
-          <div className="heroActions">
-            <a className="btn" href="#equipo">Elige a tu terapeuta</a>
-            <WhatsAppLink className="btn btnOutline" message={WHATSAPP_MESSAGES.member} label="soy-miembro">Soy miembro</WhatsAppLink>
-          </div>
-          <a className="heroQuiz" href="/quiz">¿No sabes a quién elegir? Haz el quiz de 1 minuto</a>
-          <ul className="chips">
-            <li className="chip">Cabina privada</li>
-            <li className="chip">Visita confidencial</li>
-            <li className="chip">Estacionamiento frente al club</li>
-          </ul>
+          <a className="heroCta" href="#equipo" onClick={() => track('reserve_click', 'hero')}>
+            Elegir terapeuta <ArrowIcon />
+          </a>
+          <a className="heroScroll" href="#equipo" aria-label="Ver a los terapeutas"><ArrowDownIcon /></a>
+          <p className="heroMeta">
+            <PeopleIcon />
+            {therapists.length ? `${therapists.length} terapeutas · ` : ''}Atención personalizada
+          </p>
         </div>
       </section>
 
