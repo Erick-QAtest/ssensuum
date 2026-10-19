@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
+import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
 import { BUSINESS } from '../../lib/business';
 import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
@@ -36,6 +36,9 @@ export function Catalog() {
   const [services, setServices] = useState<Service[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [error, setError] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [heroCtaVisible, setHeroCtaVisible] = useState(true);
+  const heroCtaRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     Promise.all([getServices(), getTherapists()])
@@ -46,6 +49,25 @@ export function Catalog() {
       .catch(() => setError('No pudimos cargar la carta. Intenta de nuevo en un momento.'));
     track('page_view', 'home');
   }, []);
+
+  // Mientras el botón del hero está en pantalla, la barra fija sobra y taparía contenido.
+  useEffect(() => {
+    const cta = heroCtaRef.current;
+    if (!cta || !('IntersectionObserver' in window)) {
+      setHeroCtaVisible(false);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => setHeroCtaVisible(entry.isIntersecting));
+    observer.observe(cta);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [menuOpen]);
 
   const special = services.find((service) => service.id === SPECIAL_ID);
   const massages = useMemo(() => services.filter((service) => service.category === MASSAGE && service.id !== SPECIAL_ID), [services]);
@@ -71,12 +93,26 @@ export function Catalog() {
             <nav className="clubNav" aria-label="Secciones">
               {NAV.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
             </nav>
-            <a className="btn" href={BOOK_HREF} onClick={() => track('reserve_click', 'header')}>Reservar</a>
+            <div className="clubHeaderActions">
+              <a className="btn" href={BOOK_HREF} onClick={() => track('reserve_click', 'header')}>Reservar</a>
+              <button
+                type="button"
+                className="clubMenuButton"
+                aria-expanded={menuOpen}
+                aria-controls="menu-movil"
+                aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                {menuOpen ? <CloseIcon /> : <MenuIcon />}
+              </button>
+            </div>
           </div>
-          <nav className="clubNav clubNavMobile" aria-label="Secciones">
-            {NAV.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
-          </nav>
         </div>
+        {menuOpen ? (
+          <nav className="clubMenu" id="menu-movil" aria-label="Secciones">
+            {NAV.map((item) => <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}
+          </nav>
+        ) : null}
       </header>
 
       {/* 2. Hero */}
@@ -85,7 +121,7 @@ export function Catalog() {
           <div className="heroCopy">
             <p className="heroLabel">Private Massage Club · Guadalajara</p>
             <h1>Tú eliges <em>quién te&nbsp;atiende.</em></h1>
-            <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta, personaliza tu experiencia y reserva a tu ritmo.</p>
+            <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta y reserva una experiencia a tu medida.</p>
           </div>
           <figure className="heroMedia">
             <img src="/ssensuum/hero-cabina.webp" width={768} height={1365} alt="Cabina privada de SSENSUUM con camilla, espejos y el logo en la pared" fetchPriority="high" />
@@ -98,7 +134,7 @@ export function Catalog() {
                 <small>Video</small>
               </a>
             ) : null}
-            <a className="heroCta" href="#equipo" onClick={() => track('reserve_click', 'hero')}>
+            <a className="heroCta" ref={heroCtaRef} href="#equipo" onClick={() => track('reserve_click', 'hero')}>
               Elegir terapeuta <ArrowIcon />
             </a>
             <a className="heroScroll" href="#equipo" aria-label="Ver a los terapeutas"><ArrowDownIcon /></a>
@@ -294,7 +330,7 @@ export function Catalog() {
       </footer>
 
       {/* Barra fija en móvil */}
-      <div className="bottomBar">
+      <div className={`bottomBar ${heroCtaVisible ? 'bottomBarHidden' : ''}`}>
         <a className="btn" href={BOOK_HREF} onClick={() => track('reserve_click', 'barra')}>Reservar</a>
         <WhatsAppLink className="btn bottomBarWhatsapp" message={WHATSAPP_MESSAGES.question} label="barra">
           <WhatsAppIcon />
