@@ -161,26 +161,35 @@ svg { width: 1em; height: 1em; }
 .clubNavMobile { display: none; }
 
 /* ---------- Hero ----------
-   Bloque oscuro: la foto de la cabina lleva el peso; texto claro encima. */
-.hero { padding: 32px 0 40px; background: #0b0a09; color: var(--on-dark); }
-.heroLabel { margin: 0 0 14px; color: var(--on-dark-muted); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+   Fondo crema cálido: la foto de la cabina lleva el peso. */
+.hero {
+  --hero-bg: #F4EEE7;
+  --hero-ink: #1F1A17;
+  --hero-text: #5C5149;
+  --hero-cta: #7A432A;
+  --hero-cta-hover: #683723;
+  padding: 32px 0 40px;
+  background: var(--hero-bg);
+  color: var(--hero-text);
+}
+.heroLabel { margin: 0 0 14px; color: var(--hero-text); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .hero h1 {
   margin: 0;
   max-width: 760px;
-  color: #fff;
+  color: var(--hero-ink);
   font-family: var(--serif);
   font-size: clamp(36px, 9vw, 64px);
   font-weight: 400;
   line-height: 1.04;
   letter-spacing: -.01em;
 }
-.hero h1 em { color: #fff; }
-.heroLead { margin: 14px 0 0; max-width: 640px; color: var(--on-dark-muted); font-size: 18px; }
-.heroMedia { margin: 24px 0 0; overflow: hidden; border-radius: var(--r-lg); background: #1d1915; aspect-ratio: 4 / 3; }
+.hero h1 em { color: var(--hero-ink); }
+.heroLead { margin: 14px 0 0; max-width: 640px; color: var(--hero-text); font-size: 18px; }
+.heroMedia { margin: 24px 0 0; overflow: hidden; border-radius: var(--r-lg); background: var(--accent); aspect-ratio: 4 / 3; }
 .heroMedia img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; }
-.heroVideo { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; color: #fff; font-size: 17px; text-decoration: none; }
-.heroVideo svg { flex: none; width: 26px; height: 26px; color: #fff; }
-.heroVideo small { margin-left: auto; color: var(--on-dark-muted); font-size: 14px; }
+.heroVideo { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; color: var(--hero-ink); font-size: 17px; text-decoration: none; }
+.heroVideo svg { flex: none; width: 26px; height: 26px; color: var(--hero-ink); }
+.heroVideo small { margin-left: auto; color: var(--hero-text); font-size: 14px; }
 .heroCta {
   display: flex;
   align-items: center;
@@ -189,13 +198,13 @@ svg { width: 1em; height: 1em; }
   min-height: 56px;
   margin-top: 16px;
   border-radius: var(--pill);
-  background: var(--on-dark);
-  color: var(--ink);
+  background: var(--hero-cta);
+  color: #fff;
   font-size: 18px;
   font-weight: 700;
   text-decoration: none;
 }
-.heroCta:hover { background: #fff; }
+.heroCta:hover, .heroCta:active { background: var(--hero-cta-hover); }
 .heroCta svg { width: 20px; height: 20px; }
 .heroScroll {
   position: relative;
@@ -206,13 +215,13 @@ svg { width: 1em; height: 1em; }
   width: 44px;
   height: 44px;
   margin: -8px auto 0;
-  border: 1px solid rgba(255, 255, 255, .18);
+  border: 1px solid var(--line);
   border-radius: 50%;
-  background: #0b0a09;
-  color: #fff;
+  background: var(--hero-bg);
+  color: var(--hero-ink);
 }
 .heroScroll svg { width: 20px; height: 20px; }
-.heroMeta { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 0; color: var(--on-dark-muted); font-size: 16px; }
+.heroMeta { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 0; color: var(--hero-text); font-size: 16px; }
 .heroMeta svg { width: 22px; height: 22px; }
 .heroFaces { display: flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; color: var(--text); }
 .heroFaces span:first-child { display: flex; }

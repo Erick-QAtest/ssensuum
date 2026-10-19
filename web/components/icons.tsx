@@ -72,7 +72,7 @@ export function PlayIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="11" fill="currentColor" />
-      <path d="M10 8.5v7l5.5-3.5Z" fill="#000" />
+      <path d="M10 8.5v7l5.5-3.5Z" fill="#fff" />
     </svg>
   );
 }
