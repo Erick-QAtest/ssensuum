@@ -152,3 +152,35 @@ export type HrDocument = {
   sizeBytes: number;
   uploadedAt: string;
 };
+
+export type PayrollLine = {
+  recordId: string;
+  paidAt: string;
+  serviceName: string;
+  customerName: string;
+  gross: number;
+  cleaning: number;
+  pay: number;
+};
+
+export type PayrollAmounts = {
+  services: number;
+  gross: number;
+  cleaning: number;
+  servicePay: number;
+  tips: number;
+  total: number;
+};
+
+export type PayrollRow = PayrollAmounts & {
+  therapistId: string;
+  therapistName: string;
+  lines: PayrollLine[];
+};
+
+export type WeeklyPayroll = {
+  weekStart: string;
+  weekEnd: string;
+  staff: PayrollRow[];
+  totals: PayrollAmounts;
+};

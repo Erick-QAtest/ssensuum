@@ -7,6 +7,7 @@ import type { StaffMember } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 import { DocumentsPanel } from './DocumentsPanel';
+import { PayrollPanel } from './PayrollPanel';
 import { StaffForm } from './StaffForm';
 import { formatDate, formatPhone } from './hr';
 
@@ -90,6 +91,8 @@ export function HrPage() {
             </div>
           ) : null}
         </section>
+
+        <PayrollPanel />
 
         {staff ? <DocumentsPanel staff={staff} filter={filter} onFilterChange={setFilter} onChanged={load} /> : null}
       </div>

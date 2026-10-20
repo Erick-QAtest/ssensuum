@@ -13,6 +13,7 @@ from ..domain.hr import MAX_DOCUMENT_BYTES
 from ..schemas import StaffProfileUpdate
 from ..serializers import hr_document_payload, staff_payload
 from ..services import hr as hr_service
+from ..services import payroll as payroll_service
 
 # Bajo /admin para que nginx lo proteja con el usuario y contraseña de administración.
 router = APIRouter(prefix="/admin/rh", tags=["recursos humanos"])
@@ -85,3 +86,19 @@ def download_document(document_id: str, db: Session = Depends(get_db)) -> FileRe
 @router.delete("/documents/{document_id}", status_code=204)
 def delete_document(document_id: str, db: Session = Depends(get_db)) -> None:
     hr_service.delete_document(db, document_id)
+
+
+@router.get("/payroll")
+def weekly_payroll(day: date = Query(alias="week"), db: Session = Depends(get_db)) -> dict:
+    """Liquidación de la semana (lunes a domingo) que contiene ese día."""
+    return payroll_service.weekly_payroll(db, day)
+
+
+@router.get("/payroll/export")
+def export_payroll(day: date = Query(alias="week"), db: Session = Depends(get_db)) -> Response:
+    payroll = payroll_service.weekly_payroll(db, day)
+    return Response(
+        content=payroll_service.export_payroll_xlsx(db, day),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": _attachment(f"liquidacion-{payroll['weekStart']}.xlsx")},
+    )

@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -156,3 +156,9 @@ export function deleteHrDocument(id: string) {
 export const hrDownloadUrl = (id: string) => `${API}/admin/rh/documents/${encodeURIComponent(id)}/download`;
 export const hrStaffExportUrl = `${API}/admin/rh/staff/export`;
 export const hrDocumentsExportUrl = `${API}/admin/rh/documents/export`;
+
+export function getWeeklyPayroll(week: string) {
+  return getJson<WeeklyPayroll>(`/admin/rh/payroll?week=${encodeURIComponent(week)}`, 'No se pudo calcular la liquidación');
+}
+
+export const hrPayrollExportUrl = (week: string) => `${API}/admin/rh/payroll/export?week=${encodeURIComponent(week)}`;
