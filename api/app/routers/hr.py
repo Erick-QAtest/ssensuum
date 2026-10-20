@@ -10,7 +10,7 @@ from starlette.background import BackgroundTask
 
 from ..db import get_db
 from ..domain.hr import MAX_DOCUMENT_BYTES
-from ..schemas import StaffProfileUpdate
+from ..schemas import PayoutUpdate, StaffProfileUpdate
 from ..serializers import hr_document_payload, staff_payload
 from ..services import hr as hr_service
 from ..services import payroll as payroll_service
@@ -96,6 +96,17 @@ def delete_document(document_id: str, db: Session = Depends(get_db)) -> None:
 def weekly_payroll(day: date = Query(alias="week"), db: Session = Depends(get_db)) -> dict:
     """Liquidación de la semana (lunes a domingo) que contiene ese día."""
     return payroll_service.weekly_payroll(db, day)
+
+
+@router.get("/payroll/pending")
+def pending_payouts(db: Session = Depends(get_db)) -> list[dict]:
+    """Pagos a masajistas que siguen pendientes; vencen 48 horas después del servicio."""
+    return payroll_service.pending_payouts(db)
+
+
+@router.put("/payroll/payouts", status_code=204)
+def set_payout(payload: PayoutUpdate, db: Session = Depends(get_db)) -> None:
+    payroll_service.set_payout(db, payload)
 
 
 @router.get("/payroll/export")

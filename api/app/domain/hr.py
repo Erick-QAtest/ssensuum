@@ -9,6 +9,7 @@ MAX_DOCUMENT_BYTES = 8 * 1024 * 1024
 DOCUMENT_CATEGORIES = {
     "contrato": "Contrato firmado",
     "autorizacion_imagen": "Autorización de imagen",
+    "autorizacion_descuento": "Autorización de descuento de limpieza",
     "identificacion": "Identificación oficial",
     "comprobante": "Comprobante",
     "certificado": "Certificado",
@@ -22,7 +23,9 @@ TEMPLATE_CATEGORY = "plantilla"
 
 # Lo que cada masajista debe entregar firmado para tener su documentación completa.
 # La autorización de imagen cuenta aunque no marque ninguna casilla: lo que se pide es el documento firmado.
-REQUIRED_DOCUMENTS = ("contrato", "autorizacion_imagen", "identificacion")
+REQUIRED_DOCUMENTS = ("contrato", "autorizacion_imagen", "autorizacion_descuento", "identificacion")
+# Con este documento firmado, la limpieza semanal se descuenta de los honorarios (cláusula QUINTA).
+CLEANING_AUTHORIZATION = "autorizacion_descuento"
 
 # Solo documentos de oficina e imágenes: nada que el navegador pueda ejecutar al abrirlo.
 ALLOWED_EXTENSIONS = {

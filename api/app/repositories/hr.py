@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..models import HrDocument, StaffProfile, Therapist
+from ..models import HrDocument, StaffProfile, Therapist, TherapistPayout
 
 
 def list_therapists(db: Session) -> list[Therapist]:
@@ -69,3 +69,14 @@ def save(db: Session, row):
 def delete(db: Session, row) -> None:
     db.delete(row)
     db.commit()
+
+
+def payouts(db: Session, record_ids: list[str]) -> dict[tuple[str, str], TherapistPayout]:
+    if not record_ids:
+        return {}
+    rows = db.scalars(select(TherapistPayout).where(TherapistPayout.record_id.in_(record_ids))).all()
+    return {(row.record_id, row.therapist_id): row for row in rows}
+
+
+def get_payout(db: Session, record_id: str, therapist_id: str) -> Optional[TherapistPayout]:
+    return db.get(TherapistPayout, (record_id, therapist_id))

@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -160,6 +160,14 @@ export const hrDocumentsExportUrl = `${API}/admin/rh/documents/export`;
 
 export function getWeeklyPayroll(week: string) {
   return getJson<WeeklyPayroll>(`/admin/rh/payroll?week=${encodeURIComponent(week)}`, 'No se pudo calcular la liquidación');
+}
+
+export function getPendingPayouts() {
+  return getJson<PendingPayout[]>('/admin/rh/payroll/pending', 'No se pudieron cargar los pagos pendientes');
+}
+
+export function setPayout(recordId: string, therapistId: string, paid: boolean) {
+  return sendJson<void>('PUT', '/admin/rh/payroll/payouts', { recordId, therapistId, paid }, 'No se pudo guardar el pago');
 }
 
 export const hrPayrollExportUrl = (week: string) => `${API}/admin/rh/payroll/export?week=${encodeURIComponent(week)}`;

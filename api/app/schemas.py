@@ -90,6 +90,14 @@ class StaffProfileUpdate(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class PayoutUpdate(BaseModel):
+    record_id: str = Field(alias="recordId")
+    therapist_id: str = Field(alias="therapistId")
+    paid: bool
+
+    model_config = {"populate_by_name": True}
+
+
 class ServiceRecordCreate(BaseModel):
     customer_name: str = Field(alias="customerName", max_length=200)
     customer_phone: str = Field(alias="customerPhone")

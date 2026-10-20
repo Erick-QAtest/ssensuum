@@ -145,3 +145,15 @@ class HrDocument(Base):
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     stored_name: Mapped[str] = mapped_column(String(80), nullable=False)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+
+class TherapistPayout(Base):
+    """Pago a un masajista por un servicio registrado: honorarios y propina, dentro de las 48 horas."""
+
+    __tablename__ = "therapist_payouts"
+
+    record_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    therapist_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    # Lo que se pagó en ese momento, por si el registro del servicio cambia después.
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    paid_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

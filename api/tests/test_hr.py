@@ -106,6 +106,7 @@ def test_documentation_complete_when_required_documents_are_in(client):
     assert row()["documentationComplete"] is False
     upload(client, therapist_id, name="contrato.pdf", category="contrato")
     upload(client, therapist_id, name="imagen.pdf", category="autorizacion_imagen")
+    upload(client, therapist_id, name="descuento.pdf", category="autorizacion_descuento")
     assert [item["category"] for item in row()["missingDocuments"]] == ["identificacion"]
     upload(client, therapist_id, name="ine.jpg", category="identificacion")
     assert row()["documentationComplete"] is True

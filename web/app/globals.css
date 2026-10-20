@@ -601,6 +601,10 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .hrTemplates strong { color: var(--ink); }
 .hrMissing { white-space: nowrap; }
 .hrMissing .hrLink { min-height: 0; font-size: 13px; }
+.hrSubhead { margin: 22px 0 0; color: var(--ink); font-size: 16px; }
+.hrPayout .statusBadge { margin-right: 6px; }
+.hrPayout .hrLink { min-height: 0; margin-top: 4px; font-size: 13px; }
+.hrUndo { margin-left: 4px; color: var(--muted); }
 .hrWeek { color: var(--ink); font-size: 15px; }
 .hrDetail td { background: var(--bg); font-size: 14px; }
 .hrTotal td { font-weight: 700; }

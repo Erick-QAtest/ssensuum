@@ -141,7 +141,7 @@ export type StaffProfileInput = {
   notes: string;
 };
 
-export type HrDocumentCategory = 'contrato' | 'autorizacion_imagen' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro' | 'plantilla';
+export type HrDocumentCategory = 'contrato' | 'autorizacion_imagen' | 'autorizacion_descuento' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro' | 'plantilla';
 
 export type HrDocument = {
   id: string;
@@ -162,21 +162,32 @@ export type PayrollLine = {
   customerName: string;
   gross: number;
   cleaning: number;
+  tip: number;
   pay: number;
+  // Fecha límite de pago: 48 horas después del servicio.
+  dueAt: string;
+  payoutAt: string | null;
+  overdue: boolean;
 };
+
+export type PendingPayout = PayrollLine & { therapistId: string; therapistName: string };
 
 export type PayrollAmounts = {
   services: number;
   gross: number;
   cleaning: number;
+  cleaningToCollect: number;
   servicePay: number;
   tips: number;
   total: number;
+  pending: number;
 };
 
 export type PayrollRow = PayrollAmounts & {
   therapistId: string;
   therapistName: string;
+  cleaningCompensated: boolean;
+  paidLines: number;
   lines: PayrollLine[];
 };
 

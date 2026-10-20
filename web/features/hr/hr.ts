@@ -3,6 +3,7 @@ import type { HrDocumentCategory } from '../../lib/types';
 export const DOCUMENT_CATEGORIES: { value: HrDocumentCategory; label: string }[] = [
   { value: 'contrato', label: 'Contrato firmado' },
   { value: 'autorizacion_imagen', label: 'Autorización de imagen' },
+  { value: 'autorizacion_descuento', label: 'Autorización de descuento de limpieza' },
   { value: 'identificacion', label: 'Identificación oficial' },
   { value: 'comprobante', label: 'Comprobante' },
   { value: 'certificado', label: 'Certificado' },

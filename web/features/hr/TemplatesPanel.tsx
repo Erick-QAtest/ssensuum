@@ -12,7 +12,8 @@ export function TemplatesPanel({ version }: { version: number }) {
 
   useEffect(() => {
     getHrDocuments('', 'plantilla')
-      .then((rows) => { setTemplates(rows); setError(''); })
+      // La API los da del más reciente al más antiguo; se muestran en el orden en que se subieron.
+      .then((rows) => { setTemplates([...rows].reverse()); setError(''); })
       .catch((e: Error) => setError(e.message));
   }, [version]);
 
