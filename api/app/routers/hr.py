@@ -45,8 +45,12 @@ def update_staff(therapist_id: str, payload: StaffProfileUpdate, db: Session = D
 
 
 @router.get("/documents")
-def list_documents(therapist_id: Optional[str] = Query(default=None, alias="therapistId"), db: Session = Depends(get_db)) -> list[dict]:
-    return [hr_document_payload(row) for row in hr_service.list_documents(db, therapist_id)]
+def list_documents(
+    therapist_id: Optional[str] = Query(default=None, alias="therapistId"),
+    category: Optional[str] = Query(default=None),
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    return [hr_document_payload(row) for row in hr_service.list_documents(db, therapist_id, category)]
 
 
 @router.post("/documents", status_code=201)

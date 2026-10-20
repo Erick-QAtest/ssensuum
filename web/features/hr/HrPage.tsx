@@ -3,18 +3,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getStaff, hrStaffExportUrl } from '../../lib/api';
-import type { StaffMember } from '../../lib/types';
+import type { HrDocumentCategory, StaffMember } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 import { DocumentsPanel } from './DocumentsPanel';
 import { PayrollPanel } from './PayrollPanel';
 import { StaffForm } from './StaffForm';
-import { formatDate, formatPhone } from './hr';
+import { TemplatesPanel } from './TemplatesPanel';
+import { UploadPreset, formatDate, formatPhone } from './hr';
 
 export function HrPage() {
   const [staff, setStaff] = useState<StaffMember[] | null>(null);
   const [editing, setEditing] = useState<StaffMember | null>(null);
   const [filter, setFilter] = useState('');
+  const [preset, setPreset] = useState<UploadPreset | null>(null);
+  const [version, setVersion] = useState(0);
   const [error, setError] = useState('');
 
   const load = useCallback(() => {
@@ -29,6 +32,15 @@ export function HrPage() {
     setFilter(member.id);
     document.getElementById('documentos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  function capture(member: StaffMember, category: HrDocumentCategory) {
+    setFilter(member.id);
+    setPreset({ therapistId: member.id, category, key: Date.now() });
+    document.getElementById('documentos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const complete = staff?.filter((member) => member.active && member.documentationComplete).length ?? 0;
+  const active = staff?.filter((member) => member.active).length ?? 0;
 
   return (
     <main className="bookingShell" data-testid="hr-page">
@@ -48,6 +60,8 @@ export function HrPage() {
           />
         ) : null}
 
+        <TemplatesPanel version={version} />
+
         <section className="adminCard">
           <div className="adminRow adminRowSpread">
             <h2>Masajistas</h2>
@@ -57,11 +71,12 @@ export function HrPage() {
           {error ? <div className="errorBox" role="alert">{error}</div> : null}
           {staff === null && !error ? <p className="muted">Cargando equipo…</p> : null}
           {staff?.length === 0 ? <p className="muted">Aún no hay masajistas registrados.</p> : null}
+          {staff && active > 0 ? <p className="muted" data-testid="hr-complete-count">Documentación completa: {complete} de {active} masajistas activos.</p> : null}
 
           {staff && staff.length > 0 ? (
             <div className="adminTableWrap">
               <table className="adminTable">
-                <thead><tr><th>Masajista</th><th>Estado</th><th>Teléfono</th><th>Correo</th><th>Ingreso</th><th>Emergencia</th><th>Documentos</th><th></th></tr></thead>
+                <thead><tr><th>Masajista</th><th>Estado</th><th>Documentación</th><th>Teléfono</th><th>Correo</th><th>Ingreso</th><th>Emergencia</th><th>Archivos</th><th></th></tr></thead>
                 <tbody>
                   {staff.map((member) => (
                     <tr key={member.id} data-testid="staff-row">
@@ -72,6 +87,18 @@ export function HrPage() {
                         </div>
                       </td>
                       <td><span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span></td>
+                      <td data-testid="staff-documentation">
+                        {member.documentationComplete ? <span className="statusBadge ok">Completa</span> : (
+                          <>
+                            <span className="statusBadge wait">Incompleta</span>
+                            {member.missingDocuments.map((missing) => (
+                              <span key={missing.category} className="adminSub hrMissing">
+                                Falta {missing.label.toLowerCase()} · <button type="button" className="hrLink" onClick={() => capture(member, missing.category)}>Capturar</button>
+                              </span>
+                            ))}
+                          </>
+                        )}
+                      </td>
                       <td>{member.phone ? formatPhone(member.phone) : '—'}</td>
                       <td>{member.email ?? '—'}</td>
                       <td>{member.hiredOn ? formatDate(member.hiredOn) : '—'}</td>
@@ -94,7 +121,15 @@ export function HrPage() {
 
         <PayrollPanel />
 
-        {staff ? <DocumentsPanel staff={staff} filter={filter} onFilterChange={setFilter} onChanged={load} /> : null}
+        {staff ? (
+          <DocumentsPanel
+            staff={staff}
+            filter={filter}
+            onFilterChange={setFilter}
+            preset={preset}
+            onChanged={() => { setVersion((value) => value + 1); load(); }}
+          />
+        ) : null}
       </div>
     </main>
   );

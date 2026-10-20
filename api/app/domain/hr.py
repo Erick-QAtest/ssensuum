@@ -7,13 +7,22 @@ from typing import Optional
 MAX_DOCUMENT_BYTES = 8 * 1024 * 1024
 
 DOCUMENT_CATEGORIES = {
-    "contrato": "Contrato",
-    "identificacion": "Identificación",
+    "contrato": "Contrato firmado",
+    "autorizacion_imagen": "Autorización de imagen",
+    "identificacion": "Identificación oficial",
     "comprobante": "Comprobante",
     "certificado": "Certificado",
     "nomina": "Nómina",
     "otro": "Otro",
+    "plantilla": "Formato para firmar",
 }
+
+# Formatos en blanco que se descargan, se imprimen y se firman; son del equipo, no de un masajista.
+TEMPLATE_CATEGORY = "plantilla"
+
+# Lo que cada masajista debe entregar firmado para tener su documentación completa.
+# La autorización de imagen cuenta aunque no marque ninguna casilla: lo que se pide es el documento firmado.
+REQUIRED_DOCUMENTS = ("contrato", "autorizacion_imagen", "identificacion")
 
 # Solo documentos de oficina e imágenes: nada que el navegador pueda ejecutar al abrirlo.
 ALLOWED_EXTENSIONS = {

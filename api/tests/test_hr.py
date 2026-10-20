@@ -54,7 +54,7 @@ def test_upload_download_and_delete_document(client):
     document = created.json()
     assert document["fileName"] == "Contrato Jessy.pdf"
     assert document["title"] == "Contrato Jessy"
-    assert document["categoryLabel"] == "Contrato"
+    assert document["categoryLabel"] == "Contrato firmado"
 
     listed = client.get("/admin/rh/documents", params={"therapistId": therapist_id}).json()
     assert document["id"] in [row["id"] for row in listed]
@@ -95,3 +95,26 @@ def test_exports_staff_and_documents(client):
     assert any(name.endswith("identificacion/ine.png") for name in names)
     assert "General/otro/reglamento.pdf" in names
     assert "General/otro/reglamento (2).pdf" in names
+
+
+def test_documentation_complete_when_required_documents_are_in(client):
+    therapist_id = client.get("/admin/rh/staff").json()[-1]["id"]
+
+    def row():
+        return next(item for item in client.get("/admin/rh/staff").json() if item["id"] == therapist_id)
+
+    assert row()["documentationComplete"] is False
+    upload(client, therapist_id, name="contrato.pdf", category="contrato")
+    upload(client, therapist_id, name="imagen.pdf", category="autorizacion_imagen")
+    assert [item["category"] for item in row()["missingDocuments"]] == ["identificacion"]
+    upload(client, therapist_id, name="ine.jpg", category="identificacion")
+    assert row()["documentationComplete"] is True
+    assert row()["missingDocuments"] == []
+
+
+def test_templates_live_apart_from_the_repository(client):
+    template = upload(client, name="Contrato en blanco.pdf", category="plantilla").json()
+    assert template["categoryLabel"] == "Formato para firmar"
+    assert template["id"] in [row["id"] for row in client.get("/admin/rh/documents", params={"category": "plantilla"}).json()]
+    assert template["id"] not in [row["id"] for row in client.get("/admin/rh/documents").json()]
+    assert upload(client, first_therapist(client), category="plantilla").status_code == 422

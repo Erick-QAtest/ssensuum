@@ -1,13 +1,17 @@
 import type { HrDocumentCategory } from '../../lib/types';
 
 export const DOCUMENT_CATEGORIES: { value: HrDocumentCategory; label: string }[] = [
-  { value: 'contrato', label: 'Contrato' },
-  { value: 'identificacion', label: 'Identificación' },
+  { value: 'contrato', label: 'Contrato firmado' },
+  { value: 'autorizacion_imagen', label: 'Autorización de imagen' },
+  { value: 'identificacion', label: 'Identificación oficial' },
   { value: 'comprobante', label: 'Comprobante' },
   { value: 'certificado', label: 'Certificado' },
   { value: 'nomina', label: 'Nómina' },
   { value: 'otro', label: 'Otro' },
+  { value: 'plantilla', label: 'Formato para firmar (en blanco)' },
 ];
+
+export type UploadPreset = { therapistId: string; category: HrDocumentCategory; key: number };
 
 export const ACCEPTED_FILES = '.pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,.xls,.xlsx,.csv,.txt';
 export const MAX_DOCUMENT_BYTES = 8 * 1024 * 1024;

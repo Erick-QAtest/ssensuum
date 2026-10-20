@@ -3,17 +3,19 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { deleteHrDocument, getHrDocuments, hrDocumentsExportUrl, hrDownloadUrl, uploadHrDocument } from '../../lib/api';
 import type { HrDocument, HrDocumentCategory, StaffMember } from '../../lib/types';
-import { ACCEPTED_FILES, DOCUMENT_CATEGORIES, MAX_DOCUMENT_BYTES, formatDate, formatSize } from './hr';
+import { ACCEPTED_FILES, DOCUMENT_CATEGORIES, MAX_DOCUMENT_BYTES, UploadPreset, formatDate, formatSize } from './hr';
 
 type Props = {
   staff: StaffMember[];
   // '' = todos, 'general' = documentos del equipo, o el id de un terapeuta.
   filter: string;
   onFilterChange: (filter: string) => void;
+  // Al pulsar "Capturar" en la tabla del equipo, el formulario queda listo para ese documento.
+  preset: UploadPreset | null;
   onChanged: () => void;
 };
 
-export function DocumentsPanel({ staff, filter, onFilterChange, onChanged }: Props) {
+export function DocumentsPanel({ staff, filter, onFilterChange, preset, onChanged }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [documents, setDocuments] = useState<HrDocument[] | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -37,6 +39,16 @@ export function DocumentsPanel({ staff, filter, onFilterChange, onChanged }: Pro
   // Al filtrar por un terapeuta, lo que se suba queda a su nombre.
   useEffect(() => { setOwner(filter === 'general' ? '' : filter); }, [filter]);
 
+  useEffect(() => {
+    if (!preset) return;
+    setOwner(preset.therapistId);
+    setCategory(preset.category);
+    setNotice('');
+    input.current?.focus();
+  }, [preset]);
+
+  const isTemplate = category === 'plantilla';
+
   function chooseFile(next: File | null) {
     setNotice('');
     if (next && next.size > MAX_DOCUMENT_BYTES) {
@@ -54,7 +66,7 @@ export function DocumentsPanel({ staff, filter, onFilterChange, onChanged }: Pro
     if (!file) return;
     setBusy(true);
     setError('');
-    uploadHrDocument(file, category, owner, title)
+    uploadHrDocument(file, category, isTemplate ? '' : owner, title)
       .then((document) => {
         setNotice(`Se subió ${document.fileName}.`);
         setFile(null);
@@ -90,7 +102,7 @@ export function DocumentsPanel({ staff, filter, onFilterChange, onChanged }: Pro
           </label>
           <label>Título (opcional)<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Se usa el nombre del archivo" /></label>
           <label>Pertenece a
-            <select value={owner} onChange={(event) => setOwner(event.target.value)}>
+            <select value={isTemplate ? '' : owner} disabled={isTemplate} onChange={(event) => setOwner(event.target.value)}>
               <option value="">Todo el equipo (general)</option>
               {staff.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
             </select>

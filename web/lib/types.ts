@@ -127,6 +127,8 @@ export type StaffMember = Therapist & {
   emergencyContact: string | null;
   notes: string | null;
   documents: number;
+  missingDocuments: { category: HrDocumentCategory; label: string }[];
+  documentationComplete: boolean;
 };
 
 export type StaffProfileInput = {
@@ -139,7 +141,7 @@ export type StaffProfileInput = {
   notes: string;
 };
 
-export type HrDocumentCategory = 'contrato' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro';
+export type HrDocumentCategory = 'contrato' | 'autorizacion_imagen' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro' | 'plantilla';
 
 export type HrDocument = {
   id: string;

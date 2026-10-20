@@ -98,7 +98,7 @@ def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> di
     }
 
 
-def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documents: int) -> dict:
+def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documents: int, missing: list[str]) -> dict:
     return {
         **therapist_payload(therapist),
         "active": therapist.active,
@@ -110,6 +110,8 @@ def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documen
         "emergencyContact": profile.emergency_contact if profile else None,
         "notes": profile.notes if profile else None,
         "documents": documents,
+        "missingDocuments": [{"category": category, "label": DOCUMENT_CATEGORIES[category]} for category in missing],
+        "documentationComplete": not missing,
     }
 
 

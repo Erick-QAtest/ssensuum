@@ -128,9 +128,10 @@ export function saveStaffProfile(therapistId: string, input: StaffProfileInput) 
   return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}`, input, 'No se pudo guardar el expediente');
 }
 
-export function getHrDocuments(therapistId: string) {
+export function getHrDocuments(therapistId: string, category?: HrDocumentCategory) {
   const params = new URLSearchParams();
   if (therapistId) params.set('therapistId', therapistId);
+  if (category) params.set('category', category);
   return getJson<HrDocument[]>(`/admin/rh/documents?${params.toString()}`, 'No se pudieron cargar los documentos');
 }
 

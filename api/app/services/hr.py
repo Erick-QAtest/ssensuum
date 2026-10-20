@@ -14,7 +14,16 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..domain.customers import normalize_email, normalize_phone
 from ..domain.errors import NotFoundError, ValidationError
-from ..domain.hr import DOCUMENT_CATEGORIES, MAX_DOCUMENT_BYTES, clean_file_name, content_type_for, extension, folder_name
+from ..domain.hr import (
+    DOCUMENT_CATEGORIES,
+    MAX_DOCUMENT_BYTES,
+    REQUIRED_DOCUMENTS,
+    TEMPLATE_CATEGORY,
+    clean_file_name,
+    content_type_for,
+    extension,
+    folder_name,
+)
 from ..models import HrDocument, StaffProfile, Therapist
 from ..repositories import hr as hr_repo
 from ..schemas import StaffProfileUpdate
@@ -37,11 +46,21 @@ def _therapist(db: Session, therapist_id: str) -> Therapist:
     return therapist
 
 
+def missing_documents(categories: set[str]) -> list[str]:
+    return [category for category in REQUIRED_DOCUMENTS if category not in categories]
+
+
 def staff_overview(db: Session) -> list[dict]:
     profiles = hr_repo.profiles(db)
     counts = hr_repo.document_counts(db)
+    categories = hr_repo.categories_by_therapist(db)
     return [
-        {"therapist": row, "profile": profiles.get(row.id), "documents": counts.get(row.id, 0)}
+        {
+            "therapist": row,
+            "profile": profiles.get(row.id),
+            "documents": counts.get(row.id, 0),
+            "missing": missing_documents(categories.get(row.id, set())),
+        }
         for row in hr_repo.list_therapists(db)
     ]
 
@@ -69,14 +88,21 @@ def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) 
     profile.notes = (payload.notes or "").strip() or None
     profile.updated_at = datetime.now(timezone.utc)
     hr_repo.save(db, profile)
-    return {"therapist": therapist, "profile": profile, "documents": hr_repo.document_counts(db).get(therapist_id, 0)}
+    return {
+        "therapist": therapist,
+        "profile": profile,
+        "documents": hr_repo.document_counts(db).get(therapist_id, 0),
+        "missing": missing_documents(hr_repo.categories_by_therapist(db).get(therapist_id, set())),
+    }
 
 
-def list_documents(db: Session, therapist_id: Optional[str]) -> list[HrDocument]:
+def list_documents(db: Session, therapist_id: Optional[str], category: Optional[str] = None) -> list[HrDocument]:
+    # Los formatos para firmar tienen su propia sección: el repositorio solo los lista si se piden.
+    exclude = None if category else TEMPLATE_CATEGORY
     # "general" filtra los documentos del equipo que no son de nadie en particular.
     if therapist_id == "general":
-        return hr_repo.list_documents(db, general_only=True)
-    return hr_repo.list_documents(db, therapist_id)
+        return hr_repo.list_documents(db, general_only=True, category=category, exclude_category=exclude)
+    return hr_repo.list_documents(db, therapist_id, category=category, exclude_category=exclude)
 
 
 def get_document(db: Session, document_id: str) -> HrDocument:
@@ -107,6 +133,8 @@ def upload_document(
     if category not in DOCUMENT_CATEGORIES:
         raise ValidationError("Categoría no válida")
     therapist_id = (therapist_id or "").strip() or None
+    if therapist_id and category == TEMPLATE_CATEGORY:
+        raise ValidationError("Un formato para firmar es para todo el equipo: no lo asignes a un masajista")
     if therapist_id:
         _therapist(db, therapist_id)
 
@@ -143,7 +171,7 @@ def export_staff_xlsx(db: Session) -> bytes:
     sheet = workbook.active
     sheet.title = "Equipo"
     headers = ["ID", "Nombre", "Nombre completo", "Estado", "Teléfono", "Correo", "Cumpleaños", "Fecha de ingreso",
-               "Contacto de emergencia", "Fortalezas", "Documentos", "Notas"]
+               "Contacto de emergencia", "Fortalezas", "Documentos", "Documentación", "Notas"]
     sheet.append(headers)
     for cell in sheet[1]:
         cell.font = Font(bold=True)
@@ -161,6 +189,7 @@ def export_staff_xlsx(db: Session) -> bytes:
             profile.emergency_contact if profile else None,
             therapist.strengths or None,
             item["documents"],
+            "Completa" if not item["missing"] else "Falta: " + ", ".join(DOCUMENT_CATEGORIES[c] for c in item["missing"]),
             profile.notes if profile else None,
         ])
     for column, header in zip(sheet.columns, headers):

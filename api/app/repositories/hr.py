@@ -28,8 +28,26 @@ def document_counts(db: Session) -> dict[Optional[str], int]:
     return {therapist_id: count for therapist_id, count in db.execute(statement).all()}
 
 
-def list_documents(db: Session, therapist_id: Optional[str] = None, general_only: bool = False) -> list[HrDocument]:
+def categories_by_therapist(db: Session) -> dict[str, set[str]]:
+    statement = select(HrDocument.therapist_id, HrDocument.category).where(HrDocument.therapist_id.is_not(None)).distinct()
+    result: dict[str, set[str]] = {}
+    for therapist_id, category in db.execute(statement).all():
+        result.setdefault(therapist_id, set()).add(category)
+    return result
+
+
+def list_documents(
+    db: Session,
+    therapist_id: Optional[str] = None,
+    general_only: bool = False,
+    category: Optional[str] = None,
+    exclude_category: Optional[str] = None,
+) -> list[HrDocument]:
     statement = select(HrDocument)
+    if category:
+        statement = statement.where(HrDocument.category == category)
+    if exclude_category:
+        statement = statement.where(HrDocument.category != exclude_category)
     if general_only:
         statement = statement.where(HrDocument.therapist_id.is_(None))
     elif therapist_id:
