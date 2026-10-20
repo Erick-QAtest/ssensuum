@@ -186,8 +186,12 @@ else
 fi
 
 echo "==> Verificación"
-sleep 3
-curl -fsS "http://127.0.0.1:$API_PORT/health" && echo
+# La API tarda unos segundos en arrancar: se reintenta hasta 30 s antes de dar error.
+for _ in $(seq 30); do
+  curl -fsS "http://127.0.0.1:$API_PORT/health" 2>/dev/null && echo && break
+  sleep 1
+done || true
+curl -fsS "http://127.0.0.1:$API_PORT/health" >/dev/null || echo "La API no respondió en 30 s: revisa journalctl -u ssensuum-api"
 curl -fsS -o /dev/null -w "web: HTTP %{http_code}\n" "http://127.0.0.1:$WEB_PORT/"
 echo
 echo "Listo: https://$DOMAIN"
