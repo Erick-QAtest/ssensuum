@@ -78,6 +78,18 @@ class TipEntry(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class StaffProfileUpdate(BaseModel):
+    full_name: Optional[str] = Field(default=None, alias="fullName", max_length=200)
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    birthday: Optional[date] = None
+    hired_on: Optional[date] = Field(default=None, alias="hiredOn")
+    emergency_contact: Optional[str] = Field(default=None, alias="emergencyContact", max_length=200)
+    notes: Optional[str] = None
+
+    model_config = {"populate_by_name": True}
+
+
 class ServiceRecordCreate(BaseModel):
     customer_name: str = Field(alias="customerName", max_length=200)
     customer_phone: str = Field(alias="customerPhone")

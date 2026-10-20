@@ -590,6 +590,14 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .recordNotes { margin-top: 16px; }
 .recordActions { white-space: nowrap; }
 .linkButton { min-height: 44px; margin-left: 6px; padding: 0 8px; border: 0; background: none; color: var(--danger); font-size: 14px; font-weight: 700; }
+.hrButtonLink { display: inline-flex; align-items: center; text-decoration: none; }
+.hrPerson { display: flex; align-items: center; gap: 10px; }
+.hrAvatar { display: inline-grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--brown); font-family: var(--serif); font-size: 18px; object-fit: cover; }
+.hrLink { min-height: 32px; padding: 0; border: 0; background: none; color: var(--brown); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.hrUpload { margin-top: 0; }
+.hrUpload input[type="file"] { padding: 10px 14px; }
+.hrFilter { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+.hrFilter select { min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font-size: 16px; }
 
 @media (max-width: 899px) {
   .datesRow { grid-template-columns: repeat(14, 74px); }

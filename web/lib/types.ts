@@ -116,3 +116,39 @@ export type ServiceRecordSummary = {
   byPaymentMethod: Partial<Record<PaymentMethod, number>>;
   tipsByTherapist: { therapistId: string; therapistName: string; amount: number; count: number }[];
 };
+
+export type StaffMember = Therapist & {
+  active: boolean;
+  fullName: string | null;
+  phone: string | null;
+  email: string | null;
+  birthday: string | null;
+  hiredOn: string | null;
+  emergencyContact: string | null;
+  notes: string | null;
+  documents: number;
+};
+
+export type StaffProfileInput = {
+  fullName: string;
+  phone: string;
+  email: string;
+  birthday: string | null;
+  hiredOn: string | null;
+  emergencyContact: string;
+  notes: string;
+};
+
+export type HrDocumentCategory = 'contrato' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro';
+
+export type HrDocument = {
+  id: string;
+  therapistId: string | null;
+  category: HrDocumentCategory;
+  categoryLabel: string;
+  title: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+};

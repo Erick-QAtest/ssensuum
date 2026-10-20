@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     # Las credenciales de prueba nuevas empiezan con APP_USR igual que las reales:
     # con esto se fuerza el checkout de pruebas (sandbox) de Mercado Pago.
     mp_sandbox: bool = False
+    # Carpeta del repositorio de documentos de recursos humanos (contratos, identificaciones…).
+    hr_files_dir: str = "./storage/rh"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

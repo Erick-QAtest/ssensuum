@@ -1,0 +1,97 @@
+import io
+import zipfile
+
+import pytest
+from fastapi.testclient import TestClient
+from openpyxl import load_workbook
+
+from app.main import app
+
+
+@pytest.fixture()
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+def first_therapist(client) -> str:
+    return client.get("/admin/rh/staff").json()[0]["id"]
+
+
+def upload(client, therapist_id=None, name="contrato.pdf", content=b"%PDF-1.4 prueba", category="contrato", title=""):
+    data = {"category": category, "title": title}
+    if therapist_id:
+        data["therapistId"] = therapist_id
+    return client.post("/admin/rh/documents", data=data, files={"file": (name, content, "application/octet-stream")})
+
+
+def test_staff_lists_every_therapist_with_profile(client):
+    staff = client.get("/admin/rh/staff").json()
+    assert {row["id"] for row in staff} >= {row["id"] for row in client.get("/therapists").json()}
+    assert all("documents" in row and "active" in row for row in staff)
+
+
+def test_update_profile_normalizes_and_validates(client):
+    therapist_id = first_therapist(client)
+    body = {"fullName": "  Jessy   Pérez ", "phone": "+52 33 1234 5678", "email": " Jessy@Mail.com ", "hiredOn": "2024-02-01", "emergencyContact": "Mamá 3311112222"}
+    updated = client.put(f"/admin/rh/staff/{therapist_id}", json=body)
+    assert updated.status_code == 200
+    row = updated.json()
+    assert row["fullName"] == "Jessy Pérez"
+    assert row["phone"] == "3312345678"
+    assert row["email"] == "jessy@mail.com"
+    assert row["hiredOn"] == "2024-02-01"
+
+    assert client.put(f"/admin/rh/staff/{therapist_id}", json={"phone": "123"}).status_code == 422
+    assert client.put(f"/admin/rh/staff/{therapist_id}", json={"email": "nope"}).status_code == 422
+    assert client.put("/admin/rh/staff/nadie", json={}).status_code == 404
+
+
+def test_upload_download_and_delete_document(client):
+    therapist_id = first_therapist(client)
+    created = upload(client, therapist_id, name="../../Contrato Jessy.pdf")
+    assert created.status_code == 201
+    document = created.json()
+    assert document["fileName"] == "Contrato Jessy.pdf"
+    assert document["title"] == "Contrato Jessy"
+    assert document["categoryLabel"] == "Contrato"
+
+    listed = client.get("/admin/rh/documents", params={"therapistId": therapist_id}).json()
+    assert document["id"] in [row["id"] for row in listed]
+    assert document["id"] not in [row["id"] for row in client.get("/admin/rh/documents", params={"therapistId": "general"}).json()]
+
+    downloaded = client.get(f"/admin/rh/documents/{document['id']}/download")
+    assert downloaded.status_code == 200
+    assert downloaded.content == b"%PDF-1.4 prueba"
+    assert "attachment" in downloaded.headers["content-disposition"]
+
+    assert client.delete(f"/admin/rh/documents/{document['id']}").status_code == 204
+    assert client.get(f"/admin/rh/documents/{document['id']}/download").status_code == 404
+
+
+def test_rejects_invalid_uploads(client):
+    assert upload(client, name="script.html").status_code == 422
+    assert upload(client, content=b"").status_code == 422
+    assert upload(client, category="secreto").status_code == 422
+    assert upload(client, therapist_id="nadie").status_code == 404
+    assert upload(client, content=b"x" * (8 * 1024 * 1024 + 1)).status_code == 422
+
+
+def test_exports_staff_and_documents(client):
+    therapist_id = first_therapist(client)
+    upload(client, therapist_id, name="ine.png", content=b"png", category="identificacion")
+    upload(client, name="reglamento.pdf", category="otro")
+    upload(client, name="reglamento.pdf", category="otro")
+
+    excel = client.get("/admin/rh/staff/export")
+    assert excel.status_code == 200
+    sheet = load_workbook(io.BytesIO(excel.content)).active
+    assert sheet["A1"].value == "ID"
+    assert therapist_id in [row[0].value for row in sheet.iter_rows(min_row=2)]
+
+    archive = client.get("/admin/rh/documents/export")
+    assert archive.status_code == 200
+    names = zipfile.ZipFile(io.BytesIO(archive.content)).namelist()
+    assert any(name.endswith("identificacion/ine.png") for name in names)
+    assert "General/otro/reglamento.pdf" in names
+    assert "General/otro/reglamento (2).pdf" in names

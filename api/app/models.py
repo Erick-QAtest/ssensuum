@@ -112,3 +112,36 @@ class ServiceRecord(Base):
     tip_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class StaffProfile(Base):
+    """Datos de recursos humanos de cada terapeuta. Tabla aparte para que el seed del catálogo no los toque."""
+
+    __tablename__ = "staff_profiles"
+
+    therapist_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    full_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(254), nullable=True)
+    birthday: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    hired_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    emergency_contact: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class HrDocument(Base):
+    """Archivo del repositorio de recursos humanos; el contenido vive en disco (settings.hr_files_dir)."""
+
+    __tablename__ = "hr_documents"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    # Vacío = documento general del equipo, no de un terapeuta en particular.
+    therapist_id: Mapped[Optional[str]] = mapped_column(String(80), nullable=True, index=True)
+    category: Mapped[str] = mapped_column(String(40), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    stored_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)

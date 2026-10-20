@@ -14,6 +14,9 @@ api/.venv/
 __pycache__/
 *.pyc
 
+# Repositorio local de documentos de RH
+api/storage/
+
 # Local DB
 api/ssensuum.db
 *.db

@@ -27,7 +27,7 @@ Rutas públicas:
 Desde la raíz del repo, en la Mac:
 
 ```bash
-rsync -az --delete --exclude .git --exclude node_modules --exclude .next --exclude .venv --exclude '*.db' --exclude .pytest_cache --exclude __pycache__ --exclude .env --exclude .env.local ./ lexradar@167.86.94.254:ssensuum-src/
+rsync -az --delete --exclude .git --exclude node_modules --exclude .next --exclude .venv --exclude '*.db' --exclude .pytest_cache --exclude __pycache__ --exclude .env --exclude .env.local --exclude api/storage ./ lexradar@167.86.94.254:ssensuum-src/
 ```
 
 ```bash

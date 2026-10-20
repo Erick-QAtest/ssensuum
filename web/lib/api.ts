@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Therapist } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -117,3 +117,42 @@ export function saveServiceRecord(input: ServiceRecordInput, id?: string) {
 export function deleteServiceRecord(id: string) {
   return sendJson<void>('DELETE', `/admin/records/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar el registro');
 }
+
+// Recursos humanos: expediente del equipo y repositorio de documentos.
+
+export function getStaff() {
+  return getJson<StaffMember[]>('/admin/rh/staff', 'No se pudo cargar el equipo');
+}
+
+export function saveStaffProfile(therapistId: string, input: StaffProfileInput) {
+  return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}`, input, 'No se pudo guardar el expediente');
+}
+
+export function getHrDocuments(therapistId: string) {
+  const params = new URLSearchParams();
+  if (therapistId) params.set('therapistId', therapistId);
+  return getJson<HrDocument[]>(`/admin/rh/documents?${params.toString()}`, 'No se pudieron cargar los documentos');
+}
+
+export async function uploadHrDocument(file: File, category: HrDocumentCategory, therapistId: string, title: string): Promise<HrDocument> {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('category', category);
+  body.append('title', title);
+  if (therapistId) body.append('therapistId', therapistId);
+  const response = await fetch(`${API}/admin/rh/documents`, { method: 'POST', body });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(typeof error?.detail === 'string' ? error.detail : response.status === 413 ? 'El archivo es demasiado grande' : 'No se pudo subir el archivo');
+  }
+  return response.json();
+}
+
+export function deleteHrDocument(id: string) {
+  return sendJson<void>('DELETE', `/admin/rh/documents/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar el documento');
+}
+
+// Enlaces de descarga directa: el navegador guarda el archivo con el nombre que manda la API.
+export const hrDownloadUrl = (id: string) => `${API}/admin/rh/documents/${encodeURIComponent(id)}/download`;
+export const hrStaffExportUrl = `${API}/admin/rh/staff/export`;
+export const hrDocumentsExportUrl = `${API}/admin/rh/documents/export`;

@@ -1,5 +1,9 @@
+from datetime import timezone
+from typing import Optional
+
+from .domain.hr import DOCUMENT_CATEGORIES
 from .domain.rules import ensure_tz, hold_expired
-from .models import Customer, Reservation, ScheduleBlock, Service, ServiceRecord, Therapist
+from .models import Customer, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
@@ -91,4 +95,34 @@ def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> di
         "tipMethod": record.tip_method,
         "notes": record.notes,
         "createdAt": record.created_at.isoformat(),
+    }
+
+
+def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documents: int) -> dict:
+    return {
+        **therapist_payload(therapist),
+        "active": therapist.active,
+        "fullName": profile.full_name if profile else None,
+        "phone": profile.phone if profile else None,
+        "email": profile.email if profile else None,
+        "birthday": profile.birthday if profile else None,
+        "hiredOn": profile.hired_on if profile else None,
+        "emergencyContact": profile.emergency_contact if profile else None,
+        "notes": profile.notes if profile else None,
+        "documents": documents,
+    }
+
+
+def hr_document_payload(document: HrDocument) -> dict:
+    return {
+        "id": document.id,
+        "therapistId": document.therapist_id,
+        "category": document.category,
+        "categoryLabel": DOCUMENT_CATEGORIES.get(document.category, document.category),
+        "title": document.title,
+        "fileName": document.file_name,
+        "contentType": document.content_type,
+        "sizeBytes": document.size_bytes,
+        # Se guarda en UTC; SQLite pierde la zona horaria al leerla de vuelta.
+        "uploadedAt": ensure_tz(document.uploaded_at.replace(tzinfo=document.uploaded_at.tzinfo or timezone.utc)).isoformat(),
     }

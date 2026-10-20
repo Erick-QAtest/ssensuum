@@ -62,6 +62,7 @@ User=ssensuum
 Group=ssensuum
 WorkingDirectory=$APP/api
 Environment=DATABASE_URL=sqlite:///$APP/data/ssensuum.db
+Environment=HR_FILES_DIR=$APP/data/rh
 Environment=WEB_ORIGIN=https://$DOMAIN
 Environment=PUBLIC_BASE_URL=https://$DOMAIN
 EnvironmentFile=$SECRETS

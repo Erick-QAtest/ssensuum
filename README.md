@@ -19,6 +19,7 @@ MVP local de SSENSUUM diseñado para trabajar junto al framework de QA de Playwr
 - Bloqueos de agenda
 - Registro de clientes con teléfono único
 - Importación de clientes desde Excel o CSV en `/admin/clientes`
+- Recursos humanos en `/admin/equipo`: expediente de cada masajista, exportación del equipo a Excel y repositorio de documentos (subir, descargar, borrar y descargar todo en ZIP). Los archivos se guardan en `HR_FILES_DIR` (por defecto `api/storage/rh`)
 - Test IDs compatibles con `ssensuum-qa-framework`
 
 ## Qué NO incluye todavía
