@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import FinanceMovement
+from ..models import FinanceMovement, RecurringExpense
 
 
 def list_movements(db: Session, start: Optional[date] = None, end: Optional[date] = None) -> list[FinanceMovement]:
@@ -30,3 +30,11 @@ def save(db: Session, movement: FinanceMovement) -> FinanceMovement:
 def delete(db: Session, movement: FinanceMovement) -> None:
     db.delete(movement)
     db.commit()
+
+
+def list_recurring(db: Session) -> list[RecurringExpense]:
+    return list(db.scalars(select(RecurringExpense).order_by(RecurringExpense.created_at)).all())
+
+
+def get_recurring(db: Session, recurring_id: str) -> Optional[RecurringExpense]:
+    return db.get(RecurringExpense, recurring_id)

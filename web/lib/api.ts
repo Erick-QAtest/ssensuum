@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -199,6 +199,19 @@ export function createFinanceMovement(input: FinanceMovementInput) {
 
 export function deleteFinanceMovement(id: string) {
   return sendJson<void>('DELETE', `/admin/finanzas/movements/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar el movimiento');
+}
+
+export function getRecurringExpenses() {
+  return getJson<RecurringExpense[]>('/admin/finanzas/recurring', 'No se pudieron cargar los gastos fijos');
+}
+
+export function createRecurringExpense(input: RecurringExpenseInput) {
+  return postJson<RecurringExpense>('/admin/finanzas/recurring', input, 'No se pudo guardar el gasto fijo');
+}
+
+export function endRecurringExpense(id: string, lastMonth: string) {
+  const params = new URLSearchParams({ lastMonth });
+  return postJson<RecurringExpense>(`/admin/finanzas/recurring/${encodeURIComponent(id)}/end?${params.toString()}`, undefined, 'No se pudo dar de baja el gasto fijo');
 }
 
 export const financeExportUrl = (from: string, to: string) => `${API}/admin/finanzas/statements/export?${new URLSearchParams({ from, to }).toString()}`;

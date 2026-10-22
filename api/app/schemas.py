@@ -110,6 +110,17 @@ class FinanceMovementCreate(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class RecurringExpenseCreate(BaseModel):
+    description: str = Field(max_length=200)
+    category: str
+    amount: int = Field(gt=0)
+    account: str
+    day_of_month: int = Field(alias="dayOfMonth", ge=1, le=31)
+    start_month: str = Field(alias="startMonth", pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+
+    model_config = {"populate_by_name": True}
+
+
 class ServiceRecordCreate(BaseModel):
     customer_name: str = Field(alias="customerName", max_length=200)
     customer_phone: str = Field(alias="customerPhone")

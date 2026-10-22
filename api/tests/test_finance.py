@@ -141,3 +141,37 @@ def test_dashboard_series_and_breakdowns(client):
     assert year["granularity"] == "month" and len(year["series"]) == 12
     quarter = client.get("/admin/finanzas/dashboard", params={"from": "2032-04-01", "to": "2032-06-30"}).json()
     assert quarter["granularity"] == "week" and quarter["series"][0]["start"] == "2032-04-01"
+
+
+def test_monthly_dates_use_last_day_in_short_months():
+    from app.domain.finance import monthly_dates
+
+    days = monthly_dates(31, "2033-01", None, date(2033, 1, 1), date(2033, 4, 30))
+    assert days == [date(2033, 1, 31), date(2033, 2, 28), date(2033, 3, 31), date(2033, 4, 30)]
+    assert monthly_dates(5, "2033-02", "2033-03", date(2033, 1, 1), date(2033, 12, 31)) == [date(2033, 2, 5), date(2033, 3, 5)]
+
+
+def test_recurring_expense_posts_every_month(client):
+    rent = {"description": "Renta del local", "category": "renta", "amount": 5000, "account": "caja", "dayOfMonth": 5, "startMonth": "2034-02"}
+    assert client.post("/admin/finanzas/recurring", json={**rent, "category": "viajes"}).status_code == 422
+    assert client.post("/admin/finanzas/recurring", json={**rent, "startMonth": "2034-13"}).status_code == 422
+    created = client.post("/admin/finanzas/recurring", json=rent)
+    assert created.status_code == 201
+    recurring = created.json()
+    assert recurring["accountLabel"] == "Caja (efectivo)" and recurring["endMonth"] is None
+
+    def expenses(start, end):
+        return client.get("/admin/finanzas/statements", params={"from": start, "to": end}).json()["incomeStatement"]["operatingExpenses"]
+
+    assert expenses("2034-01-01", "2034-01-31") == 0
+    assert expenses("2034-02-01", "2034-02-04") == 0
+    assert expenses("2034-02-05", "2034-02-05") == 5000
+    assert expenses("2034-02-01", "2034-04-30") == 15_000
+
+    listed = client.get("/admin/finanzas/movements", params={"from": "2034-03-01", "to": "2034-03-31"}).json()
+    assert [(row["day"], row["kindLabel"], row["amount"]) for row in listed] == [("2034-03-05", "Gasto fijo", 5000)]
+
+    ended = client.post(f"/admin/finanzas/recurring/{recurring['id']}/end", params={"lastMonth": "2034-03"})
+    assert ended.json()["endMonth"] == "2034-03"
+    assert expenses("2034-02-01", "2034-06-30") == 10_000  # febrero y marzo se conservan; abril en adelante ya no
+    assert client.post("/admin/finanzas/recurring/nada/end", params={"lastMonth": "2034-03"}).status_code == 404

@@ -220,6 +220,8 @@ export type FinanceMovementInput = {
 
 export type FinanceMovement = FinanceMovementInput & {
   id: string;
+  // Presente cuando la fila es un mes de un gasto fijo: se edita desde Gastos fijos, no aquí.
+  recurringId?: string;
   kindLabel: string;
   categoryLabel: string | null;
   accountLabel: string;
@@ -293,4 +295,20 @@ export type FinanceDashboard = {
   costBreakdown: FinanceBreakdownRow[];
   revenueByService: FinanceBreakdownRow[];
   revenueByAccount: FinanceBreakdownRow[];
+};
+
+export type RecurringExpenseInput = {
+  description: string;
+  category: string;
+  amount: number;
+  account: string;
+  dayOfMonth: number;
+  startMonth: string;
+};
+
+export type RecurringExpense = RecurringExpenseInput & {
+  id: string;
+  categoryLabel: string;
+  accountLabel: string;
+  endMonth: string | null;
 };

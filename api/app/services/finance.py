@@ -20,13 +20,14 @@ from ..domain.finance import (
     balances,
     cash_flow,
     income_statement,
+    monthly_dates,
     movement_entry,
 )
 from ..domain.rules import TZ, ensure_tz
-from ..models import FinanceMovement
+from ..models import FinanceMovement, RecurringExpense
 from ..repositories import finance as finance_repo
 from ..repositories import records as records_repo
-from ..schemas import FinanceMovementCreate
+from ..schemas import FinanceMovementCreate, RecurringExpenseCreate
 from . import payroll as payroll_service
 
 
@@ -81,6 +82,50 @@ def list_movements(db: Session, start: date, end: date) -> list[FinanceMovement]
     return finance_repo.list_movements(db, start, end)
 
 
+def create_recurring(db: Session, payload: RecurringExpenseCreate) -> RecurringExpense:
+    if payload.category not in EXPENSE_CATEGORIES:
+        raise ValidationError("Elige la categoría del gasto")
+    if payload.account not in CASH_ACCOUNTS:
+        raise ValidationError("Cuenta no válida")
+    if not payload.description.strip():
+        raise ValidationError("Escribe una descripción")
+    return finance_repo.save(db, RecurringExpense(
+        id=str(uuid.uuid4()),
+        description=" ".join(payload.description.split()),
+        category=payload.category,
+        amount=payload.amount,
+        account=payload.account,
+        day_of_month=payload.day_of_month,
+        start_month=payload.start_month,
+    ))
+
+
+def end_recurring(db: Session, recurring_id: str, last_month: str) -> RecurringExpense:
+    """Da de baja un gasto fijo: los meses ya registrados se conservan en los estados financieros."""
+    recurring = finance_repo.get_recurring(db, recurring_id)
+    if not recurring:
+        raise NotFoundError("Gasto fijo no encontrado")
+    recurring.end_month = max(last_month, _previous_month(recurring.start_month))
+    return finance_repo.save(db, recurring)
+
+
+def _previous_month(month: str) -> str:
+    year, number = map(int, month.split("-"))
+    return f"{year - 1:04d}-12" if number == 1 else f"{year:04d}-{number - 1:02d}"
+
+
+def recurring_occurrences(db: Session, first: date, last: date) -> list[tuple[date, RecurringExpense]]:
+    return sorted(
+        ((day, item) for item in finance_repo.list_recurring(db)
+         for day in monthly_dates(item.day_of_month, item.start_month, item.end_month, first, last)),
+        key=lambda pair: pair[0],
+    )
+
+
+def list_recurring(db: Session) -> list[RecurringExpense]:
+    return finance_repo.list_recurring(db)
+
+
 def journal(db: Session, until: date) -> list[Entry]:
     """Todos los asientos hasta esa fecha, desde el inicio de la contabilidad."""
     entries: list[Entry] = []
@@ -126,6 +171,8 @@ def journal(db: Session, until: date) -> list[Entry]:
             date.fromisoformat(movement.day), movement.kind, movement.amount, movement.account,
             movement.category, movement.to_account, movement.description,
         ))
+    for day, item in recurring_occurrences(db, date.min, until):
+        entries.append(movement_entry(day, "gasto", item.amount, item.account, item.category, None, f"{item.description} (gasto fijo)"))
     return entries
 
 
@@ -322,11 +369,16 @@ def export_xlsx(db: Session, start: date, end: date) -> bytes:
     movements = workbook.create_sheet("Movimientos")
     movements.append(("Fecha", "Tipo", "Categoría", "Descripción", "Cuenta", "Cuenta destino", "Importe"))
     categories = {**EXPENSE_CATEGORIES, **OTHER_INCOME_CATEGORIES}
-    for movement in sorted(list_movements(db, start, end), key=lambda row: row.day):
-        movements.append((
-            movement.day, MOVEMENT_KINDS[movement.kind][0], categories.get(movement.category or "", None),
-            movement.description, CASH_ACCOUNTS[movement.account], CASH_ACCOUNTS.get(movement.to_account or ""), movement.amount,
-        ))
+    rows = [
+        (movement.day, MOVEMENT_KINDS[movement.kind][0], categories.get(movement.category or "", None),
+         movement.description, CASH_ACCOUNTS[movement.account], CASH_ACCOUNTS.get(movement.to_account or ""), movement.amount)
+        for movement in list_movements(db, start, end)
+    ] + [
+        (day.isoformat(), "Gasto fijo", EXPENSE_CATEGORIES[item.category], item.description, CASH_ACCOUNTS[item.account], None, item.amount)
+        for day, item in recurring_occurrences(db, start, end)
+    ]
+    for row in sorted(rows, key=lambda row: row[0]):
+        movements.append(row)
 
     for worksheet in workbook.worksheets:
         worksheet.column_dimensions["A"].width = 44

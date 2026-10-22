@@ -10,6 +10,7 @@ import { localIsoDate } from '../booking/dates';
 import { formatDate } from '../hr/hr';
 import { FinanceDashboard } from './FinanceDashboard';
 import { MovementForm } from './MovementForm';
+import { RecurringExpenses } from './RecurringExpenses';
 import { Statement, StatementRow } from './Statement';
 
 type Period = 'mes' | 'mes-anterior' | 'anio' | 'personalizado';
@@ -187,6 +188,8 @@ export function FinancePage() {
         ) : null}
         </div>
 
+        {meta ? <RecurringExpenses meta={meta} onChanged={load} /> : null}
+
         <section className="adminCard">
           <h2>Registrar movimiento</h2>
           <p className="muted">
@@ -207,7 +210,9 @@ export function FinancePage() {
                       <td>{movement.description}<span className="adminSub">{movement.kindLabel}{movement.categoryLabel ? ` · ${movement.categoryLabel}` : ''}</span></td>
                       <td>{movement.accountLabel}{movement.toAccountLabel ? ` → ${movement.toAccountLabel}` : ''}</td>
                       <td className="financeAmount">{money(movement.amount)}</td>
-                      <td className="recordActions"><button type="button" className="linkButton" onClick={() => remove(movement)}>Borrar</button></td>
+                      <td className="recordActions">
+                        {movement.recurringId ? <span className="adminSub">Automático</span> : <button type="button" className="linkButton" onClick={() => remove(movement)}>Borrar</button>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

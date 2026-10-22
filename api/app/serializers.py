@@ -4,7 +4,7 @@ from typing import Optional
 from .domain.finance import CASH_ACCOUNTS, EXPENSE_CATEGORIES, MOVEMENT_KINDS, OTHER_INCOME_CATEGORIES
 from .domain.hr import DOCUMENT_CATEGORIES
 from .domain.rules import ensure_tz, hold_expired
-from .models import Customer, FinanceMovement, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
+from .models import Customer, FinanceMovement, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
@@ -146,4 +146,38 @@ def finance_movement_payload(movement: FinanceMovement) -> dict:
         "accountLabel": CASH_ACCOUNTS[movement.account],
         "toAccount": movement.to_account,
         "toAccountLabel": CASH_ACCOUNTS.get(movement.to_account) if movement.to_account else None,
+    }
+
+
+def recurring_expense_payload(item: RecurringExpense) -> dict:
+    return {
+        "id": item.id,
+        "description": item.description,
+        "category": item.category,
+        "categoryLabel": EXPENSE_CATEGORIES[item.category],
+        "amount": item.amount,
+        "account": item.account,
+        "accountLabel": CASH_ACCOUNTS[item.account],
+        "dayOfMonth": item.day_of_month,
+        "startMonth": item.start_month,
+        "endMonth": item.end_month,
+    }
+
+
+def recurring_occurrence_payload(day, item: RecurringExpense) -> dict:
+    """Un mes de un gasto fijo, para listarlo junto a los movimientos capturados."""
+    return {
+        "id": f"{item.id}:{day.isoformat()}",
+        "recurringId": item.id,
+        "day": day.isoformat(),
+        "kind": "gasto",
+        "kindLabel": "Gasto fijo",
+        "category": item.category,
+        "categoryLabel": EXPENSE_CATEGORIES[item.category],
+        "description": item.description,
+        "amount": item.amount,
+        "account": item.account,
+        "accountLabel": CASH_ACCOUNTS[item.account],
+        "toAccount": None,
+        "toAccountLabel": None,
     }

@@ -173,3 +173,21 @@ class FinanceMovement(Base):
     account: Mapped[str] = mapped_column(String(20), nullable=False)
     to_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class RecurringExpense(Base):
+    """Gasto fijo mensual (renta, internet…): genera un gasto cada mes sin capturarlo."""
+
+    __tablename__ = "recurring_expenses"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    description: Mapped[str] = mapped_column(String(200), nullable=False)
+    category: Mapped[str] = mapped_column(String(40), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    account: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Día del mes en que se paga; en meses más cortos se usa el último día.
+    day_of_month: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Primer y último mes que cuentan, "AAAA-MM"; sin último mes sigue vigente.
+    start_month: Mapped[str] = mapped_column(String(7), nullable=False)
+    end_month: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

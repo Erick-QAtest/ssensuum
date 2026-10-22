@@ -3,6 +3,7 @@
 Los asientos no se guardan: se generan cada vez a partir del registro de servicios, de los pagos al equipo
 y de los movimientos capturados en Finanzas. Así, corregir un servicio corrige también los estados financieros.
 """
+import calendar
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
@@ -67,6 +68,21 @@ MOVEMENT_KINDS = {
     "activo": ("Compra de mobiliario o equipo", "inversion"),
     "traspaso": ("Traspaso entre cuentas", "traspaso"),
 }
+
+
+def monthly_dates(day_of_month: int, start_month: str, end_month: Optional[str], first: date, last: date) -> list[date]:
+    """Fechas de un gasto fijo mensual entre first y last; en meses cortos cae en el último día."""
+    year, month = map(int, start_month.split("-"))
+    result = []
+    while (year, month) <= (last.year, last.month):
+        stamp = f"{year:04d}-{month:02d}"
+        if end_month and stamp > end_month:
+            break
+        day = date(year, month, min(day_of_month, calendar.monthrange(year, month)[1]))
+        if first <= day <= last:
+            result.append(day)
+        year, month = (year + 1, 1) if month == 12 else (year, month + 1)
+    return result
 
 
 @dataclass
