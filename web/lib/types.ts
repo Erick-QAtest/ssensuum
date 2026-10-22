@@ -261,3 +261,36 @@ export type FinanceStatements = {
     balanced: boolean;
   };
 };
+
+export type FinanceBreakdownRow = { label: string; amount: number; count?: number };
+
+export type FinanceDashboard = {
+  from: string;
+  to: string;
+  previousFrom: string;
+  previousTo: string;
+  granularity: 'day' | 'week' | 'month';
+  kpis: {
+    revenue: number;
+    netIncome: number;
+    netMargin: number | null;
+    cash: number;
+    payables: number;
+    services: number;
+    previous: { revenue: number; netIncome: number; cash: number; payables: number };
+  };
+  series: {
+    start: string;
+    end: string;
+    revenue: number;
+    costOfServices: number;
+    operatingExpenses: number;
+    outflows: number;
+    otherIncome: number;
+    netIncome: number;
+    cash: number;
+  }[];
+  costBreakdown: FinanceBreakdownRow[];
+  revenueByService: FinanceBreakdownRow[];
+  revenueByAccount: FinanceBreakdownRow[];
+};

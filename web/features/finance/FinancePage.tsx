@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AdminNav } from '../../components/AdminNav';
-import { deleteFinanceMovement, financeExportUrl, getFinanceMeta, getFinanceMovements, getFinanceStatements } from '../../lib/api';
+import { deleteFinanceMovement, financeExportUrl, getFinanceDashboard, getFinanceMeta, getFinanceMovements, getFinanceStatements } from '../../lib/api';
 import { money } from '../../lib/format';
-import type { FinanceMeta, FinanceMovement, FinanceStatements } from '../../lib/types';
+import type { FinanceDashboard as Dashboard, FinanceMeta, FinanceMovement, FinanceStatements } from '../../lib/types';
 import { localIsoDate } from '../booking/dates';
 import { formatDate } from '../hr/hr';
+import { FinanceDashboard } from './FinanceDashboard';
 import { MovementForm } from './MovementForm';
 import { Statement, StatementRow } from './Statement';
 
@@ -83,6 +84,8 @@ export function FinancePage() {
   const [period, setPeriod] = useState<Period>('mes');
   const [custom, setCustom] = useState(() => range('mes', { from: '', to: '' }));
   const [data, setData] = useState<FinanceStatements | null>(null);
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [loading, setLoading] = useState(false);
   const [movements, setMovements] = useState<FinanceMovement[] | null>(null);
   const [error, setError] = useState('');
 
@@ -94,9 +97,12 @@ export function FinancePage() {
 
   const load = useCallback(() => {
     if (!from || !to || to < from) return Promise.resolve();
-    return Promise.all([getFinanceStatements(from, to), getFinanceMovements(from, to)])
-      .then(([statements, rows]) => { setData(statements); setMovements(rows); setError(''); })
-      .catch((e: Error) => setError(e.message));
+    // Mientras recarga, se conserva lo anterior atenuado: sin parpadeos ni saltos.
+    setLoading(true);
+    return Promise.all([getFinanceStatements(from, to), getFinanceMovements(from, to), getFinanceDashboard(from, to)])
+      .then(([statements, rows, board]) => { setData(statements); setMovements(rows); setDashboard(board); setError(''); })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [from, to]);
 
   useEffect(() => { load(); }, [load]);
@@ -105,8 +111,6 @@ export function FinancePage() {
     if (!window.confirm(`¿Borrar “${movement.description}” por ${money(movement.amount)}?`)) return;
     deleteFinanceMovement(movement.id).then(load).catch((e: Error) => setError(e.message));
   }
-
-  const cash = data?.cashFlow.accounts.reduce((sum, row) => sum + row.closing, 0) ?? 0;
 
   return (
     <main className="bookingShell" data-testid="finance-page">
@@ -141,19 +145,12 @@ export function FinancePage() {
         ) : null}
         {error ? <div className="errorBox" role="alert">{error}</div> : null}
 
-        {data ? (
-          <dl className="adminStats">
-            <div><strong>{money(data.incomeStatement.revenue)}</strong><span>Ingresos por servicios</span></div>
-            <div className={data.incomeStatement.netIncome < 0 ? 'alert' : ''}>
-              <strong>{data.incomeStatement.netIncome < 0 ? `−${money(-data.incomeStatement.netIncome)}` : money(data.incomeStatement.netIncome)}</strong>
-              <span>Utilidad neta{data.incomeStatement.netMargin !== null ? ` · margen ${data.incomeStatement.netMargin}%` : ''}</span>
-            </div>
-            <div><strong>{money(cash)}</strong><span>Dinero en cuentas al {formatDate(to)}</span></div>
-          </dl>
-        ) : null}
+        <div className={loading ? 'financeLoading' : ''}>
+          {dashboard ? <FinanceDashboard data={dashboard} /> : null}
 
         {data ? (
           <div className="financeGrid">
+            <h2 className="financeSectionTitle">Estados financieros</h2>
             <section className="adminCard">
               <h2>Estado de resultados</h2>
               <p className="muted">Lo que se ganó en el periodo: servicios cobrados menos honorarios y gastos.</p>
@@ -188,6 +185,7 @@ export function FinancePage() {
             </section>
           </div>
         ) : null}
+        </div>
 
         <section className="adminCard">
           <h2>Registrar movimiento</h2>

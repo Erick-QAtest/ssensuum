@@ -23,6 +23,12 @@ def statements(start: date = Query(alias="from"), end: date = Query(alias="to"),
     return finance_service.statements(db, start, end)
 
 
+@router.get("/dashboard")
+def dashboard(start: date = Query(alias="from"), end: date = Query(alias="to"), db: Session = Depends(get_db)) -> dict:
+    """Indicadores contra el periodo anterior, series por día, semana o mes y desgloses."""
+    return finance_service.dashboard(db, start, end)
+
+
 @router.get("/statements/export")
 def export_statements(start: date = Query(alias="from"), end: date = Query(alias="to"), db: Session = Depends(get_db)) -> Response:
     return Response(

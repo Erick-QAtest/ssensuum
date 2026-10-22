@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -181,6 +181,11 @@ export function getFinanceMeta() {
 export function getFinanceStatements(from: string, to: string) {
   const params = new URLSearchParams({ from, to });
   return getJson<FinanceStatements>(`/admin/finanzas/statements?${params.toString()}`, 'No se pudieron calcular los estados financieros');
+}
+
+export function getFinanceDashboard(from: string, to: string) {
+  const params = new URLSearchParams({ from, to });
+  return getJson<FinanceDashboard>(`/admin/finanzas/dashboard?${params.toString()}`, 'No se pudo cargar el tablero');
 }
 
 export function getFinanceMovements(from: string, to: string) {

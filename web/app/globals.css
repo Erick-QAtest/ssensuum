@@ -606,6 +606,28 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .hrPayout .hrLink { min-height: 0; margin-top: 4px; font-size: 13px; }
 .hrUndo { margin-left: 4px; color: var(--muted); }
 .financeGrid { display: grid; gap: 0; }
+.financeLoading { opacity: .55; transition: opacity .15s; }
+.financeTiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0 0; }
+.financeTiles > div { padding: 18px; border-radius: var(--r-sm); background: var(--surface); }
+.financeTiles dt { color: var(--muted); font-size: 14px; }
+.financeTiles dd { margin: 4px 0 6px; color: var(--ink); font-size: 30px; font-weight: 700; line-height: 1.1; }
+.financeTiles dd.negative { color: var(--danger); }
+.financeDelta { display: block; color: var(--muted); font-size: 13px; }
+.financeDelta.good { color: var(--success); }
+.financeDelta.bad { color: var(--danger); }
+.financeCompare { margin: 10px 0 0; font-size: 14px; }
+.financeCharts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.financeCharts .adminCard { min-width: 0; }
+.financeWide { grid-column: 1 / -1; }
+.financeChart { position: relative; width: 100%; margin-top: 12px; }
+.financeBars { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.financeBarLabel { display: block; margin-bottom: 4px; color: var(--ink); font-size: 14px; }
+.financeBarTrack { display: flex; align-items: center; gap: 8px; }
+.financeBar { display: block; flex: 0 0 auto; height: 14px; min-width: 2px; border-radius: 0 4px 4px 0; }
+.financeBars li:hover .financeBar { filter: brightness(1.12); }
+.financeBarValue { flex: 0 0 auto; color: var(--text); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.financeAccounts { margin: 12px 0 0; font-size: 14px; }
+.financeSectionTitle { margin: 40px 0 0; color: var(--ink); font-family: var(--serif); font-size: 32px; font-weight: 400; }
 .financePeriod { margin-top: 12px; color: var(--ink); }
 .financeDates label { display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
 .financeTable td { padding: 9px 14px; }
@@ -642,6 +664,9 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .checkoutButton, .whatsappConfirm { width: 100%; justify-content: center; }
   .adminCard { padding: 18px; }
   .adminNav { gap: 0; }
+  .financeTiles { grid-template-columns: repeat(2, 1fr); }
+  .financeTiles dd { font-size: 24px; }
+  .financeCharts { grid-template-columns: 1fr; }
   .adminNav a { padding: 0 5px; font-size: 14px; }
   .adminStats { grid-template-columns: 1fr; }
   .recordGrid { grid-template-columns: 1fr; }

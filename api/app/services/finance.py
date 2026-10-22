@@ -17,6 +17,7 @@ from ..domain.finance import (
     PAYOUT_ACCOUNT,
     Entry,
     balance_sheet,
+    balances,
     cash_flow,
     income_statement,
     movement_entry,
@@ -141,6 +142,123 @@ def statements(db: Session, start: date, end: date) -> dict:
         "incomeStatement": income_statement(during),
         "cashFlow": cash_flow(before, during),
         "balanceSheet": balance_sheet(entries),
+    }
+
+
+def _buckets(start: date, end: date) -> tuple[str, list[tuple[date, date]]]:
+    """Divide el periodo en días (hasta un mes), semanas (hasta cuatro meses) o meses."""
+    days = (end - start).days + 1
+    if days <= 31:
+        return "day", [(start + timedelta(days=i), start + timedelta(days=i)) for i in range(days)]
+    if days <= 124:
+        result, cursor = [], start
+        while cursor <= end:
+            last = min(cursor + timedelta(days=6 - cursor.weekday()), end)
+            result.append((cursor, last))
+            cursor = last + timedelta(days=1)
+        return "week", result
+    result, cursor = [], start
+    while cursor <= end:
+        next_month = (cursor.replace(day=1) + timedelta(days=32)).replace(day=1)
+        last = min(next_month - timedelta(days=1), end)
+        result.append((cursor, last))
+        cursor = last + timedelta(days=1)
+    return "month", result
+
+
+def _cash(entries: list[Entry]) -> int:
+    totals = balances(entries)
+    return sum(totals.get(code, 0) for code in CASH_ACCOUNTS)
+
+
+def _payables(entries: list[Entry]) -> int:
+    totals = balances(entries)
+    return totals.get("honorarios_por_pagar", 0) + totals.get("propinas_por_pagar", 0)
+
+
+def _top(rows: dict[str, dict], limit: int = 6) -> list[dict]:
+    """Los conceptos más grandes y el resto sumado en "Otros"."""
+    ordered = sorted(rows.values(), key=lambda row: -row["amount"])
+    if len(ordered) <= limit:
+        return ordered
+    rest = ordered[limit - 1:]
+    return ordered[: limit - 1] + [{"label": "Otros", "amount": sum(r["amount"] for r in rest), "count": sum(r.get("count", 0) for r in rest)}]
+
+
+def dashboard(db: Session, start: date, end: date) -> dict:
+    """Indicadores, series por periodo y desgloses para el tablero de Finanzas."""
+    if end < start:
+        raise ValidationError("La fecha final debe ser posterior a la inicial")
+    length = (end - start).days + 1
+    previous_start, previous_end = start - timedelta(days=length), start - timedelta(days=1)
+    entries = journal(db, end)
+    within = lambda first, last: [entry for entry in entries if first <= entry.day <= last]
+    upto = lambda last: [entry for entry in entries if entry.day <= last]
+
+    current = income_statement(within(start, end))
+    previous = income_statement(within(previous_start, previous_end))
+
+    # Antes del inicio de la contabilidad no hay servicios: la serie arranca ahí para no mostrar días vacíos.
+    granularity, ranges = _buckets(max(start, FINANCE_START) if end >= FINANCE_START else start, end)
+    series = []
+    for first, last in ranges:
+        pnl = income_statement(within(first, last))
+        series.append({
+            "start": first.isoformat(),
+            "end": last.isoformat(),
+            "revenue": pnl["revenue"],
+            "costOfServices": pnl["costOfServices"],
+            "operatingExpenses": pnl["operatingExpenses"],
+            "outflows": pnl["costOfServices"] + pnl["operatingExpenses"],
+            "otherIncome": pnl["otherIncomeTotal"],
+            "netIncome": pnl["netIncome"],
+            "cash": _cash(upto(last)),
+        })
+
+    costs = {"honorarios": {"label": "Honorarios de masajistas", "amount": current["costOfServices"]}} if current["costOfServices"] else {}
+    for row in current["expenses"]:
+        costs[row["account"]] = {"label": row["label"], "amount": row["amount"]}
+
+    services: dict[str, dict] = {}
+    methods: dict[str, dict] = {}
+    if end >= FINANCE_START:
+        first = max(start, FINANCE_START)
+        records = records_repo.list_paid_between(
+            db, datetime.combine(first, time.min, tzinfo=TZ), datetime.combine(end + timedelta(days=1), time.min, tzinfo=TZ),
+        )
+        for record in records:
+            service = services.setdefault(record.service_name, {"label": record.service_name, "amount": 0, "count": 0})
+            service["amount"] += record.amount
+            service["count"] += 1
+            account = PAYMENT_METHOD_ACCOUNT[record.payment_method]
+            method = methods.setdefault(account, {"label": CASH_ACCOUNTS[account], "amount": 0, "count": 0})
+            method["amount"] += record.amount
+            method["count"] += 1
+
+    return {
+        "from": start.isoformat(),
+        "to": end.isoformat(),
+        "previousFrom": previous_start.isoformat(),
+        "previousTo": previous_end.isoformat(),
+        "granularity": granularity,
+        "kpis": {
+            "revenue": current["revenue"],
+            "netIncome": current["netIncome"],
+            "netMargin": current["netMargin"],
+            "cash": _cash(upto(end)),
+            "payables": _payables(upto(end)),
+            "services": sum(row["count"] for row in services.values()),
+            "previous": {
+                "revenue": previous["revenue"],
+                "netIncome": previous["netIncome"],
+                "cash": _cash(upto(previous_end)),
+                "payables": _payables(upto(previous_end)),
+            },
+        },
+        "series": series,
+        "costBreakdown": _top(costs, limit=7),
+        "revenueByService": _top(services),
+        "revenueByAccount": sorted(methods.values(), key=lambda row: -row["amount"]),
     }
 
 

@@ -108,3 +108,36 @@ def test_statements_follow_services_payouts_and_movements(client):
     excel = client.get("/admin/finanzas/statements/export", params={"from": "2031-01-06", "to": "2031-01-12"})
     assert excel.status_code == 200
     assert excel.headers["content-type"].startswith("application/vnd.openxmlformats")
+
+
+def test_dashboard_series_and_breakdowns(client):
+    record = {
+        "customerName": "Cliente Tablero",
+        "customerPhone": "36" + str(uuid.uuid4().int)[:8],
+        "serviceId": "massage-special",
+        "therapistIds": [client.get("/therapists").json()[7]["id"]],
+        "paidAt": "2032-05-04T10:00:00-06:00",
+        "amount": 1500,
+        "paymentMethod": "mercadopago",
+        "tips": [],
+    }
+    assert client.post("/admin/records", json=record).status_code == 201
+    expense = {"kind": "gasto", "category": "publicidad", "description": "Anuncios", "amount": 700, "account": "banco", "day": "2032-05-05"}
+    assert client.post("/admin/finanzas/movements", json=expense).status_code == 201
+
+    week = client.get("/admin/finanzas/dashboard", params={"from": "2032-05-03", "to": "2032-05-09"}).json()
+    assert week["granularity"] == "day" and len(week["series"]) == 7
+    days = {row["start"]: row for row in week["series"]}
+    assert days["2032-05-04"]["revenue"] == 1500 and days["2032-05-04"]["outflows"] == 500
+    assert days["2032-05-05"]["operatingExpenses"] == 700
+    assert days["2032-05-05"]["cash"] - days["2032-05-03"]["cash"] == 1500 - 700
+    assert week["kpis"]["revenue"] == 1500 and week["kpis"]["netIncome"] == 300
+    assert (week["previousFrom"], week["previousTo"]) == ("2032-04-26", "2032-05-02")
+    assert {row["label"] for row in week["costBreakdown"]} == {"Honorarios de masajistas", "Publicidad y marketing"}
+    assert week["revenueByService"][0]["count"] == 1
+    assert week["revenueByAccount"] == [{"label": "Mercado Pago", "amount": 1500, "count": 1}]
+
+    year = client.get("/admin/finanzas/dashboard", params={"from": "2032-01-01", "to": "2032-12-31"}).json()
+    assert year["granularity"] == "month" and len(year["series"]) == 12
+    quarter = client.get("/admin/finanzas/dashboard", params={"from": "2032-04-01", "to": "2032-06-30"}).json()
+    assert quarter["granularity"] == "week" and quarter["series"][0]["start"] == "2032-04-01"
