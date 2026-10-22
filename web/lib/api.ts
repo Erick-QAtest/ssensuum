@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -171,3 +171,29 @@ export function setPayout(recordId: string, therapistId: string, paid: boolean) 
 }
 
 export const hrPayrollExportUrl = (week: string) => `${API}/admin/rh/payroll/export?week=${encodeURIComponent(week)}`;
+
+// Finanzas: estados financieros generados con el registro, los pagos al equipo y los movimientos capturados.
+
+export function getFinanceMeta() {
+  return getJson<FinanceMeta>('/admin/finanzas/meta', 'No se pudo cargar Finanzas');
+}
+
+export function getFinanceStatements(from: string, to: string) {
+  const params = new URLSearchParams({ from, to });
+  return getJson<FinanceStatements>(`/admin/finanzas/statements?${params.toString()}`, 'No se pudieron calcular los estados financieros');
+}
+
+export function getFinanceMovements(from: string, to: string) {
+  const params = new URLSearchParams({ from, to });
+  return getJson<FinanceMovement[]>(`/admin/finanzas/movements?${params.toString()}`, 'No se pudieron cargar los movimientos');
+}
+
+export function createFinanceMovement(input: FinanceMovementInput) {
+  return postJson<FinanceMovement>('/admin/finanzas/movements', input, 'No se pudo guardar el movimiento');
+}
+
+export function deleteFinanceMovement(id: string) {
+  return sendJson<void>('DELETE', `/admin/finanzas/movements/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar el movimiento');
+}
+
+export const financeExportUrl = (from: string, to: string) => `${API}/admin/finanzas/statements/export?${new URLSearchParams({ from, to }).toString()}`;

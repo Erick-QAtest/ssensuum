@@ -157,3 +157,19 @@ class TherapistPayout(Base):
     # Lo que se pagó en ese momento, por si el registro del servicio cambia después.
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     paid_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class FinanceMovement(Base):
+    """Movimiento capturado en Finanzas: gastos, saldos iniciales, aportaciones, retiros, préstamos, equipo y traspasos."""
+
+    __tablename__ = "finance_movements"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    category: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    description: Mapped[str] = mapped_column(String(200), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    account: Mapped[str] = mapped_column(String(20), nullable=False)
+    to_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

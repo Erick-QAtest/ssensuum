@@ -197,3 +197,67 @@ export type WeeklyPayroll = {
   staff: PayrollRow[];
   totals: PayrollAmounts;
 };
+
+export type Option = { value: string; label: string };
+
+export type FinanceMeta = {
+  startDate: string;
+  accounts: Option[];
+  kinds: Option[];
+  expenseCategories: Option[];
+  incomeCategories: Option[];
+};
+
+export type FinanceMovementInput = {
+  day: string;
+  kind: string;
+  category: string | null;
+  description: string;
+  amount: number;
+  account: string;
+  toAccount: string | null;
+};
+
+export type FinanceMovement = FinanceMovementInput & {
+  id: string;
+  kindLabel: string;
+  categoryLabel: string | null;
+  accountLabel: string;
+  toAccountLabel: string | null;
+};
+
+type AccountAmount = { account: string; label: string; amount: number };
+
+export type FinanceStatements = {
+  from: string;
+  to: string;
+  startDate: string;
+  incomeStatement: {
+    revenue: number;
+    costOfServices: number;
+    grossProfit: number;
+    expenses: AccountAmount[];
+    operatingExpenses: number;
+    operatingIncome: number;
+    otherIncome: AccountAmount[];
+    otherIncomeTotal: number;
+    netIncome: number;
+    netMargin: number | null;
+  };
+  cashFlow: {
+    opening: number;
+    sections: { section: string; label: string; items: { label: string; amount: number }[]; total: number }[];
+    netChange: number;
+    closing: number;
+    accounts: { account: string; label: string; opening: number; closing: number }[];
+  };
+  balanceSheet: {
+    assets: AccountAmount[];
+    totalAssets: number;
+    liabilities: AccountAmount[];
+    totalLiabilities: number;
+    equity: AccountAmount[];
+    totalEquity: number;
+    balanced: boolean;
+  };
+};

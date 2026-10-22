@@ -1,9 +1,10 @@
 from datetime import timezone
 from typing import Optional
 
+from .domain.finance import CASH_ACCOUNTS, EXPENSE_CATEGORIES, MOVEMENT_KINDS, OTHER_INCOME_CATEGORIES
 from .domain.hr import DOCUMENT_CATEGORIES
 from .domain.rules import ensure_tz, hold_expired
-from .models import Customer, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
+from .models import Customer, FinanceMovement, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
@@ -127,4 +128,22 @@ def hr_document_payload(document: HrDocument) -> dict:
         "sizeBytes": document.size_bytes,
         # Se guarda en UTC; SQLite pierde la zona horaria al leerla de vuelta.
         "uploadedAt": ensure_tz(document.uploaded_at.replace(tzinfo=document.uploaded_at.tzinfo or timezone.utc)).isoformat(),
+    }
+
+
+def finance_movement_payload(movement: FinanceMovement) -> dict:
+    categories = EXPENSE_CATEGORIES if movement.kind == "gasto" else OTHER_INCOME_CATEGORIES
+    return {
+        "id": movement.id,
+        "day": movement.day,
+        "kind": movement.kind,
+        "kindLabel": MOVEMENT_KINDS[movement.kind][0],
+        "category": movement.category,
+        "categoryLabel": categories.get(movement.category) if movement.category else None,
+        "description": movement.description,
+        "amount": movement.amount,
+        "account": movement.account,
+        "accountLabel": CASH_ACCOUNTS[movement.account],
+        "toAccount": movement.to_account,
+        "toAccountLabel": CASH_ACCOUNTS.get(movement.to_account) if movement.to_account else None,
     }

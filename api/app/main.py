@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from .config import settings
 from .db import Base, SessionLocal, add_missing_columns, engine
 from .domain.errors import DomainError
-from .routers import admin, availability, catalog, checkout, customers, events, health, hr, records, reservations
+from .routers import admin, availability, catalog, checkout, customers, events, finance, health, hr, records, reservations
 from .seed import seed
 
 
@@ -45,3 +45,4 @@ app.include_router(checkout.router)
 app.include_router(events.router)
 app.include_router(records.router)
 app.include_router(hr.router)
+app.include_router(finance.router)

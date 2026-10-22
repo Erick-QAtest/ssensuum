@@ -57,6 +57,18 @@ def _settle_weeks(db: Session, first_monday: date, weeks: int) -> list[dict]:
     return result
 
 
+def lines_between(db: Session, start: date, end: date) -> list[dict]:
+    """Cada servicio de cada masajista entre esas fechas, con limpieza, propina y estado de pago."""
+    first_monday = week_start(start)
+    weeks = (week_start(end) - first_monday).days // 7 + 1
+    lines = []
+    for row in _settle_weeks(db, first_monday, weeks):
+        for line in row["lines"]:
+            if start <= datetime.fromisoformat(line["paidAt"]).date() <= end:
+                lines.append({"therapistId": row["therapistId"], "therapistName": row["therapistName"], **line})
+    return lines
+
+
 def weekly_payroll(db: Session, day: date) -> dict:
     monday = week_start(day)
     staff = sorted(_settle_weeks(db, monday, 1), key=lambda row: row["therapistName"])

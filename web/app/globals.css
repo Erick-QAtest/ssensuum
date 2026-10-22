@@ -546,8 +546,8 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .legalPage li { margin-bottom: 8px; }
 .legalUpdated { color: var(--muted); font-size: 14px; }
 
-.adminNav { display: flex; gap: 6px; margin: 4px 0 18px; border-bottom: 1px solid var(--line); }
-.adminNav a { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: -1px; padding: 0 14px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 700; text-decoration: none; }
+.adminNav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 4px 0 18px; border-bottom: 1px solid var(--line); }
+.adminNav a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; margin-bottom: -1px; padding: 0 14px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 700; text-decoration: none; }
 .adminNav a.active { border-bottom-color: var(--brown); color: var(--brown); }
 .adminCard { margin-top: 32px; padding: 24px; border-radius: var(--r-lg); background: var(--surface); }
 .adminCard h2 { margin: 0 0 8px; color: var(--ink); font-family: var(--serif); font-size: 28px; font-weight: 400; }
@@ -605,6 +605,16 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .hrPayout .statusBadge { margin-right: 6px; }
 .hrPayout .hrLink { min-height: 0; margin-top: 4px; font-size: 13px; }
 .hrUndo { margin-left: 4px; color: var(--muted); }
+.financeGrid { display: grid; gap: 0; }
+.financePeriod { margin-top: 12px; color: var(--ink); }
+.financeDates label { display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
+.financeTable td { padding: 9px 14px; }
+.financeAmount { text-align: right !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.financeAmount.negative { color: var(--danger); }
+.financeRow-section td { padding-top: 16px; color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.financeRow-item td:first-child { padding-left: 28px; }
+.financeRow-subtotal td { font-weight: 700; }
+.financeRow-total td { background: var(--bg); color: var(--ink); font-size: 16px; font-weight: 700; }
 .hrWeek { color: var(--ink); font-size: 15px; }
 .hrDetail td { background: var(--bg); font-size: 14px; }
 .hrTotal td { font-weight: 700; }
@@ -631,6 +641,8 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .checkoutFields { grid-template-columns: 1fr; }
   .checkoutButton, .whatsappConfirm { width: 100%; justify-content: center; }
   .adminCard { padding: 18px; }
+  .adminNav { gap: 0; }
+  .adminNav a { padding: 0 5px; font-size: 14px; }
   .adminStats { grid-template-columns: 1fr; }
   .recordGrid { grid-template-columns: 1fr; }
 }

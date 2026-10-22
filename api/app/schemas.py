@@ -98,6 +98,18 @@ class PayoutUpdate(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class FinanceMovementCreate(BaseModel):
+    day: date
+    kind: str
+    category: Optional[str] = None
+    description: str = Field(max_length=200)
+    amount: int = Field(gt=0)
+    account: str
+    to_account: Optional[str] = Field(default=None, alias="toAccount")
+
+    model_config = {"populate_by_name": True}
+
+
 class ServiceRecordCreate(BaseModel):
     customer_name: str = Field(alias="customerName", max_length=200)
     customer_phone: str = Field(alias="customerPhone")
