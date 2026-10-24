@@ -110,15 +110,41 @@ THERAPISTS = [
         "Trabaja con técnica cuidada y atención constante, ideal si buscas una sesión seria, puntual y bien ejecutada.",
     },
     {
-        "id": "chicano",
-        "name": "Chicano",
-        "photo_url": "/ssensuum/equipo/chicano.jpg",
-        "strengths": "Presencia · Temple · Confianza",
-        "bio": "De presencia tranquila y trato directo, Chicano genera confianza desde el saludo. Trabaja con seguridad y ritmo constante, "
-        "ideal si buscas una sesión firme, sin prisas y con buena comunicación.",
+        "id": "kevin",
+        "name": "Kevin",
+        "photo_url": "/ssensuum/equipo/kevin.jpg",
+        "strengths": "Alegría · Soltura · Trato",
+        "bio": "De trato ligero y buen ánimo, Kevin hace que la primera visita se sienta cómoda desde que entras. Trabaja con soltura y "
+        "la conversación justa, sin perder la seriedad de la sesión.",
+        "is_new": True,
     },
-    {"id": "kevin", "name": "Kevin", "photo_url": "/ssensuum/equipo/kevin.jpg", "is_new": True},
-    {"id": "paul", "name": "Paul", "photo_url": "", "is_new": True},
+    {
+        "id": "paul",
+        "name": "Paul",
+        "photo_url": "/ssensuum/equipo/paul.jpg",
+        "strengths": "Aplomo · Firmeza · Disciplina",
+        "bio": "Serio y de mirada directa, Paul transmite aplomo desde el primer saludo. Trabaja con firmeza y método, buena opción si "
+        "buscas una sesión de presión alta y manos seguras.",
+        "is_new": True,
+    },
+    {
+        "id": "richy",
+        "name": "Richy",
+        "photo_url": "/ssensuum/equipo/richy.jpg",
+        "strengths": "Ritmo · Paciencia · Entrega",
+        "bio": "De trato tranquilo y ritmo parejo, Richy trabaja sin prisa y sostiene la presión que acordaron de principio a fin. "
+        "Buena opción si prefieres una sesión constante, sin cambios bruscos.",
+        "is_new": True,
+    },
+    {
+        "id": "braulio",
+        "name": "Braulio",
+        "photo_url": "/ssensuum/equipo/braulio.jpg",
+        "strengths": "Carácter · Precisión · Actitud",
+        "bio": "De carácter decidido y trato frontal, Braulio pregunta lo necesario y se pone a trabajar. Buena opción si buscas una "
+        "sesión de presión firme, directa y sin rodeos.",
+        "is_new": True,
+    },
 ]
 
 

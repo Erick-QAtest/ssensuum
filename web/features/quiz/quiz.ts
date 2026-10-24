@@ -20,10 +20,10 @@ export type TimeWindow = keyof typeof TIME_WINDOWS;
 // Estilos de trato y quién los representa, según las fortalezas y bios del equipo.
 // Si alguien deja el equipo, el quiz lo salta; si se integra alguien, agrégalo aquí.
 export const TRATO_STYLES = {
-  cercano: { label: 'Cercano y cálido', hint: 'Para sentirte en confianza desde el saludo', ids: ['aleman', 'dany'] },
-  tranquilo: { label: 'Tranquilo y pausado', hint: 'Sin prisas, con calma en cada movimiento', ids: ['mazer', 'jairo'] },
+  cercano: { label: 'Cercano y cálido', hint: 'Para sentirte en confianza desde el saludo', ids: ['aleman', 'dany', 'kevin'] },
+  tranquilo: { label: 'Tranquilo y pausado', hint: 'Sin prisas, con calma en cada movimiento', ids: ['mazer', 'jairo', 'richy'] },
   profesional: { label: 'Serio y profesional', hint: 'Técnica cuidada y sin distracciones', ids: ['borja', 'jessy'] },
-  directo: { label: 'Directo y con temple', hint: 'Firme y con buena comunicación', ids: ['chicano'] },
+  directo: { label: 'Directo y firme', hint: 'Presión firme y sin rodeos', ids: ['braulio', 'paul'] },
 } as const;
 type TratoStyle = keyof typeof TRATO_STYLES;
 

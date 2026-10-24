@@ -187,8 +187,8 @@ def test_no_preference_spreads_bookings_across_therapists(client, mp):
 
 def test_catalog_lists_only_current_team(client):
     names = {row["name"] for row in client.get("/therapists").json()}
-    assert {"Jessy", "Borja", "Alemán"} <= names
-    assert "Alex" not in names
+    assert {"Jessy", "Borja", "Alemán", "Richy", "Braulio"} <= names
+    assert "Alex" not in names and "Chicano" not in names
 
 
 def test_new_therapists_are_flagged(client):
