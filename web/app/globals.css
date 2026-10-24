@@ -190,7 +190,8 @@ svg { width: 1em; height: 1em; }
 }
 .hero h1 em { color: var(--hero-ink); }
 .heroLead { margin: 14px 0 0; max-width: 640px; color: var(--hero-text); font-size: 18px; }
-.heroGrid { display: grid; grid-template-areas: "copy" "media" "actions"; }
+/* En celular el botón va antes del video: la acción queda visible al abrir la página. */
+.heroGrid { display: grid; grid-template-areas: "copy" "actions" "media"; }
 .heroCopy { grid-area: copy; }
 .heroActions { grid-area: actions; }
 /* La foto se muestra completa, sin recortes: el alto sale de su propia proporción. */
@@ -288,6 +289,7 @@ svg { width: 1em; height: 1em; }
 .therapistBio { margin: 0; }
 .therapist .btn { margin-top: auto; }
 .availableToday { color: var(--success); font-size: 14px; font-weight: 700; }
+.teamCount { display: none; justify-content: space-between; margin: 0 0 12px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 
 /* ---------- Cómo funciona / Reglas ---------- */
 .steps { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
@@ -422,6 +424,9 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .clubHeaderRow .clubNav { display: none; }
   .clubMenuButton { display: inline-flex; }
   .bottomBar { display: flex; }
+  /* La flecha a terapeutas sobra cuando el video queda debajo del botón. */
+  .heroScroll { display: none; }
+  .teamCount { display: flex; }
   .team {
     grid-template-columns: none;
     grid-auto-flow: column;

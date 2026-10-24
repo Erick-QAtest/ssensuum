@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ApiError, getAvailability, getServices, getTherapists, paymentsEnabled, startCheckout, track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
-import { localIsoDate, longDateLabel, next14Days } from './dates';
+import { localIsoDate, longDateLabel, next14Days, timeLabel } from './dates';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 
 // El quiz puede llegar con día y hora; solo se aceptan si caen dentro de los 14 días que se muestran.
@@ -31,6 +31,14 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState('');
   const [paymentsOff, setPaymentsOff] = useState(false);
+  const summaryRef = useRef<HTMLElement>(null);
+
+  // En celular el resumen aparece fuera de pantalla: se lleva al cliente hasta él.
+  useEffect(() => {
+    if (!showSummary) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    summaryRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }, [showSummary]);
 
   useEffect(() => {
     Promise.all([getServices(), getTherapists()])
@@ -74,7 +82,7 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
   const confirmUrl = whatsappUrl([
     'Hola SSENSUUM, quiero reservar:',
     `• ${service.name}`,
-    `• ${dateIso ? longDateLabel(dateIso) : ''}, ${time} h`,
+    `• ${dateIso ? longDateLabel(dateIso) : ''}, ${time ? timeLabel(time) : ''}`,
     `• Terapeuta: ${therapistLabel}`,
     'Mi nombre es: ',
   ].join('\n'));
@@ -130,13 +138,14 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
           <div className="stepNumber">01</div>
           <div className="stepContent">
             <h2>Elige terapeuta</h2>
-            <button className={`secondaryButton ${noPreference ? 'selected' : ''}`} onClick={() => { setNoPreference(true); setTherapistIds([]); }}>Sin preferencia</button>
+            <button type="button" aria-pressed={noPreference} className={`secondaryButton ${noPreference ? 'selected' : ''}`} onClick={() => { setNoPreference(true); setTherapistIds([]); }}>Sin preferencia</button>
             <div className="therapistGrid bookingTherapists">
               {therapists.map((therapist) => (
                 <button
                   type="button"
                   key={therapist.id}
                   data-testid="therapist-card"
+                  aria-pressed={therapistIds.includes(therapist.id)}
                   className={`therapistChoice ${therapistIds.includes(therapist.id) ? 'selected' : ''}`}
                   onClick={() => {
                     setNoPreference(false);
@@ -168,6 +177,8 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
                     type="button"
                     key={iso}
                     data-testid={`date-${iso}`}
+                    aria-label={longDateLabel(iso)}
+                    aria-pressed={dateIso === iso}
                     className={`dateButton ${dateIso === iso ? 'selected' : ''}`}
                     onClick={() => { setDateIso(iso); setTime(''); setShowSummary(false); }}
                   >
@@ -192,10 +203,11 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
                   type="button"
                   key={slot}
                   data-testid={`slot-${slot.replace(':', '-')}`}
+                  aria-pressed={time === slot}
                   className={time === slot ? 'selected' : ''}
                   onClick={() => { setTime(slot); setShowSummary(false); }}
                 >
-                  {slot}
+                  {timeLabel(slot)}
                 </button>
               ))}
             </div>
@@ -205,14 +217,14 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
         <button className="primaryButton" disabled={!canContinue} onClick={() => { setShowSummary(true); track('booking_summary', service.id); }}>Continuar al resumen</button>
 
         {showSummary ? (
-          <section className="summary" data-testid="booking-summary">
+          <section className="summary" data-testid="booking-summary" ref={summaryRef}>
             <span className="kicker">Resumen</span>
             <h2>Tu experiencia</h2>
             <dl>
               <div><dt>Servicio</dt><dd>{service.name}</dd></div>
               <div><dt>Terapeuta</dt><dd>{therapistLabel}</dd></div>
               <div><dt>Día</dt><dd>{longDateLabel(dateIso)}</dd></div>
-              <div><dt>Hora</dt><dd>{time}</dd></div>
+              <div><dt>Hora</dt><dd>{timeLabel(time)}</dd></div>
               <div><dt>Duración</dt><dd>{service.durationMinutes} min</dd></div>
               <div><dt>Total</dt><dd>{money(service.publicPrice)}</dd></div>
               <div><dt>Anticipo hoy</dt><dd>{money(service.deposit)}</dd></div>
@@ -228,13 +240,15 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
                 <div className="checkoutFields">
                   <label>
                     <span>Nombre</span>
-                    <input value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" placeholder="¿Cómo te llamas?" />
+                    <input value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" placeholder="¿Cómo te llamas?" required />
                   </label>
                   <label>
                     <span>WhatsApp</span>
-                    <input type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel-national" placeholder="33 1234 5678" />
+                    <input type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel-national" placeholder="33 1234 5678" required aria-describedby="phone-hint" />
                   </label>
                 </div>
+                {/* El botón de pago está deshabilitado hasta tener nombre y 10 dígitos: se dice por qué. */}
+                {!canPay && !paying ? <p className="summaryNote" id="phone-hint">Escribe tu nombre y tu WhatsApp a 10 dígitos para pagar el anticipo.</p> : null}
                 {payError ? <div className="errorBox" role="alert">{payError}</div> : null}
                 <button type="button" className="primaryButton checkoutButton" disabled={!canPay} onClick={pay}>
                   {paying ? 'Abriendo Mercado Pago…' : `Pagar anticipo ${money(service.deposit)}`}

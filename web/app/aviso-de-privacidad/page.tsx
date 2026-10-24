@@ -7,6 +7,7 @@ import { whatsappUrl } from '../../lib/whatsapp';
 export const metadata: Metadata = {
   title: 'Aviso de privacidad · SSENSUUM',
   description: 'Cómo SSENSUUM recaba, usa y protege tus datos personales.',
+  alternates: { canonical: '/aviso-de-privacidad' },
 };
 
 const responsible = BUSINESS.legalName ? `${BUSINESS.legalName}, con nombre comercial ${BUSINESS.commercialName}` : BUSINESS.commercialName;

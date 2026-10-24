@@ -11,6 +11,12 @@ export function longDateLabel(iso: string) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+// La API trabaja en 24 h ("13:30"); al cliente se le muestra como en el resto del sitio ("1:30 p.m.").
+export function timeLabel(time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return `${((hours + 11) % 12) + 1}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'a.m.' : 'p.m.'}`;
+}
+
 export function next14Days() {
   return Array.from({ length: 14 }, (_, index) => {
     const date = new Date();

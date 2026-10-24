@@ -7,6 +7,7 @@ import { whatsappUrl } from '../../lib/whatsapp';
 export const metadata: Metadata = {
   title: 'Términos de reserva y cancelación · SSENSUUM',
   description: 'Anticipo, cancelaciones, cambios de horario y reembolsos en SSENSUUM.',
+  alternates: { canonical: '/terminos' },
 };
 
 export default function TermsPage() {

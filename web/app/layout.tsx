@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     siteName: 'SSENSUUM',
     title: 'SSENSUUM · Tú eliges quién te atiende',
     description: DESCRIPTION,
-    images: [{ url: '/ssensuum/location.jpg', width: 1200, height: 655, alt: 'Fachada de SSENSUUM en Col. Americana' }],
+    images: [{ url: '/ssensuum/og-cabina.jpg', width: 1200, height: 630, alt: 'Cabina privada de SSENSUUM a media luz' }],
   },
   twitter: { card: 'summary_large_image' },
 };

@@ -110,7 +110,7 @@ export function Catalog() {
         <div className="wrap">
           <div className="clubHeaderRow">
             <a href="#inicio" className="clubLogo" aria-label="SSENSUUM, inicio">
-              <img src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
+              <img src="/ssensuum/brand-logo.webp" width={450} height={150} alt="SSENSUUM Private Massage Club" />
             </a>
             <nav className="clubNav" aria-label="Secciones">
               {NAV.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
@@ -359,7 +359,7 @@ export function Catalog() {
       {/* 13. Footer */}
       <footer className="clubFooter">
         <div className="wrap">
-          <img src="/ssensuum/brand-logo.jpg" alt="SSENSUUM Private Massage Club" />
+          <img src="/ssensuum/brand-logo.webp" width={450} height={150} alt="SSENSUUM Private Massage Club" />
           <ul className="footerLinks">
             {NAV.map((item) => <li key={item.href}><a href={item.href}>{item.label}</a></li>)}
             <li><a href="/terminos">Términos de reserva</a></li>

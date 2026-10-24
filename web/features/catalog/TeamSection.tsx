@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getAvailability, track } from '../../lib/api';
 import type { Therapist } from '../../lib/types';
 import { localIsoDate } from '../booking/dates';
@@ -12,6 +12,15 @@ function strengthsOf(therapist: Therapist) {
 
 export function TeamSection({ therapists }: { therapists: Therapist[] }) {
   const [availableToday, setAvailableToday] = useState<Set<string>>(new Set());
+  // En celular el equipo es un carrusel: el contador avisa que hay más tarjetas y cuántas.
+  const listRef = useRef<HTMLUListElement>(null);
+  const [current, setCurrent] = useState(0);
+  const onScroll = () => {
+    const list = listRef.current;
+    const card = list?.firstElementChild as HTMLElement | null;
+    if (!list || !card) return;
+    setCurrent(Math.round(list.scrollLeft / (card.offsetWidth + 16)));
+  };
 
   // La API ya calcula horarios por terapeuta: "Disponible hoy" = le queda algún horario hoy.
   useEffect(() => {
@@ -34,7 +43,13 @@ export function TeamSection({ therapists }: { therapists: Therapist[] }) {
           <h2 id="equipo-title">Elige quién te atiende.</h2>
           <p className="sectionLead">¿No sabes a quién elegir? <a href="/quiz">Haz el quiz de 1 minuto</a> y te recomendamos terapeuta, masaje y horario.</p>
         </div>
-        <ul className="team">
+        {therapists.length > 1 ? (
+          <p className="teamCount" aria-hidden="true">
+            <span>Desliza para ver a todos</span>
+            <span>{Math.min(current + 1, therapists.length)} / {therapists.length}</span>
+          </p>
+        ) : null}
+        <ul className="team" ref={listRef} onScroll={onScroll}>
           {therapists.map((therapist) => (
             <li className="therapist" key={therapist.id}>
               <div className="therapistPhoto">

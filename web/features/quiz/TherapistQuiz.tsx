@@ -6,7 +6,7 @@ import { getAvailability, getServices, getTherapists, track } from '../../lib/ap
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl, WHATSAPP_MESSAGES } from '../../lib/whatsapp';
-import { localIsoDate } from '../booking/dates';
+import { localIsoDate, timeLabel } from '../booking/dates';
 import {
   inWindow,
   lowerFirst,
@@ -263,7 +263,7 @@ export function TherapistQuiz() {
                                 onClick={() => track('reserve_click', `quiz:${therapist?.id ?? 'sin-preferencia'}`)}
                               >
                                 <span>{slot.dayLabel}</span>
-                                <strong>{slot.time}</strong>
+                                <strong>{timeLabel(slot.time)}</strong>
                               </Link>
                             </li>
                           ))}
