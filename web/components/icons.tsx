@@ -77,6 +77,15 @@ export function PlayIcon() {
   );
 }
 
+export function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="currentColor" />
+      <path d="M9.5 8.5v7M14.5 8.5v7" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function PeopleIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

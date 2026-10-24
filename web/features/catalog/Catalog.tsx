@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
+import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PauseIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
 import { BUSINESS } from '../../lib/business';
 import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
@@ -39,6 +39,9 @@ export function Catalog() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroCtaVisible, setHeroCtaVisible] = useState(true);
   const heroCtaRef = useRef<HTMLAnchorElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  // null: el video no corre (movimiento reducido o ahorro de datos) y queda el poster.
+  const [heroPaused, setHeroPaused] = useState<boolean | null>(null);
 
   useEffect(() => {
     Promise.all([getServices(), getTherapists()])
@@ -61,6 +64,25 @@ export function Catalog() {
     observer.observe(cta);
     return () => observer.disconnect();
   }, []);
+
+  // El video del hero arranca solo si no se pidió movimiento reducido ni ahorro de datos.
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+    if (!video || window.matchMedia('(prefers-reduced-motion: reduce)').matches || saveData) return;
+    video.play().then(() => setHeroPaused(false), () => setHeroPaused(true));
+  }, []);
+
+  const toggleHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().then(() => setHeroPaused(false), () => setHeroPaused(true));
+    } else {
+      video.pause();
+      setHeroPaused(true);
+    }
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -124,7 +146,25 @@ export function Catalog() {
             <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta y reserva una experiencia a tu medida.</p>
           </div>
           <figure className="heroMedia">
-            <img src="/ssensuum/hero-cabina.webp" width={768} height={1365} alt="Cabina privada de SSENSUUM con camilla, espejos y el logo en la pared" fetchPriority="high" />
+            <video
+              ref={heroVideoRef}
+              width={960}
+              height={1280}
+              poster="/ssensuum/hero-cortina-poster.jpg"
+              muted
+              loop
+              playsInline
+              preload="none"
+              aria-label="Cabina privada de SSENSUUM a media luz, vista tras una cortina"
+            >
+              <source src="/ssensuum/hero-cortina.webm" type="video/webm" />
+              <source src="/ssensuum/hero-cortina.mp4" type="video/mp4" />
+            </video>
+            {heroPaused !== null ? (
+              <button className="heroMediaToggle" type="button" onClick={toggleHeroVideo} aria-label={heroPaused ? 'Reproducir video' : 'Pausar video'}>
+                {heroPaused ? <PlayIcon /> : <PauseIcon />}
+              </button>
+            ) : null}
           </figure>
           <div className="heroActions">
             {BUSINESS.experienceVideoUrl ? (
