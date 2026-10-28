@@ -14,7 +14,7 @@ def get_by_phone(db: Session, phone: str) -> Optional[Customer]:
     return db.scalar(select(Customer).where(Customer.phone == phone))
 
 
-def search(db: Session, query: Optional[str], limit: int, offset: int) -> list[Customer]:
+def search(db: Session, query: Optional[str], limit: Optional[int] = None, offset: int = 0) -> list[Customer]:
     statement = select(Customer)
     if query:
         pattern = f"%{query}%"
@@ -27,6 +27,10 @@ def search(db: Session, query: Optional[str], limit: int, offset: int) -> list[C
         )
     statement = statement.order_by(Customer.first_name, Customer.last_name, Customer.id).limit(limit).offset(offset)
     return list(db.scalars(statement).all())
+
+
+def list_all(db: Session) -> list[Customer]:
+    return list(db.scalars(select(Customer)).all())
 
 
 def save(db: Session, customer: Customer) -> Customer:

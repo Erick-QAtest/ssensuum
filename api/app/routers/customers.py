@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..schemas import CustomerCreate, CustomerUpdate
-from ..serializers import customer_payload
+from ..serializers import customer_payload, customer_profile_payload
 from ..domain.customer_import import MAX_FILE_BYTES
 from ..services import customer_import as import_service
 from ..services import customers as customers_service
@@ -18,9 +18,15 @@ def search_customers(
     query: Optional[str] = Query(default=None, alias="q"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    stage: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    return [customer_payload(row) for row in customers_service.search_customers(db, query, limit, offset)]
+    return [{**customer_payload(row), **summary} for row, summary in customers_service.search_customers(db, query, limit, offset, stage)]
+
+
+@router.get("/funnel")
+def funnel_summary(db: Session = Depends(get_db)) -> dict:
+    return customers_service.funnel_summary(db)
 
 
 @router.post("", status_code=201)
@@ -42,6 +48,11 @@ def import_customers(
 @router.get("/{customer_id}")
 def get_customer(customer_id: str, db: Session = Depends(get_db)) -> dict:
     return customer_payload(customers_service.get_customer(db, customer_id))
+
+
+@router.get("/{customer_id}/profile")
+def customer_profile(customer_id: str, db: Session = Depends(get_db)) -> dict:
+    return customer_profile_payload(*customers_service.customer_profile(db, customer_id))
 
 
 @router.patch("/{customer_id}")

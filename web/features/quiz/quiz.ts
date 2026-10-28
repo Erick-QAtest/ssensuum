@@ -175,3 +175,23 @@ export function reserveHref(service: Service, therapist: Therapist | null, slot?
   }
   return `/reservar?${params.toString()}`;
 }
+
+// Las respuestas viajan a la reserva para quedar en la ficha del cliente al pagar el anticipo.
+const QUIZ_STORAGE_KEY = 'ssensuum.quiz';
+
+export function saveQuizAnswers(answers: Answers) {
+  try {
+    window.sessionStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(answers));
+  } catch {
+    // Sin almacenamiento (modo privado o bloqueado) la reserva sigue igual, solo sin el quiz.
+  }
+}
+
+export function loadQuizAnswers(): Answers | undefined {
+  try {
+    const raw = window.sessionStorage.getItem(QUIZ_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Answers) : undefined;
+  } catch {
+    return undefined;
+  }
+}

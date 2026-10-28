@@ -29,6 +29,11 @@ def list_paid_between(db: Session, start: datetime, end: datetime) -> list[Servi
     return list(db.scalars(statement).all())
 
 
+def list_for_customers(db: Session, customer_ids: list[str]) -> list[ServiceRecord]:
+    statement = select(ServiceRecord).where(ServiceRecord.customer_id.in_(customer_ids)).order_by(ServiceRecord.paid_at)
+    return list(db.scalars(statement).all())
+
+
 def save(db: Session, record: ServiceRecord) -> ServiceRecord:
     db.add(record)
     db.commit()

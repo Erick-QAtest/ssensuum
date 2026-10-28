@@ -53,6 +53,9 @@ class Customer(Base):
     membership_expires_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    # Últimas respuestas del quiz ({"presion": "firme", ...}), guardadas al reservar después de hacerlo.
+    quiz_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Reservation(Base):

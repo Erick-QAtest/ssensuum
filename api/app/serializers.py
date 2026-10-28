@@ -82,6 +82,10 @@ def customer_payload(customer: Customer) -> dict:
     }
 
 
+def customer_profile_payload(customer: Customer, profile: dict) -> dict:
+    return {**customer_payload(customer), **profile}
+
+
 def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> dict:
     ids = records_repo.therapist_ids(record)
     tips = records_repo.tips(record)

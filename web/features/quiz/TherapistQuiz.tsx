@@ -14,6 +14,7 @@ import {
   pickTherapist,
   QUESTIONS,
   quizMessage,
+  saveQuizAnswers,
   reserveHref,
   resolveService,
   therapistChoices,
@@ -92,7 +93,8 @@ export function TherapistQuiz() {
     if (!isResult || resultTracked.current) return;
     resultTracked.current = true;
     track('page_view', 'quiz:resultado');
-  }, [isResult]);
+    saveQuizAnswers(answers);
+  }, [isResult, answers]);
 
   // Próximos horarios reales en la ventana elegida (hoy y los dos días siguientes).
   useEffect(() => {

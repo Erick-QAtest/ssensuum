@@ -36,6 +36,48 @@ export type Customer = {
   createdAt: string;
 };
 
+export type FunnelStage = 'lead' | 'primera_reserva' | 'primera_visita' | 'recurrente' | 'miembro' | 'en_riesgo' | 'inactivo';
+
+export type CustomerWithStage = Customer & {
+  stage: FunnelStage;
+  visits: number;
+  lastVisit: string | null;
+};
+
+export type FunnelSummary = {
+  total: number;
+  stages: { stage: FunnelStage; label: string; count: number }[];
+};
+
+type Favorite = { value: string; count: number; label?: string } | null;
+
+export type CustomerProfile = Customer & {
+  stage: FunnelStage;
+  member: boolean;
+  recurrence: {
+    visits: number;
+    firstVisit: string | null;
+    lastVisit: string | null;
+    averageGapDays: number | null;
+    daysSinceLastVisit: number | null;
+    nextExpectedVisit: string | null;
+    status: 'al_corriente' | 'atrasado' | 'inactivo' | null;
+  };
+  preferences: {
+    service: Favorite;
+    therapistId: Favorite;
+    weekday: Favorite;
+    timeWindow: Favorite;
+    totalSpent: number;
+    averageTicket: number | null;
+    totalTips: number;
+  };
+  quiz: Partial<Record<string, string>>;
+  quizAt: string | null;
+  upcoming: { startsAt: string; serviceName: string; status: string }[];
+  history: { at: string; serviceName: string; therapistNames: string[]; amount: number | null; tip: number }[];
+};
+
 export type CustomerImportIssue = {
   row: number;
   status: 'duplicate' | 'invalid' | 'warning';
@@ -78,6 +120,7 @@ export type CheckoutRequest = {
   startsAt: string;
   firstName: string;
   phone: string;
+  quiz?: Partial<Record<string, string>>;
 };
 
 export type AdminReservation = Reservation & {

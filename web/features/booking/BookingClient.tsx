@@ -9,6 +9,7 @@ import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
 import { localIsoDate, longDateLabel, next14Days, timeLabel } from './dates';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
+import { loadQuizAnswers } from '../quiz/quiz';
 
 // El quiz puede llegar con día y hora; solo se aceptan si caen dentro de los 14 días que se muestran.
 function bookableDate(date?: string) {
@@ -104,6 +105,7 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
         startsAt: `${dateIso}T${time}:00-06:00`,
         firstName: firstName.trim(),
         phone,
+        quiz: loadQuizAnswers(),
       });
       window.location.assign(checkoutUrl);
     } catch (e) {

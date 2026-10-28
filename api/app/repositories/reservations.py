@@ -40,6 +40,11 @@ def list_active_starting_between(db: Session, start: datetime, end: datetime) ->
     )
 
 
+def list_for_customers(db: Session, customer_ids: list[str]) -> list[Reservation]:
+    statement = select(Reservation).where(Reservation.customer_id.in_(customer_ids)).order_by(Reservation.starts_at)
+    return list(db.scalars(statement).all())
+
+
 def save(db: Session, reservation: Reservation) -> Reservation:
     db.add(reservation)
     db.commit()

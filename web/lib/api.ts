@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, CustomerImportResult, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -28,10 +28,19 @@ export async function getAvailability(serviceId: string, date: string, therapist
   return body.slots ?? [];
 }
 
-export function searchCustomers(query: string) {
+export function searchCustomers(query: string, stage?: FunnelStage) {
   const params = new URLSearchParams({ limit: '200' });
   if (query.trim()) params.set('q', query.trim());
-  return getJson<Customer[]>(`/customers?${params.toString()}`, 'No se pudo cargar la lista de clientes');
+  if (stage) params.set('stage', stage);
+  return getJson<CustomerWithStage[]>(`/customers?${params.toString()}`, 'No se pudo cargar la lista de clientes');
+}
+
+export function getCustomerFunnel() {
+  return getJson<FunnelSummary>('/customers/funnel', 'No se pudo cargar el funnel de clientes');
+}
+
+export function getCustomerProfile(customerId: string) {
+  return getJson<CustomerProfile>(`/customers/${encodeURIComponent(customerId)}/profile`, 'No se pudo cargar la ficha del cliente');
 }
 
 export async function importCustomers(file: File, dryRun: boolean): Promise<CustomerImportResult> {

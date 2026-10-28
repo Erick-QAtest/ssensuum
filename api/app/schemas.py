@@ -62,6 +62,8 @@ class CheckoutCreate(BaseModel):
     starts_at: str = Field(alias="startsAt")
     first_name: str = Field(alias="firstName")
     phone: str
+    # Respuestas del quiz si la persona llegó a reservar desde ahí.
+    quiz: Optional[dict] = None
 
     model_config = {"populate_by_name": True}
 

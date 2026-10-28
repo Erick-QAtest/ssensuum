@@ -1,9 +1,11 @@
+import json
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from ..domain.customer_profile import clean_quiz_answers
 from ..domain.customers import normalize_phone
 from ..domain.errors import ConflictError, NotFoundError, PaymentGatewayError, ValidationError
 from ..domain.rules import PAYMENT_HOLD, TZ, ensure_tz, hold_expired, parse_iso_datetime
@@ -20,7 +22,7 @@ from .reservations import create_reservation
 REVERSED_PAYMENT_STATUSES = {"refunded", "charged_back", "cancelled"}
 
 
-def _customer_for(db: Session, first_name: str, raw_phone: str) -> Customer:
+def _customer_for(db: Session, first_name: str, raw_phone: str, quiz: Optional[dict] = None) -> Customer:
     phone = normalize_phone(raw_phone)
     if not phone:
         raise ValidationError("El teléfono debe tener 10 dígitos")
@@ -28,13 +30,14 @@ def _customer_for(db: Session, first_name: str, raw_phone: str) -> Customer:
     if not name:
         raise ValidationError("El nombre es obligatorio")
 
-    customer = customers_repo.get_by_phone(db, phone)
-    if customer:
-        if not customer.first_name:
-            customer.first_name = name
-            customers_repo.save(db, customer)
-        return customer
-    return customers_repo.save(db, Customer(id=str(uuid.uuid4()), phone=phone, first_name=name))
+    customer = customers_repo.get_by_phone(db, phone) or Customer(id=str(uuid.uuid4()), phone=phone, first_name=name)
+    if not customer.first_name:
+        customer.first_name = name
+    answers = clean_quiz_answers(quiz)
+    if answers:
+        customer.quiz_json = json.dumps(answers)
+        customer.quiz_at = datetime.now(TZ)
+    return customers_repo.save(db, customer)
 
 
 def start_checkout(db: Session, payload: CheckoutCreate) -> tuple[Reservation, str]:
@@ -42,7 +45,7 @@ def start_checkout(db: Session, payload: CheckoutCreate) -> tuple[Reservation, s
     service = catalog_repo.get_service(db, payload.service_id)
     if not service or not service.active:
         raise NotFoundError("Servicio no encontrado")
-    customer = _customer_for(db, payload.first_name, payload.phone)
+    customer = _customer_for(db, payload.first_name, payload.phone, payload.quiz)
 
     therapist_ids = payload.therapist_ids
     if not therapist_ids:

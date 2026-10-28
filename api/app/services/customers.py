@@ -1,13 +1,19 @@
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from ..domain import customer_profile as profile
 from ..domain.customers import normalize_email, normalize_phone
 from ..domain.errors import ConflictError, NotFoundError, ValidationError
-from ..models import Customer
+from ..domain.rules import TZ, ensure_tz, hold_expired
+from ..models import Customer, Reservation, ServiceRecord
+from ..repositories import catalog as catalog_repo
 from ..repositories import customers as customers_repo
+from ..repositories import records as records_repo
+from ..repositories import reservations as reservations_repo
 from ..schemas import CustomerCreate, CustomerUpdate
 
 DUPLICATE_PHONE = "Ya existe un cliente con ese teléfono"
@@ -51,11 +57,124 @@ def get_customer(db: Session, customer_id: str) -> Customer:
     return customer
 
 
-def search_customers(db: Session, query: Optional[str], limit: int, offset: int) -> list[Customer]:
+def search_customers(db: Session, query: Optional[str], limit: int, offset: int, stage: Optional[str] = None) -> list[tuple[Customer, dict]]:
+    """Clientes con su resumen de perfil; con etapa, la paginación aplica después de filtrar."""
+    if stage and stage not in profile.FUNNEL_STAGES:
+        raise ValidationError("Etapa no reconocida")
     text = (query or "").strip()
     # Permite buscar por teléfono aunque venga con espacios, guiones o +52.
     phone = normalize_phone(text)
-    return customers_repo.search(db, phone or text or None, limit, offset)
+    if stage:
+        rows = [row for row in _with_summaries(db, customers_repo.search(db, phone or text or None)) if row[1]["stage"] == stage]
+        return rows[offset:offset + limit]
+    return _with_summaries(db, customers_repo.search(db, phone or text or None, limit, offset))
+
+
+def funnel_summary(db: Session) -> dict:
+    counts = {stage: 0 for stage in profile.FUNNEL_STAGES}
+    for _, summary in _with_summaries(db, customers_repo.list_all(db)):
+        counts[summary["stage"]] += 1
+    return {
+        "total": sum(counts.values()),
+        "stages": [{"stage": stage, "label": label, "count": counts[stage]} for stage, label in profile.FUNNEL_STAGES.items()],
+    }
+
+
+def customer_profile(db: Session, customer_id: str) -> tuple[Customer, dict]:
+    customer = get_customer(db, customer_id)
+    records = records_repo.list_for_customers(db, [customer.id])
+    reservations = reservations_repo.list_for_customers(db, [customer.id])
+    now = datetime.now(TZ)
+    therapists = {row.id: row.name for row in catalog_repo.list_therapists(db)}
+    services = {row.id: row.name for row in catalog_repo.list_services(db)}
+    visits = _visits(records, reservations, now, services)
+    upcoming = _upcoming(reservations, now)
+    member = profile.membership_active(customer.membership_expires_on, now.date())
+
+    preferences = profile.preferences(visits)
+    favorite = preferences["therapistId"]
+    if favorite:
+        favorite["label"] = therapists.get(favorite["value"], favorite["value"])
+    return customer, {
+        "stage": profile.funnel_stage(visits, bool(upcoming), member, now.date()),
+        "member": member,
+        "recurrence": profile.recurrence(visits, now.date()),
+        "preferences": preferences,
+        "quiz": profile.load_quiz(customer.quiz_json),
+        "quizAt": ensure_tz(customer.quiz_at).isoformat() if customer.quiz_at else None,
+        "upcoming": [
+            {"startsAt": ensure_tz(row.starts_at).isoformat(), "serviceName": services.get(row.service_id, row.service_id), "status": row.status}
+            for row in upcoming
+        ],
+        "history": [
+            {
+                "at": visit.at.isoformat(),
+                "serviceName": visit.service_name,
+                "therapistNames": [therapists.get(tid, tid) for tid in visit.therapist_ids],
+                "amount": visit.amount,
+                "tip": visit.tip,
+            }
+            for visit in sorted(visits, key=lambda visit: visit.at, reverse=True)
+        ],
+    }
+
+
+# Reservas que cuentan como cita real (pagada o por resolver); las demás no llegaron a confirmarse.
+_BOOKED_STATUSES = {"CONFIRMED", "NEEDS_ATTENTION"}
+
+
+def _visits(records: list[ServiceRecord], reservations: list[Reservation], now: datetime, service_names: Optional[dict[str, str]] = None) -> list[profile.Visit]:
+    """Cada servicio registrado es una visita; una reserva confirmada que ya pasó cuenta si ese día no hay registro."""
+    visits = [
+        profile.Visit(
+            at=ensure_tz(record.paid_at),
+            service_name=record.service_name,
+            therapist_ids=records_repo.therapist_ids(record),
+            amount=record.amount,
+            tip=sum(tip["amount"] for tip in records_repo.tips(record)),
+        )
+        for record in records
+    ]
+    recorded_days = {visit.at.date() for visit in visits}
+    for reservation in reservations:
+        starts_at = ensure_tz(reservation.starts_at)
+        if reservation.status in _BOOKED_STATUSES and starts_at <= now and starts_at.date() not in recorded_days:
+            visits.append(profile.Visit(at=starts_at, service_name=(service_names or {}).get(reservation.service_id, reservation.service_id), therapist_ids=reservations_repo.therapist_ids(reservation)))
+    return visits
+
+
+def _upcoming(reservations: list[Reservation], now: datetime) -> list[Reservation]:
+    return [
+        row for row in reservations
+        if ensure_tz(row.starts_at) > now and (
+            row.status in _BOOKED_STATUSES or (row.status == "PENDING_PAYMENT" and not hold_expired(row.hold_expires_at))
+        )
+    ]
+
+
+def _with_summaries(db: Session, customers: list[Customer]) -> list[tuple[Customer, dict]]:
+    """Etapa, visitas y última visita de cada cliente, con dos consultas para toda la lista."""
+    ids = [customer.id for customer in customers]
+    records: dict[str, list[ServiceRecord]] = {}
+    for record in records_repo.list_for_customers(db, ids) if ids else []:
+        records.setdefault(record.customer_id, []).append(record)
+    reservations: dict[str, list[Reservation]] = {}
+    for reservation in reservations_repo.list_for_customers(db, ids) if ids else []:
+        reservations.setdefault(reservation.customer_id, []).append(reservation)
+
+    now = datetime.now(TZ)
+    rows = []
+    for customer in customers:
+        own_reservations = reservations.get(customer.id, [])
+        visits = _visits(records.get(customer.id, []), own_reservations, now)
+        days = profile.visit_days(visits)
+        member = profile.membership_active(customer.membership_expires_on, now.date())
+        rows.append((customer, {
+            "stage": profile.funnel_stage(visits, bool(_upcoming(own_reservations, now)), member, now.date()),
+            "visits": len(days),
+            "lastVisit": days[-1].isoformat() if days else None,
+        }))
+    return rows
 
 
 def create_customer(db: Session, payload: CustomerCreate) -> Customer:
