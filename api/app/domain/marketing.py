@@ -8,7 +8,7 @@ from typing import Optional
 # Redes donde se publica: el calendario y las métricas solo usan estas.
 SOCIAL_CHANNELS = {"instagram": "Instagram", "tiktok": "TikTok", "x": "X", "facebook": "Facebook"}
 # Cómo nos conoció un cliente: las redes y lo que llega fuera de ellas.
-SOURCES = {**SOCIAL_CHANNELS, "google": "Google / Maps", "recomendacion": "Recomendación", "otro": "Otro"}
+SOURCES = {**SOCIAL_CHANNELS, "google": "Google / Maps", "catalogo": "Catálogo PDF", "recomendacion": "Recomendación", "otro": "Otro"}
 
 # Valores cortos que se usan en los enlaces de cada red (?utm_source=ig) y dominios de referencia.
 _ALIASES = {
@@ -17,6 +17,8 @@ _ALIASES = {
     "x": "x", "twitter": "x", "tw": "x",
     "facebook": "facebook", "fb": "facebook", "meta": "facebook",
     "google": "google", "maps": "google", "gmb": "google",
+    # Los botones del PDF de servicios y equipo llevan utm_source=catalogo_pdf.
+    "catalogo_pdf": "catalogo", "catalogo": "catalogo", "pdf": "catalogo",
 }
 # Una parte del dominio (l.instagram.com, m.facebook.com, www.google.com.mx) basta para reconocer la red.
 _HOST_LABELS = {"instagram": "instagram", "tiktok": "tiktok", "facebook": "facebook", "fb": "facebook", "twitter": "x", "google": "google"}

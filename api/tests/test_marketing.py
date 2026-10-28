@@ -27,6 +27,7 @@ from app.services import mercadopago
         ("fb", "facebook"),
         ("m.facebook.com", "facebook"),
         ("https://www.google.com.mx/", "google"),
+        ("catalogo_pdf", "catalogo"),
         ("pinterest.com", None),
         ("t.company.com", None),
         ("", None),
