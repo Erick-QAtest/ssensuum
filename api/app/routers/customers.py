@@ -19,14 +19,15 @@ def search_customers(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     stage: Optional[str] = Query(default=None),
+    source: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    return [{**customer_payload(row), **summary} for row, summary in customers_service.search_customers(db, query, limit, offset, stage)]
+    return [{**customer_payload(row), **summary} for row, summary in customers_service.search_customers(db, query, limit, offset, stage, source)]
 
 
 @router.get("/funnel")
-def funnel_summary(db: Session = Depends(get_db)) -> dict:
-    return customers_service.funnel_summary(db)
+def funnel_summary(source: Optional[str] = Query(default=None), db: Session = Depends(get_db)) -> dict:
+    return customers_service.funnel_summary(db, source)
 
 
 @router.post("", status_code=201)

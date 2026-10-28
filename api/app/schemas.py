@@ -39,6 +39,7 @@ class CustomerCreate(BaseModel):
     birthday: Optional[date] = None
     membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
     notes: Optional[str] = None
+    acquisition_source: Optional[str] = Field(default=None, alias="acquisitionSource")
 
     model_config = {"populate_by_name": True}
 
@@ -51,6 +52,7 @@ class CustomerUpdate(BaseModel):
     birthday: Optional[date] = None
     membership_expires_on: Optional[date] = Field(default=None, alias="membershipExpiresOn")
     notes: Optional[str] = None
+    acquisition_source: Optional[str] = Field(default=None, alias="acquisitionSource")
 
     model_config = {"populate_by_name": True}
 
@@ -64,6 +66,8 @@ class CheckoutCreate(BaseModel):
     phone: str
     # Respuestas del quiz si la persona llegó a reservar desde ahí.
     quiz: Optional[dict] = None
+    # Red de la que llegó (utm_source o sitio de referencia), si se conoce.
+    channel: Optional[str] = Field(default=None, max_length=200)
 
     model_config = {"populate_by_name": True}
 
@@ -71,6 +75,7 @@ class CheckoutCreate(BaseModel):
 class SiteEventCreate(BaseModel):
     name: str
     label: str = Field(default="", max_length=120)
+    channel: Optional[str] = Field(default=None, max_length=200)
 
 
 class TipEntry(BaseModel):
@@ -162,5 +167,38 @@ class ServiceRecordCreate(BaseModel):
     tips: list[TipEntry] = Field(default_factory=list)
     tip_method: Optional[str] = Field(default=None, alias="tipMethod")
     notes: Optional[str] = None
+    # "¿Cómo nos conoció?": solo se guarda si el cliente aún no tiene origen.
+    customer_source: Optional[str] = Field(default=None, alias="customerSource")
+
+    model_config = {"populate_by_name": True}
+
+
+class MarketingPostCreate(BaseModel):
+    channel: str
+    publish_on: date = Field(alias="publishOn")
+    status: str = "idea"
+    format: str
+    pillar: Optional[str] = None
+    title: str = Field(max_length=200)
+    caption: Optional[str] = Field(default=None, max_length=5000)
+    url: Optional[str] = Field(default=None, max_length=500)
+    idea_id: Optional[str] = Field(default=None, alias="ideaId")
+
+    model_config = {"populate_by_name": True}
+
+
+class MarketingIdeaCreate(BaseModel):
+    pillar: str
+    hook: str = Field(max_length=200)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ChannelSnapshotCreate(BaseModel):
+    channel: str
+    day: date
+    followers: Optional[int] = Field(default=None, ge=0)
+    reach: Optional[int] = Field(default=None, ge=0)
+    interactions: Optional[int] = Field(default=None, ge=0)
+    link_clicks: Optional[int] = Field(default=None, ge=0, alias="linkClicks")
 
     model_config = {"populate_by_name": True}

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..domain import customer_profile as profile
 from ..domain.customers import normalize_email, normalize_phone
+from ..domain.marketing import SOURCES, clean_source
 from ..domain.errors import ConflictError, NotFoundError, ValidationError
 from ..domain.rules import TZ, ensure_tz, hold_expired
 from ..models import Customer, Reservation, ServiceRecord
@@ -42,6 +43,15 @@ def _clean_first_name(value: str) -> str:
     return name
 
 
+def _clean_source(value: Optional[str]) -> Optional[str]:
+    if value is None or not value.strip():
+        return None
+    source = clean_source(value)
+    if not source:
+        raise ValidationError("Origen no reconocido")
+    return source
+
+
 def _save(db: Session, customer: Customer) -> Customer:
     try:
         return customers_repo.save(db, customer)
@@ -57,22 +67,47 @@ def get_customer(db: Session, customer_id: str) -> Customer:
     return customer
 
 
-def search_customers(db: Session, query: Optional[str], limit: int, offset: int, stage: Optional[str] = None) -> list[tuple[Customer, dict]]:
-    """Clientes con su resumen de perfil; con etapa, la paginación aplica después de filtrar."""
+# "sin_origen" filtra a quien aún no tiene red de origen registrada.
+NO_SOURCE = "sin_origen"
+
+
+def _check_source_filter(source: Optional[str]) -> None:
+    if source and source != NO_SOURCE and source not in SOURCES:
+        raise ValidationError("Origen no reconocido")
+
+
+def _matches_source(customer: Customer, source: Optional[str]) -> bool:
+    if not source:
+        return True
+    return customer.acquisition_source is None if source == NO_SOURCE else customer.acquisition_source == source
+
+
+def search_customers(
+    db: Session, query: Optional[str], limit: int, offset: int, stage: Optional[str] = None, source: Optional[str] = None
+) -> list[tuple[Customer, dict]]:
+    """Clientes con su resumen de perfil; con etapa u origen, la paginación aplica después de filtrar."""
     if stage and stage not in profile.FUNNEL_STAGES:
         raise ValidationError("Etapa no reconocida")
+    _check_source_filter(source)
     text = (query or "").strip()
     # Permite buscar por teléfono aunque venga con espacios, guiones o +52.
     phone = normalize_phone(text)
-    if stage:
-        rows = [row for row in _with_summaries(db, customers_repo.search(db, phone or text or None)) if row[1]["stage"] == stage]
+    if stage or source:
+        customers = [row for row in customers_repo.search(db, phone or text or None) if _matches_source(row, source)]
+        rows = [row for row in _with_summaries(db, customers) if not stage or row[1]["stage"] == stage]
         return rows[offset:offset + limit]
     return _with_summaries(db, customers_repo.search(db, phone or text or None, limit, offset))
 
 
-def funnel_summary(db: Session) -> dict:
+def summaries(db: Session, customers: Optional[list[Customer]] = None) -> list[tuple[Customer, dict]]:
+    return _with_summaries(db, customers if customers is not None else customers_repo.list_all(db))
+
+
+def funnel_summary(db: Session, source: Optional[str] = None) -> dict:
+    _check_source_filter(source)
     counts = {stage: 0 for stage in profile.FUNNEL_STAGES}
-    for _, summary in _with_summaries(db, customers_repo.list_all(db)):
+    customers = [row for row in customers_repo.list_all(db) if _matches_source(row, source)]
+    for _, summary in _with_summaries(db, customers):
         counts[summary["stage"]] += 1
     return {
         "total": sum(counts.values()),
@@ -190,6 +225,7 @@ def create_customer(db: Session, payload: CustomerCreate) -> Customer:
         birthday=payload.birthday.isoformat() if payload.birthday else None,
         membership_expires_on=payload.membership_expires_on.isoformat() if payload.membership_expires_on else None,
         notes=(payload.notes or "").strip() or None,
+        acquisition_source=_clean_source(payload.acquisition_source),
     )
     return _save(db, customer)
 
@@ -219,5 +255,13 @@ def update_customer(db: Session, customer_id: str, payload: CustomerUpdate) -> C
         customer.membership_expires_on = value.isoformat() if value else None
     if "notes" in changes:
         customer.notes = (changes["notes"] or "").strip() or None
+    if "acquisition_source" in changes:
+        customer.acquisition_source = _clean_source(changes["acquisition_source"])
 
     return _save(db, customer)
+
+
+def set_source_if_missing(customer: Customer, source: Optional[str]) -> None:
+    """Guarda el primer origen conocido; uno posterior no lo reemplaza (eso se corrige a mano en la ficha)."""
+    if source and not customer.acquisition_source:
+        customer.acquisition_source = source

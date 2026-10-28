@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export function AdminNav({ current }: { current: 'reservas' | 'registro' | 'clientes' | 'equipo' | 'finanzas' }) {
+export function AdminNav({ current }: { current: 'reservas' | 'registro' | 'clientes' | 'equipo' | 'finanzas' | 'marketing' }) {
   return (
     <nav className="adminNav" aria-label="Administración">
       <Link href="/admin/reservas" className={current === 'reservas' ? 'active' : ''}>Reservas</Link>
@@ -8,6 +8,7 @@ export function AdminNav({ current }: { current: 'reservas' | 'registro' | 'clie
       <Link href="/admin/clientes" className={current === 'clientes' ? 'active' : ''}>Clientes</Link>
       <Link href="/admin/equipo" className={current === 'equipo' ? 'active' : ''}>Equipo</Link>
       <Link href="/admin/finanzas" className={current === 'finanzas' ? 'active' : ''}>Finanzas</Link>
+      <Link href="/admin/marketing" className={current === 'marketing' ? 'active' : ''}>Marketing</Link>
     </nav>
   );
 }

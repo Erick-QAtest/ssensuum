@@ -1,4 +1,6 @@
-import type { AdminReservation, CheckoutRequest, CustomerImportResult, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+
+import { currentChannel } from './channel';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -28,15 +30,21 @@ export async function getAvailability(serviceId: string, date: string, therapist
   return body.slots ?? [];
 }
 
-export function searchCustomers(query: string, stage?: FunnelStage) {
+export function searchCustomers(query: string, stage?: FunnelStage, source?: string) {
   const params = new URLSearchParams({ limit: '200' });
   if (query.trim()) params.set('q', query.trim());
   if (stage) params.set('stage', stage);
+  if (source) params.set('source', source);
   return getJson<CustomerWithStage[]>(`/customers?${params.toString()}`, 'No se pudo cargar la lista de clientes');
 }
 
-export function getCustomerFunnel() {
-  return getJson<FunnelSummary>('/customers/funnel', 'No se pudo cargar el funnel de clientes');
+export function getCustomerFunnel(source?: string) {
+  const params = source ? `?${new URLSearchParams({ source }).toString()}` : '';
+  return getJson<FunnelSummary>(`/customers/funnel${params}`, 'No se pudo cargar el funnel de clientes');
+}
+
+export function updateCustomerSource(customerId: string, acquisitionSource: string | null) {
+  return sendJson<Customer>('PATCH', `/customers/${encodeURIComponent(customerId)}`, { acquisitionSource }, 'No se pudo guardar el origen');
 }
 
 export function getCustomerProfile(customerId: string) {
@@ -78,6 +86,7 @@ function postJson<T>(path: string, body: unknown, errorMessage: string) {
 }
 
 export function startCheckout(request: CheckoutRequest) {
+  request = { ...request, channel: request.channel ?? currentChannel() };
   return postJson<{ reservation: Reservation; checkoutUrl: string }>('/checkout', request, 'No pudimos iniciar el pago');
 }
 
@@ -99,7 +108,7 @@ export type TrackEvent = 'page_view' | 'reserve_click' | 'booking_summary' | 'ch
 // Conteo anónimo de visitas y clics; nunca debe interrumpir al usuario.
 export function track(name: TrackEvent, label = '') {
   try {
-    const body = JSON.stringify({ name, label: label.slice(0, 120) });
+    const body = JSON.stringify({ name, label: label.slice(0, 120), channel: currentChannel() });
     const url = `${API}/events`;
     if (navigator.sendBeacon?.(url, new Blob([body], { type: 'application/json' }))) return;
     fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => null);
@@ -276,3 +285,52 @@ export function endRecurringExpense(id: string, lastMonth: string) {
 }
 
 export const financeExportUrl = (from: string, to: string) => `${API}/admin/finanzas/statements/export?${new URLSearchParams({ from, to }).toString()}`;
+
+// Marketing: atribución por red, calendario de contenido, métricas e ideas.
+
+export function getMarketingMeta() {
+  return getJson<MarketingMeta>('/admin/marketing/meta', 'No se pudo cargar Marketing');
+}
+
+export function getMarketingAttribution(days: number) {
+  return getJson<MarketingAttribution>(`/admin/marketing/attribution?days=${days}`, 'No se pudo cargar la atribución por red');
+}
+
+export function getMarketingPosts(from: string, to: string) {
+  const params = new URLSearchParams({ from, to });
+  return getJson<MarketingPost[]>(`/admin/marketing/posts?${params.toString()}`, 'No se pudo cargar el calendario');
+}
+
+export function saveMarketingPost(input: MarketingPostInput, id?: string) {
+  return id
+    ? sendJson<MarketingPost>('PUT', `/admin/marketing/posts/${encodeURIComponent(id)}`, input, 'No se pudo guardar la publicación')
+    : postJson<MarketingPost>('/admin/marketing/posts', input, 'No se pudo guardar la publicación');
+}
+
+export function deleteMarketingPost(id: string) {
+  return sendJson<void>('DELETE', `/admin/marketing/posts/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar la publicación');
+}
+
+export function getMarketingIdeas() {
+  return getJson<MarketingIdea[]>('/admin/marketing/ideas', 'No se pudieron cargar las ideas');
+}
+
+export function createMarketingIdea(input: MarketingIdeaInput) {
+  return postJson<MarketingIdea>('/admin/marketing/ideas', input, 'No se pudo guardar la idea');
+}
+
+export function deleteMarketingIdea(id: string) {
+  return sendJson<void>('DELETE', `/admin/marketing/ideas/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar la idea');
+}
+
+export function getChannelMetrics() {
+  return getJson<ChannelMetrics[]>('/admin/marketing/metrics', 'No se pudieron cargar las métricas');
+}
+
+export function saveChannelSnapshot(input: ChannelSnapshotInput) {
+  return postJson<ChannelMetrics[]>('/admin/marketing/metrics', input, 'No se pudieron guardar las métricas');
+}
+
+export function deleteChannelSnapshot(id: string) {
+  return sendJson<void>('DELETE', `/admin/marketing/metrics/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar la captura');
+}

@@ -900,3 +900,32 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 @media (max-width: 899px) {
   .profileGrid { grid-template-columns: 1fr; }
 }
+
+/* Marketing */
+.marketingPeriods { margin-top: 0; }
+.marketingMonth { min-width: 140px; color: var(--ink); text-align: center; text-transform: capitalize; }
+.marketingTable td, .marketingTable th { white-space: nowrap; }
+.marketingTable td:first-child { white-space: normal; }
+.marketingEmpty td { color: var(--muted); }
+.marketingAlert { color: var(--danger) !important; font-weight: 700; }
+.marketingLinks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.marketingLinks > div { display: grid; gap: 4px; padding: 16px; border-radius: var(--r-sm); background: var(--bg); }
+.marketingLinks h3 { margin: 0 0 4px; color: var(--ink); font-size: 16px; }
+.marketingLink { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.marketingLink code { flex: 1 1 auto; min-width: 0; overflow: hidden; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.marketingCounts { grid-template-columns: repeat(4, 1fr); }
+.marketingGap { margin-left: 12px; }
+.marketingChannels { display: grid; gap: 0; }
+.marketingChannels .adminCard { min-width: 0; }
+.marketingFollowers { color: var(--muted); font-size: 14px; }
+.marketingFollowers strong { color: var(--brown); font-family: var(--serif); font-size: 26px; font-weight: 400; }
+.marketingFollowers .financeDelta { display: inline; margin-left: 4px; }
+td .financeDelta { display: inline; margin-left: 4px; white-space: nowrap; }
+.marketingPillar .hrTemplates { margin-top: 10px; }
+.marketingInline { display: inline; margin-left: 6px; }
+.recordForm textarea { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; resize: vertical; }
+@media (max-width: 899px) {
+  .marketingLinks { grid-template-columns: 1fr; }
+  .marketingCounts { grid-template-columns: repeat(2, 1fr); }
+}
+.profileSource { min-height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); font-size: 15px; }

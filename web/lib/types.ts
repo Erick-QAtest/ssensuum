@@ -33,6 +33,7 @@ export type Customer = {
   birthday: string | null;
   membershipExpiresOn: string | null;
   notes: string | null;
+  acquisitionSource: string | null;
   createdAt: string;
 };
 
@@ -121,6 +122,7 @@ export type CheckoutRequest = {
   firstName: string;
   phone: string;
   quiz?: Partial<Record<string, string>>;
+  channel?: string;
 };
 
 export type AdminReservation = Reservation & {
@@ -145,6 +147,7 @@ export type ServiceRecordInput = {
   tips: TipEntry[];
   tipMethod: PaymentMethod | null;
   notes: string | null;
+  customerSource?: string | null;
 };
 
 export type ServiceRecord = ServiceRecordInput & {
@@ -372,4 +375,72 @@ export type RecurringExpense = RecurringExpenseInput & {
   categoryLabel: string;
   accountLabel: string;
   endMonth: string | null;
+};
+
+export type MarketingOption = { id: string; label: string };
+
+export type MarketingMeta = {
+  channels: MarketingOption[];
+  sources: MarketingOption[];
+  statuses: MarketingOption[];
+  formats: MarketingOption[];
+  pillars: MarketingOption[];
+  metrics: MarketingOption[];
+};
+
+export type AttributionRow = {
+  source: string;
+  label: string;
+  visits: number;
+  reserveClicks: number;
+  checkoutStarts: number;
+  whatsappClicks: number;
+  newCustomers: number;
+  customers: number;
+  visited: number;
+  recurring: number;
+  members: number;
+  atRisk: number;
+  conversion: number | null;
+};
+
+export type MarketingAttribution = { days: number; from: string; rows: AttributionRow[] };
+
+export type MarketingPostInput = {
+  channel: string;
+  publishOn: string;
+  status: string;
+  format: string;
+  pillar: string | null;
+  title: string;
+  caption: string | null;
+  url: string | null;
+  ideaId: string | null;
+};
+
+export type MarketingPost = MarketingPostInput & {
+  id: string;
+  channelLabel: string;
+  statusLabel: string;
+  formatLabel: string;
+  pillarLabel: string | null;
+};
+
+export type MarketingIdeaInput = { pillar: string; hook: string; notes: string | null };
+
+export type MarketingIdea = MarketingIdeaInput & { id: string; pillarLabel: string; used: number };
+
+export type MetricKey = 'followers' | 'reach' | 'interactions' | 'link_clicks';
+
+export type ChannelSnapshot = { id: string; day: string; changes: Record<MetricKey, number | null> } & Record<MetricKey, number | null>;
+
+export type ChannelMetrics = { channel: string; label: string; snapshots: ChannelSnapshot[] };
+
+export type ChannelSnapshotInput = {
+  channel: string;
+  day: string;
+  followers: number | null;
+  reach: number | null;
+  interactions: number | null;
+  linkClicks: number | null;
 };

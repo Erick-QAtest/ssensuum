@@ -9,7 +9,8 @@ from .domain.rules import TZ
 from .domain.schedule import load as load_schedule
 from .domain.schedule import on_vacation
 from .domain.rules import ensure_tz, hold_expired
-from .models import Customer, FinanceMovement, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
+from .domain.marketing import PILLARS, POST_FORMATS, POST_STATUSES, SOCIAL_CHANNELS
+from .models import Customer, FinanceMovement, MarketingIdea, MarketingPost, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
@@ -78,6 +79,7 @@ def customer_payload(customer: Customer) -> dict:
         "birthday": customer.birthday,
         "membershipExpiresOn": customer.membership_expires_on,
         "notes": customer.notes,
+        "acquisitionSource": customer.acquisition_source,
         "createdAt": customer.created_at.isoformat(),
     }
 
@@ -198,4 +200,34 @@ def recurring_occurrence_payload(day, item: RecurringExpense) -> dict:
         "accountLabel": CASH_ACCOUNTS[item.account],
         "toAccount": None,
         "toAccountLabel": None,
+    }
+
+
+def marketing_post_payload(post: MarketingPost) -> dict:
+    return {
+        "id": post.id,
+        "channel": post.channel,
+        "channelLabel": SOCIAL_CHANNELS.get(post.channel, post.channel),
+        "publishOn": post.publish_on,
+        "status": post.status,
+        "statusLabel": POST_STATUSES.get(post.status, post.status),
+        "format": post.format,
+        "formatLabel": POST_FORMATS.get(post.format, post.format),
+        "pillar": post.pillar,
+        "pillarLabel": PILLARS.get(post.pillar) if post.pillar else None,
+        "title": post.title,
+        "caption": post.caption,
+        "url": post.url,
+        "ideaId": post.idea_id,
+    }
+
+
+def marketing_idea_payload(idea: MarketingIdea, used: int) -> dict:
+    return {
+        "id": idea.id,
+        "pillar": idea.pillar,
+        "pillarLabel": PILLARS.get(idea.pillar, idea.pillar),
+        "hook": idea.hook,
+        "notes": idea.notes,
+        "used": used,
     }

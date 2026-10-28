@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { getCustomerFunnel, searchCustomers } from '../../lib/api';
-import type { Customer, CustomerWithStage, FunnelStage, FunnelSummary } from '../../lib/types';
+import { getCustomerFunnel, getMarketingMeta, searchCustomers } from '../../lib/api';
+import type { Customer, CustomerWithStage, FunnelStage, FunnelSummary, MarketingOption } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
 import { localIsoDate } from '../booking/dates';
 import { CustomerProfileCard } from './CustomerProfileCard';
@@ -67,27 +67,45 @@ function renewUrl(customer: Customer) {
 export function CustomersPage() {
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState<FunnelStage | null>(null);
+  // Origen: red de la que llegó (?source=instagram desde Marketing) o "sin_origen".
+  const [source, setSource] = useState('');
+  const [sources, setSources] = useState<MarketingOption[]>([]);
   const [customers, setCustomers] = useState<CustomerWithStage[] | null>(null);
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const load = useCallback((text: string, stageFilter: FunnelStage | null) => {
-    return searchCustomers(text, stageFilter ?? undefined)
-      .then((rows) => { setCustomers(rows); setError(''); })
+  const listRequest = useRef(0);
+  const load = useCallback((text: string, stageFilter: FunnelStage | null, sourceFilter: string) => {
+    const request = ++listRequest.current;
+    return searchCustomers(text, stageFilter ?? undefined, sourceFilter || undefined)
+      .then((rows) => { if (request === listRequest.current) { setCustomers(rows); setError(''); } })
       .catch((e: Error) => setError(e.message));
   }, []);
 
+  // Solo vale la respuesta del último origen pedido: una más lenta de un filtro anterior se descarta.
+  const funnelRequest = useRef(0);
   const loadFunnel = useCallback(() => {
-    getCustomerFunnel().then(setFunnel).catch((e: Error) => setError(e.message));
-  }, []);
+    const request = ++funnelRequest.current;
+    getCustomerFunnel(source || undefined)
+      .then((data) => { if (request === funnelRequest.current) setFunnel(data); })
+      .catch((e: Error) => setError(e.message));
+  }, [source]);
 
   useEffect(() => {
-    const timer = setTimeout(() => load(query, stage), 250);
+    const timer = setTimeout(() => load(query, stage, source), 250);
     return () => clearTimeout(timer);
-  }, [query, stage, load]);
+  }, [query, stage, source, load]);
 
   useEffect(loadFunnel, [loadFunnel]);
+
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get('source');
+    if (fromLink) setSource(fromLink);
+    getMarketingMeta().then((meta) => setSources(meta.sources)).catch(() => null);
+  }, []);
+
+  const sourceLabel = (id: string | null) => (id ? sources.find((option) => option.id === id)?.label ?? id : '—');
 
   return (
     <main className="bookingShell" data-testid="customers-page">
@@ -99,11 +117,33 @@ export function CustomersPage() {
         </div>
         <AdminNav current="clientes" />
 
-        <ImportPanel onImported={() => { load(query, stage); loadFunnel(); }} />
+        <ImportPanel onImported={() => { load(query, stage, source); loadFunnel(); }} />
+
+        <div className="adminRow">
+          <label className="adminSub" htmlFor="source-filter">Origen</label>
+          <select
+            id="source-filter"
+            className="adminSearch adminSelect"
+            value={source}
+            onChange={(event) => { setCustomers(null); setSource(event.target.value); }}
+            data-testid="source-filter"
+          >
+            <option value="">Todas las redes y orígenes</option>
+            {sources.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            <option value="sin_origen">Sin origen registrado</option>
+          </select>
+        </div>
 
         <FunnelCard funnel={funnel} stage={stage} onSelect={(next) => { setCustomers(null); setStage(next); }} />
 
-        {selected ? <CustomerProfileCard customerId={selected} onClose={() => setSelected(null)} /> : null}
+        {selected ? (
+          <CustomerProfileCard
+            customerId={selected}
+            sources={sources}
+            onClose={() => setSelected(null)}
+            onSourceChanged={() => { load(query, stage, source); loadFunnel(); }}
+          />
+        ) : null}
 
         <section className="adminCard">
           <div className="adminRow adminRowSpread">
@@ -130,12 +170,12 @@ export function CustomersPage() {
 
           {error ? <div className="errorBox" role="alert">{error}</div> : null}
           {customers === null && !error ? <p className="muted">Cargando clientes…</p> : null}
-          {customers?.length === 0 ? <p className="muted">{query.trim() || stage ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes registrados.'}</p> : null}
+          {customers?.length === 0 ? <p className="muted">{query.trim() || stage || source ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes registrados.'}</p> : null}
 
           {customers && customers.length > 0 ? (
             <div className="adminTableWrap">
               <table className="adminTable">
-                <thead><tr><th>Nombre</th><th>Etapa</th><th>Visitas</th><th>Teléfono</th><th>Membresía</th><th>Correo</th><th>Cumpleaños</th><th>Notas</th></tr></thead>
+                <thead><tr><th>Nombre</th><th>Etapa</th><th>Visitas</th><th>Origen</th><th>Teléfono</th><th>Membresía</th><th>Correo</th><th>Cumpleaños</th><th>Notas</th></tr></thead>
                 <tbody>
                   {customers.map((customer) => (
                     <tr key={customer.id} data-testid="customer-row">
@@ -149,6 +189,7 @@ export function CustomersPage() {
                         {customer.visits}
                         {customer.lastVisit ? <span className="adminSub">Última: {shortDate(customer.lastVisit)}</span> : null}
                       </td>
+                      <td>{sourceLabel(customer.acquisitionSource)}</td>
                       <td>{formatPhone(customer.phone)}</td>
                       <td>{(() => {
                         const status = membership(customer);

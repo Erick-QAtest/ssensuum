@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getCustomerProfile } from '../../lib/api';
+import { getCustomerProfile, updateCustomerSource } from '../../lib/api';
 import { money } from '../../lib/format';
-import type { CustomerProfile } from '../../lib/types';
+import type { CustomerProfile, MarketingOption } from '../../lib/types';
 import { QUESTIONS, TIME_WINDOWS, type TimeWindow } from '../quiz/quiz';
 import { StageBadge } from './stages';
 
@@ -41,7 +41,9 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-export function CustomerProfileCard({ customerId, onClose }: { customerId: string; onClose: () => void }) {
+type Props = { customerId: string; sources: MarketingOption[]; onClose: () => void; onSourceChanged: () => void };
+
+export function CustomerProfileCard({ customerId, sources, onClose, onSourceChanged }: Props) {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [error, setError] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -57,6 +59,18 @@ export function CustomerProfileCard({ customerId, onClose }: { customerId: strin
     headingRef.current?.focus({ preventScroll: true });
     headingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [profile]);
+
+  async function changeSource(value: string) {
+    if (!profile) return;
+    setError('');
+    try {
+      const updated = await updateCustomerSource(profile.id, value || null);
+      setProfile({ ...profile, acquisitionSource: updated.acquisitionSource });
+      onSourceChanged();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   const recurrence = profile?.recurrence;
   const prefs = profile?.preferences;
@@ -113,6 +127,18 @@ export function CustomerProfileCard({ customerId, onClose }: { customerId: strin
                 <Fact label="Terapeuta favorito">{prefs.therapistId ? `${prefs.therapistId.label ?? prefs.therapistId.value} · ${times(prefs.therapistId.count)}` : '—'}</Fact>
                 <Fact label="Día habitual">{prefs.weekday ? prefs.weekday.value.replace(/^./, (c) => c.toUpperCase()) : '—'}</Fact>
                 <Fact label="Horario habitual">{prefs.timeWindow ? TIME_WINDOWS[prefs.timeWindow.value as TimeWindow]?.label ?? prefs.timeWindow.value : '—'}</Fact>
+                <Fact label="Cómo nos conoció">
+                  <select
+                    className="profileSource"
+                    value={profile.acquisitionSource ?? ''}
+                    onChange={(event) => changeSource(event.target.value)}
+                    aria-label="Cómo nos conoció"
+                    data-testid="profile-source"
+                  >
+                    <option value="">Sin registrar</option>
+                    {sources.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                  </select>
+                </Fact>
                 <Fact label="Membresía">
                   {profile.membershipExpiresOn
                     ? `${profile.member ? 'Vigente hasta' : 'Vencida el'} ${dateLabel(profile.membershipExpiresOn)}`

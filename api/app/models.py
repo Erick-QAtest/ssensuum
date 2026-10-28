@@ -56,6 +56,8 @@ class Customer(Base):
     # Últimas respuestas del quiz ({"presion": "firme", ...}), guardadas al reservar después de hacerlo.
     quiz_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Cómo nos conoció (domain/marketing.SOURCES): la primera red registrada, no se sobrescribe sola.
+    acquisition_source: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
 
 class Reservation(Base):
@@ -97,6 +99,8 @@ class SiteEvent(Base):
     name: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+    # Red de la que llegó la visita (enlace con utm_source o sitio de referencia); no identifica a nadie.
+    channel: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
 
 class ServiceRecord(Base):
@@ -201,3 +205,47 @@ class RecurringExpense(Base):
     start_month: Mapped[str] = mapped_column(String(7), nullable=False)
     end_month: Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class MarketingPost(Base):
+    """Publicación planeada o hecha en una red: el calendario de contenido orgánico."""
+
+    __tablename__ = "marketing_posts"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    publish_on: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="idea")
+    format: Mapped[str] = mapped_column(String(20), nullable=False)
+    pillar: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    caption: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    idea_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class MarketingIdea(Base):
+    """Idea o gancho reutilizable para publicaciones, agrupado por pilar de contenido."""
+
+    __tablename__ = "marketing_ideas"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    pillar: Mapped[str] = mapped_column(String(20), nullable=False)
+    hook: Mapped[str] = mapped_column(String(200), nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class ChannelSnapshot(Base):
+    """Métricas de una red capturadas a mano en una fecha (una por red y día)."""
+
+    __tablename__ = "channel_snapshots"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    channel: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False)
+    followers: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    reach: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    interactions: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    link_clicks: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

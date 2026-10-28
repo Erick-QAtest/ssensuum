@@ -1,8 +1,8 @@
 'use client';
 
 import { FormEvent, WheelEvent, useEffect, useMemo, useState } from 'react';
-import { searchCustomers, saveServiceRecord } from '../../lib/api';
-import type { PaymentMethod, Service, ServiceRecord, Therapist } from '../../lib/types';
+import { getMarketingMeta, searchCustomers, saveServiceRecord } from '../../lib/api';
+import type { MarketingOption, PaymentMethod, Service, ServiceRecord, Therapist } from '../../lib/types';
 import { PAYMENT_METHODS, localDateTimeInput } from './records';
 
 type Props = {
@@ -34,13 +34,17 @@ export function RecordForm({ services, therapists, editing, onSaved, onCancel }:
   const [tipMethod, setTipMethod] = useState<PaymentMethod>('efectivo');
   const [notes, setNotes] = useState('');
   const [knownCustomer, setKnownCustomer] = useState('');
+  // Origen ya registrado del cliente: si existe, no se vuelve a preguntar.
+  const [knownSource, setKnownSource] = useState<string | null>(null);
+  const [customerSource, setCustomerSource] = useState('');
+  const [sources, setSources] = useState<MarketingOption[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function reset() {
     setName(''); setPhone(''); setServiceId(''); setTherapistIds([]);
     setPaidAt(localDateTimeInput(new Date().toISOString()));
-    setAmount(''); setPaymentMethod('efectivo'); setTips({}); setTipMethod('efectivo'); setNotes('');
+    setAmount(''); setPaymentMethod('efectivo'); setTips({}); setTipMethod('efectivo'); setNotes(''); setCustomerSource('');
     setError('');
   }
 
@@ -67,6 +71,7 @@ export function RecordForm({ services, therapists, editing, onSaved, onCancel }:
   useEffect(() => {
     const number = digits(phone);
     setKnownCustomer('');
+    setKnownSource(null);
     if (number.length !== 10) return;
     let active = true;
     searchCustomers(number)
@@ -75,11 +80,16 @@ export function RecordForm({ services, therapists, editing, onSaved, onCancel }:
         if (!active || !match) return;
         const fullName = `${match.firstName} ${match.lastName}`.trim();
         setKnownCustomer(fullName);
+        setKnownSource(match.acquisitionSource);
         setName((current) => current.trim() ? current : fullName);
       })
       .catch(() => null);
     return () => { active = false; };
   }, [phone]);
+
+  useEffect(() => {
+    getMarketingMeta().then((meta) => setSources(meta.sources)).catch(() => null);
+  }, []);
 
   const service = services.find((row) => row.id === serviceId);
   const byCategory = useMemo(() => {
@@ -117,6 +127,7 @@ export function RecordForm({ services, therapists, editing, onSaved, onCancel }:
         tips: tipEntries,
         tipMethod: tipEntries.length ? tipMethod : null,
         notes: notes.trim() || null,
+        customerSource: knownSource ? null : customerSource || null,
       }, editing?.id);
       reset();
       onSaved(saved);
@@ -142,6 +153,16 @@ export function RecordForm({ services, therapists, editing, onSaved, onCancel }:
         <label>Celular
           <input value={phone} onChange={(event) => setPhone(event.target.value)} inputMode="tel" placeholder="10 dígitos" required data-testid="record-phone" />
           {knownCustomer ? <small className="adminSub">Cliente registrado: {knownCustomer}</small> : null}
+        </label>
+        <label>¿Cómo nos conoció?
+          {knownSource ? (
+            <input value={sources.find((option) => option.id === knownSource)?.label ?? knownSource} disabled />
+          ) : (
+            <select value={customerSource} onChange={(event) => setCustomerSource(event.target.value)} data-testid="record-source">
+              <option value="">Sin preguntar</option>
+              {sources.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </select>
+          )}
         </label>
         <label>Servicio
           <select value={serviceId} onChange={(event) => chooseService(event.target.value)} required data-testid="record-service">

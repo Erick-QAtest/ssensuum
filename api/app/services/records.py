@@ -7,6 +7,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from ..domain.customers import normalize_phone
+from ..domain.marketing import clean_source
 from ..domain.errors import NotFoundError, ValidationError
 from ..domain.rules import TZ, parse_iso_datetime
 from ..models import Customer, ServiceRecord
@@ -14,6 +15,7 @@ from ..repositories import catalog as catalog_repo
 from ..repositories import customers as customers_repo
 from ..repositories import records as records_repo
 from ..schemas import ServiceRecordCreate
+from .customers import set_source_if_missing
 
 PAYMENT_METHODS = {"efectivo", "tarjeta", "transferencia", "mercadopago"}
 
@@ -30,14 +32,16 @@ def _split_name(full_name: str) -> tuple[str, str]:
     return first, last.strip()
 
 
-def _link_customer(db: Session, name: str, phone: str) -> str:
+def _link_customer(db: Session, name: str, phone: str, source: Optional[str]) -> str:
     """Asocia el registro al cliente con ese teléfono; si no existe, lo da de alta."""
     customer = customers_repo.get_by_phone(db, phone)
-    if customer:
+    if not customer:
+        first, last = _split_name(name)
+        customer = Customer(id=str(uuid.uuid4()), phone=phone, first_name=first, last_name=last)
+    elif not source or customer.acquisition_source:
         return customer.id
-    first, last = _split_name(name)
-    customer = customers_repo.save(db, Customer(id=str(uuid.uuid4()), phone=phone, first_name=first, last_name=last))
-    return customer.id
+    set_source_if_missing(customer, source)
+    return customers_repo.save(db, customer).id
 
 
 def _apply(db: Session, record: ServiceRecord, payload: ServiceRecordCreate) -> ServiceRecord:
@@ -74,7 +78,10 @@ def _apply(db: Session, record: ServiceRecord, payload: ServiceRecordCreate) -> 
 
     record.customer_name = name
     record.customer_phone = phone
-    record.customer_id = _link_customer(db, name, phone)
+    source = clean_source(payload.customer_source)
+    if payload.customer_source and payload.customer_source.strip() and not source:
+        raise ValidationError("Origen no reconocido")
+    record.customer_id = _link_customer(db, name, phone, source)
     record.service_id = service.id
     record.service_name = service.name
     record.therapist_ids_json = json.dumps(therapist_ids)

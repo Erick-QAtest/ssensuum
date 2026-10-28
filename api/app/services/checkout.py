@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..domain.customer_profile import clean_quiz_answers
 from ..domain.customers import normalize_phone
+from ..domain.marketing import normalize_channel
 from ..domain.errors import ConflictError, NotFoundError, PaymentGatewayError, ValidationError
 from ..domain.rules import PAYMENT_HOLD, TZ, ensure_tz, hold_expired, parse_iso_datetime
 from ..models import Customer, Reservation
@@ -15,6 +16,7 @@ from ..repositories import customers as customers_repo
 from ..repositories import reservations as reservations_repo
 from ..schemas import CheckoutCreate, ReservationCreate
 from . import mercadopago
+from .customers import set_source_if_missing
 from .availability import free_therapists, has_conflict, least_busy_first
 from .reservations import create_reservation
 
@@ -22,7 +24,7 @@ from .reservations import create_reservation
 REVERSED_PAYMENT_STATUSES = {"refunded", "charged_back", "cancelled"}
 
 
-def _customer_for(db: Session, first_name: str, raw_phone: str, quiz: Optional[dict] = None) -> Customer:
+def _customer_for(db: Session, first_name: str, raw_phone: str, quiz: Optional[dict] = None, channel: Optional[str] = None) -> Customer:
     phone = normalize_phone(raw_phone)
     if not phone:
         raise ValidationError("El teléfono debe tener 10 dígitos")
@@ -37,6 +39,7 @@ def _customer_for(db: Session, first_name: str, raw_phone: str, quiz: Optional[d
     if answers:
         customer.quiz_json = json.dumps(answers)
         customer.quiz_at = datetime.now(TZ)
+    set_source_if_missing(customer, normalize_channel(channel))
     return customers_repo.save(db, customer)
 
 
@@ -45,7 +48,7 @@ def start_checkout(db: Session, payload: CheckoutCreate) -> tuple[Reservation, s
     service = catalog_repo.get_service(db, payload.service_id)
     if not service or not service.active:
         raise NotFoundError("Servicio no encontrado")
-    customer = _customer_for(db, payload.first_name, payload.phone, payload.quiz)
+    customer = _customer_for(db, payload.first_name, payload.phone, payload.quiz, payload.channel)
 
     therapist_ids = payload.therapist_ids
     if not therapist_ids:
