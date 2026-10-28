@@ -27,13 +27,14 @@ from ..domain.hr import (
     photo_extension,
     therapist_slug,
 )
+from ..domain import schedule as schedule_rules
 from ..domain.rules import TZ, ensure_tz
 from ..models import HrDocument, Reservation, StaffProfile, Therapist
 from ..repositories import catalog as catalog_repo
 from ..repositories import customers as customers_repo
 from ..repositories import hr as hr_repo
 from ..repositories import reservations as reservations_repo
-from ..schemas import StaffLeave, StaffProfileUpdate
+from ..schemas import StaffLeave, StaffProfileUpdate, StaffSchedule
 from . import payroll as payroll_service
 
 
@@ -124,6 +125,13 @@ def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) 
     _apply_profile(profile, payload)
     db.add(therapist)
     hr_repo.save(db, profile)
+    return _member(db, therapist)
+
+
+def set_schedule(db: Session, therapist_id: str, payload: StaffSchedule) -> dict:
+    therapist = _therapist(db, therapist_id)
+    therapist.schedule_json = schedule_rules.dump(schedule_rules.normalize(payload.model_dump()))
+    hr_repo.save(db, therapist)
     return _member(db, therapist)
 
 

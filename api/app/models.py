@@ -34,6 +34,8 @@ class Therapist(Base):
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_new: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True, default=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Días y horas en que atiende (ver domain/schedule.py); vacío = aún no se captura.
+    schedule_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 class Customer(Base):

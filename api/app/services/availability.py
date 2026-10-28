@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from ..domain import schedule as schedule_rules
 from ..domain.errors import NotFoundError
 from ..domain.rules import (
     DEFAULT_CABIN_ID,
@@ -52,6 +53,16 @@ def has_conflict(
     return False
 
 
+def off_schedule(db: Session, therapist_ids: list[str], starts_at: datetime, ends_at: datetime) -> list[str]:
+    """Nombres de quienes no trabajan en ese horario según su horario de RH."""
+    names = []
+    for therapist_id in therapist_ids:
+        therapist = catalog_repo.get_therapist(db, therapist_id)
+        if therapist and not schedule_rules.works(schedule_rules.load(therapist.schedule_json), starts_at, ends_at):
+            names.append(therapist.name)
+    return names
+
+
 def free_therapists(
     db: Session,
     candidates: list[str],
@@ -60,7 +71,8 @@ def free_therapists(
     ends_at: datetime,
 ) -> Optional[list[str]]:
     """Primer grupo de `required` terapeutas libres en ese horario, o None."""
-    for group in combinations(candidates, required):
+    working = [therapist_id for therapist_id in candidates if not off_schedule(db, [therapist_id], starts_at, ends_at)]
+    for group in combinations(working, required):
         if not has_conflict(db, starts_at, ends_at, list(group), DEFAULT_CABIN_ID):
             return list(group)
     return None

@@ -22,5 +22,9 @@ def active_therapist_ids(db: Session) -> list[str]:
     return [row.id for row in db.scalars(select(Therapist).where(Therapist.active.is_(True))).all()]
 
 
+def get_therapist(db: Session, therapist_id: str) -> Optional[Therapist]:
+    return db.get(Therapist, therapist_id)
+
+
 def therapist_exists(db: Session, therapist_id: str) -> bool:
     return db.get(Therapist, therapist_id) is not None

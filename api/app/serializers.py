@@ -3,6 +3,7 @@ from typing import Optional
 
 from .domain.finance import CASH_ACCOUNTS, EXPENSE_CATEGORIES, MOVEMENT_KINDS, OTHER_INCOME_CATEGORIES
 from .domain.hr import DOCUMENT_CATEGORIES
+from .domain.schedule import load as load_schedule
 from .domain.rules import ensure_tz, hold_expired
 from .models import Customer, FinanceMovement, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
@@ -32,6 +33,7 @@ def therapist_payload(therapist: Therapist) -> dict:
         "photoUrl": therapist.photo_url,
         "bio": therapist.bio,
         "isNew": bool(therapist.is_new),
+        "schedule": load_schedule(therapist.schedule_json),
     }
 
 

@@ -18,7 +18,7 @@ from ..models import Reservation
 from ..repositories import catalog as catalog_repo
 from ..repositories import reservations as reservations_repo
 from ..schemas import ReservationCreate, ReservationReschedule
-from .availability import has_conflict
+from .availability import has_conflict, off_schedule
 
 reservation_lock = threading.Lock()
 
@@ -50,6 +50,10 @@ def create_reservation(db: Session, payload: ReservationCreate, hold_expires_at:
         raise ValidationError("La cita debe reservarse con al menos 3 horas de anticipación")
     if not validate_opening_hours(starts_at, service.duration_minutes):
         raise ValidationError("El horario está fuera del horario del club")
+
+    absent = off_schedule(db, payload.therapist_ids, starts_at, ends_at)
+    if absent:
+        raise ConflictError(f"{' y '.join(absent)} no atiende en ese horario")
 
     # MVP local: serializa check+insert para hacer visible la regla RF-055.
     # En producción debe reforzarse con locking/constraints transaccionales en PostgreSQL.
@@ -89,6 +93,9 @@ def reschedule_reservation(db: Session, reservation_id: str, payload: Reservatio
 
     if not validate_minimum_lead_time(new_start):
         raise ValidationError("La nueva cita debe tener al menos 3 horas de anticipación")
+    absent = off_schedule(db, therapist_ids, new_start, new_end)
+    if absent:
+        raise ConflictError(f"{' y '.join(absent)} no atiende en ese horario")
     if has_conflict(db, new_start, new_end, therapist_ids, reservation.cabin_id, reservation.id):
         raise ConflictError("El nuevo horario ya está ocupado")
 

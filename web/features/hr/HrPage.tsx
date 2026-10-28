@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getStaff, hrStaffExportUrl, staffRehire } from '../../lib/api';
+import { scheduleSummary } from '../../lib/schedule';
 import type { HrDocumentCategory, StaffMember } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
@@ -10,12 +11,13 @@ import { DocumentsPanel } from './DocumentsPanel';
 import { HireWizard } from './HireWizard';
 import { LeaveFlow } from './LeaveFlow';
 import { PayrollPanel } from './PayrollPanel';
+import { ScheduleForm } from './ScheduleForm';
 import { StaffForm } from './StaffForm';
 import { TemplatesPanel } from './TemplatesPanel';
 import { UploadPreset, formatDate, formatPhone } from './hr';
 
 // Lo que se abre arriba de la tabla: el alta, la edición de un expediente o la baja.
-type Panel = { kind: 'hire' } | { kind: 'edit' | 'leave'; member: StaffMember } | null;
+type Panel = { kind: 'hire' } | { kind: 'edit' | 'leave' | 'schedule'; member: StaffMember } | null;
 
 export function HrPage() {
   const [staff, setStaff] = useState<StaffMember[] | null>(null);
@@ -77,6 +79,9 @@ export function HrPage() {
             onCancel={() => setPanel(null)}
           />
         ) : null}
+        {panel?.kind === 'schedule' ? (
+          <ScheduleForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
+        ) : null}
         {panel?.kind === 'leave' ? (
           <LeaveFlow member={panel.member} onDone={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
         ) : null}
@@ -100,7 +105,7 @@ export function HrPage() {
           {staff && staff.length > 0 ? (
             <div className="adminTableWrap">
               <table className="adminTable">
-                <thead><tr><th>Masajista</th><th>Estado</th><th>Documentación</th><th>Teléfono</th><th>Correo</th><th>Ingreso</th><th>Emergencia</th><th>Archivos</th><th></th></tr></thead>
+                <thead><tr><th>Masajista</th><th>Estado</th><th>Horario</th><th>Documentación</th><th>Teléfono</th><th>Correo</th><th>Ingreso</th><th>Emergencia</th><th>Archivos</th><th></th></tr></thead>
                 <tbody>
                   {staff.map((member) => (
                     <tr key={member.id} data-testid="staff-row">
@@ -113,6 +118,10 @@ export function HrPage() {
                       <td>
                         <span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span>
                         {!member.active && member.leftOn ? <span className="adminSub">Desde {formatDate(member.leftOn)}{member.leaveReason ? ` · ${member.leaveReason}` : ''}</span> : null}
+                      </td>
+                      <td className="hrScheduleCell" data-testid="staff-schedule">
+                        {!member.active ? '—' : member.schedule === null ? <span className="statusBadge wait">Sin capturar</span> : scheduleSummary(member.schedule) ?? 'Siempre disponible'}
+                        <button type="button" className="hrLink" onClick={() => open({ kind: 'schedule', member })}>Editar</button>
                       </td>
                       <td data-testid="staff-documentation">
                         {member.documentationComplete ? <span className="statusBadge ok">Completa</span> : (

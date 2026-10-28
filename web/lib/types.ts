@@ -11,6 +11,9 @@ export type Service = {
   details: string | null;
 };
 
+// Días y horas en que atiende: 0 = lunes … 6 = domingo, franjas "HH:MM". null = aún no se captura (siempre).
+export type Schedule = { always: true } | { days: Record<string, [string, string][]> };
+
 export type Therapist = {
   id: string;
   name: string;
@@ -18,6 +21,7 @@ export type Therapist = {
   photoUrl: string;
   bio: string | null;
   isNew: boolean;
+  schedule: Schedule | null;
 };
 
 export type Customer = {

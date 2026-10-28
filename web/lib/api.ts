@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -154,6 +154,10 @@ export function saveStaffPhoto(therapistId: string, photo: Blob) {
   const body = new FormData();
   body.append('photo', photo, 'foto.jpg');
   return sendForm<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}/photo`, body, 'No se pudo guardar la foto').then(withPhoto);
+}
+
+export function saveStaffSchedule(therapistId: string, schedule: Schedule) {
+  return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}/schedule`, schedule, 'No se pudo guardar el horario').then(withPhoto);
 }
 
 export function getStaffOffboarding(therapistId: string) {

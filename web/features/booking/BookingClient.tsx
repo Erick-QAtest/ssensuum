@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ApiError, getAvailability, getServices, getTherapists, paymentsEnabled, startCheckout, track } from '../../lib/api';
 import { money } from '../../lib/format';
+import { scheduleSummary } from '../../lib/schedule';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
 import { localIsoDate, longDateLabel, next14Days, timeLabel } from './dates';
@@ -197,6 +198,7 @@ export function BookingClient({ serviceId, therapistId, initialDate, initialTime
             <h2>Elige hora</h2>
             {!dateIso ? <p className="muted">Selecciona primero un día.</p> : null}
             {dateIso && slots.length === 0 ? <p className="muted">No hay horarios disponibles con estos filtros.</p> : null}
+            {selectedTherapists.map((row) => (scheduleSummary(row.schedule) ? <p key={row.id} className="muted" data-testid="therapist-schedule">{row.name} atiende: {scheduleSummary(row.schedule)}.</p> : null))}
             <div className="slotsGrid">
               {slots.map((slot) => (
                 <button

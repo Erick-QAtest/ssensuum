@@ -94,6 +94,12 @@ class StaffProfileUpdate(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class StaffSchedule(BaseModel):
+    always: bool = False
+    # "0" = lunes … "6" = domingo; cada franja es ["HH:MM", "HH:MM"].
+    days: dict[str, list[list[str]]] = Field(default_factory=dict)
+
+
 class StaffLeave(BaseModel):
     left_on: date = Field(alias="leftOn")
     reason: Optional[str] = Field(default=None, max_length=300)

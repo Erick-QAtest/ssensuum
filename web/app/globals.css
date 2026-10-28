@@ -644,6 +644,21 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .hrCheck { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--ink); font-weight: 700; }
 .hrCheck input { width: 20px; height: 20px; accent-color: var(--brown); }
 .hrDanger { background: var(--danger); border-color: var(--danger); }
+.hrScheduleCell { min-width: 180px; font-size: 14px; }
+.hrScheduleCell .hrLink { display: block; min-height: 0; margin-top: 4px; font-size: 13px; }
+.recordForm .hrCheck { display: flex; color: var(--ink); font-size: 15px; }
+.recordForm .hrCheck input { min-height: 0; padding: 0; }
+.hrScheduleMode { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; }
+.hrSchedule { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.hrSchedule > li { display: grid; grid-template-columns: 140px minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--r-sm); background: var(--bg); }
+.hrSchedule .hrCheck { margin-top: 0; }
+.hrScheduleWindows { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.hrScheduleWindow { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+.recordForm .hrScheduleWindow input { min-height: 40px; padding: 0 10px; background: var(--surface); }
+.hrScheduleWindows .hrLink { min-height: 0; font-size: 13px; }
+@media (max-width: 599px) {
+  .hrSchedule > li { grid-template-columns: 1fr; }
+}
 @media (max-width: 599px) {
   .hrPhoto, .hrReview { grid-template-columns: 1fr; }
   .hrPhotoStage { max-width: 260px; }

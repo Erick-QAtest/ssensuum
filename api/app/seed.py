@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .domain.schedule import ALWAYS, dump
 from .models import Service, Therapist
 
 
@@ -148,6 +149,31 @@ THERAPISTS = [
 ]
 
 
+# Horarios que mandó el club (octubre 2026). Solo se cargan a quien aún no tiene horario:
+# después se editan en Recursos humanos. 0 = lunes … 6 = domingo; días sin franja = descanso.
+_CLOSE = "20:30"
+SCHEDULES = {
+    "kevin": ALWAYS,
+    "richy": ALWAYS,
+    "jairo": ALWAYS,
+    "braulio": ALWAYS,
+    "jessy": {"days": {str(day): [["07:00", "21:00"]] for day in range(5)}},
+    "mazer": {"days": {
+        "0": [["17:00", _CLOSE]],
+        "1": [["17:00", _CLOSE]],
+        "2": [["15:00", "16:00"]],
+        "3": [["19:00", _CLOSE]],
+        "4": [["13:00", "16:00"]],
+    }},
+    "borja": {"days": {
+        "0": [["10:00", "19:00"]],
+        "1": [["10:00", "19:00"]],
+        "2": [["10:00", "19:00"]],
+        "4": [["09:00", "14:00"]],
+    }},
+}
+
+
 def seed(db: Session) -> None:
     has_services = db.scalar(select(Service.id).limit(1))
     if not has_services:
@@ -155,6 +181,8 @@ def seed(db: Session) -> None:
         db.flush()
 
     sync_therapists(db)
+    db.flush()
+    sync_schedules(db)
     sync_service_details(db)
 
     db.commit()
@@ -173,6 +201,13 @@ def sync_therapists(db: Session) -> None:
             is_new=row.get("is_new", False),
             active=True,
         ))
+
+
+def sync_schedules(db: Session) -> None:
+    for therapist_id, schedule in SCHEDULES.items():
+        therapist = db.get(Therapist, therapist_id)
+        if therapist and not therapist.schedule_json:
+            therapist.schedule_json = dump(schedule)
 
 
 def sync_service_details(db: Session) -> None:
