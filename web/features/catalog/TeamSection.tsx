@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ChevronIcon } from '../../components/icons';
 import { getAvailability, track } from '../../lib/api';
 import type { Therapist } from '../../lib/types';
 import { localIsoDate } from '../booking/dates';
@@ -39,7 +40,6 @@ export function TeamSection({ therapists }: { therapists: Therapist[] }) {
     <section className="section" id="equipo" aria-labelledby="equipo-title">
       <div className="wrap">
         <div className="sectionHead">
-          <p className="label">Terapeutas</p>
           <h2 id="equipo-title">Elige quién te atiende.</h2>
           <p className="sectionLead">¿No sabes a quién elegir? <a href="/quiz">Haz el quiz de 1 minuto</a> y te recomendamos terapeuta, masaje y horario.</p>
         </div>
@@ -60,24 +60,27 @@ export function TeamSection({ therapists }: { therapists: Therapist[] }) {
                 )}
               </div>
               <div className="therapistBody">
-                <h3 className="therapistName">
-                  {therapist.name}
-                  {therapist.isNew ? <span className="tag">Nuevo</span> : null}
-                </h3>
-                {availableToday.has(therapist.id) ? <span className="availableToday">Disponible hoy</span> : null}
-                {strengthsOf(therapist).length ? (
-                  <ul className="chips" aria-label="Fortalezas">
-                    {strengthsOf(therapist).map((strength) => <li className="chip" key={strength}>{strength}</li>)}
-                  </ul>
+                <h3 className="therapistName">{therapist.name}</h3>
+                {therapist.isNew || availableToday.has(therapist.id) ? (
+                  <p className="therapistTags">
+                    {therapist.isNew ? <span className="tag">Nuevo</span> : null}
+                    {availableToday.has(therapist.id) ? <span className="availableToday">Disponible hoy</span> : null}
+                  </p>
                 ) : null}
-                {therapist.bio ? <p className="therapistBio">{therapist.bio}</p> : null}
-                {therapist.isNew && !therapist.bio ? <p className="therapistBio">Recién se integra al equipo SSENSUUM.</p> : null}
+                {strengthsOf(therapist).length ? <p className="therapistTrait">{strengthsOf(therapist).join(' · ')}</p> : null}
+                {therapist.bio ? (
+                  <details className="therapistMore">
+                    <summary>Conoce a {therapist.name} <ChevronIcon /></summary>
+                    <p>{therapist.bio}</p>
+                  </details>
+                ) : null}
+                {therapist.isNew && !therapist.bio ? <p className="therapistTrait">Recién se integra al equipo.</p> : null}
                 <a
                   className="btn"
                   href={`/reservar?service=${SPECIAL_ID}&therapist=${therapist.id}`}
                   onClick={() => track('reserve_click', `terapeuta:${therapist.id}`)}
                 >
-                  Reservar con {therapist.name}
+                  Reservar<span className="srOnly"> con {therapist.name}</span>
                 </a>
               </div>
             </li>

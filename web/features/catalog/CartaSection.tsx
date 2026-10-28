@@ -30,7 +30,6 @@ export function CartaSection({ services }: { services: Service[] }) {
   return (
     <section className="section" id="masajes" data-testid="catalog" aria-labelledby="carta-title">
       <div className="wrap">
-        <p className="label">Carta completa</p>
         <h2 id="carta-title">Todas las técnicas</h2>
         {common ? (
           <p className="cartaSummary">

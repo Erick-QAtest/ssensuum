@@ -1,24 +1,19 @@
 import { money } from '../../lib/format';
 import type { Service } from '../../lib/types';
-import { AESTHETICS } from './categories';
 
 function duration(minutes: number) {
   return minutes % 60 === 0 ? `${minutes / 60} h` : `${minutes} min`;
 }
 
-// Fila compacta para barbería y medicina estética.
-export function ServiceRow({ service, onReserve }: { service: Service; onReserve: () => void }) {
-  const saving = service.publicPrice - service.memberPrice;
+// Renglón de la lista de precios de barbería y medicina estética; se reservan por WhatsApp, un botón por grupo.
+export function ServiceRow({ service }: { service: Service }) {
   return (
-    <li className="compactItem" data-testid="service-card">
-      <h4>{service.name} <span className="memberPrice">· {duration(service.durationMinutes)}</span></h4>
-      <p>
-        {money(service.publicPrice)} · <a className="memberPrice" href="#membresia">{money(service.memberPrice)} miembros</a>
-        {saving > 0 ? ` · ahorras ${money(saving)}` : ''}
-      </p>
-      <button type="button" className="btn" onClick={onReserve}>
-        {service.category === AESTHETICS ? 'Agendar valoración' : 'Reservar'}
-      </button>
+    <li className="priceItem">
+      <span className="priceName">{service.name} <span className="priceMeta">{duration(service.durationMinutes)}</span></span>
+      <span className="priceAmount">
+        {money(service.publicPrice)}
+        <a className="priceMeta" href="#membresia">{money(service.memberPrice)} miembros</a>
+      </span>
     </li>
   );
 }

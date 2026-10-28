@@ -96,7 +96,7 @@ svg { width: 1em; height: 1em; }
   border-radius: var(--pill);
   background: var(--brown);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: .04em;
   vertical-align: middle;
@@ -118,7 +118,8 @@ svg { width: 1em; height: 1em; }
 /* =====================================================================
    LANDING
    ===================================================================== */
-.club { padding-bottom: calc(var(--bar-height) + env(safe-area-inset-bottom)); }
+/* Escala de la landing: 14 notas · 17 texto · 20 entrada · 26 subtítulo · 52 sección · display. */
+.club { padding-bottom: calc(var(--bar-height) + env(safe-area-inset-bottom)); font-size: 17px; }
 .wrap { width: min(1180px, 100% - 2 * var(--gutter)); margin-inline: auto; }
 .section { padding: 56px 0; }
 .section h2 {
@@ -129,7 +130,7 @@ svg { width: 1em; height: 1em; }
   font-weight: 400;
   line-height: 1.08;
 }
-.sectionLead { margin: 12px 0 0; max-width: 620px; font-size: 17px; }
+.sectionLead { margin: 14px 0 0; max-width: 640px; color: var(--ink); font-size: 20px; line-height: 1.45; }
 .sectionHead { margin-bottom: 28px; }
 
 /* ---------- Header ---------- */
@@ -138,7 +139,6 @@ svg { width: 1em; height: 1em; }
   top: 0;
   z-index: 40;
   background: var(--bg);
-  border-bottom: 1px solid var(--line);
 }
 .clubHeaderRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
 .clubLogo { display: flex; align-items: center; min-height: 44px; }
@@ -161,9 +161,8 @@ svg { width: 1em; height: 1em; }
 .clubHeaderActions { display: flex; align-items: center; gap: 6px; }
 .clubMenuButton { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--ink); }
 .clubMenuButton svg { width: 24px; height: 24px; }
-.clubMenu { display: grid; padding: 4px var(--gutter) 12px; border-top: 1px solid var(--line); background: var(--bg); }
-.clubMenu a { display: flex; align-items: center; min-height: 48px; color: var(--ink); font-size: 17px; font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--line); }
-.clubMenu a:last-child { border-bottom: 0; }
+.clubMenu { display: grid; padding: 4px var(--gutter) 12px; background: var(--surface); }
+.clubMenu a { display: flex; align-items: center; min-height: 48px; color: var(--ink); font-size: 20px; font-weight: 600; text-decoration: none; }
 
 /* ---------- Hero ----------
    Fondo crema cálido: la foto de la cabina lleva el peso. */
@@ -177,19 +176,16 @@ svg { width: 1em; height: 1em; }
   background: var(--hero-bg);
   color: var(--hero-text);
 }
-.heroLabel { margin: 0 0 14px; color: var(--hero-text); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .hero h1 {
   margin: 0;
-  max-width: 760px;
   color: var(--hero-ink);
   font-family: var(--serif);
-  font-size: clamp(36px, 9vw, 64px);
+  font-size: clamp(44px, 11.5vw, 104px);
   font-weight: 400;
-  line-height: 1.04;
-  letter-spacing: -.01em;
+  line-height: .98;
+  letter-spacing: -.025em;
 }
-.hero h1 em { color: var(--hero-ink); }
-.heroLead { margin: 14px 0 0; max-width: 640px; color: var(--hero-text); font-size: 18px; }
+.heroLead { margin: 18px 0 0; max-width: 520px; color: var(--hero-ink); font-size: 20px; line-height: 1.45; }
 /* En celular el botón va antes del video: la acción queda visible al abrir la página. */
 .heroGrid { display: grid; grid-template-areas: "copy" "actions" "media"; }
 .heroCopy { grid-area: copy; }
@@ -213,28 +209,13 @@ svg { width: 1em; height: 1em; }
   border-radius: var(--pill);
   background: var(--hero-cta);
   color: #fff;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   text-decoration: none;
 }
 .heroCta:hover, .heroCta:active { background: var(--hero-cta-hover); }
 .heroCta svg { width: 20px; height: 20px; }
-.heroScroll {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin: -8px auto 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--hero-bg);
-  color: var(--hero-ink);
-}
-.heroScroll svg { width: 20px; height: 20px; }
-.heroMeta { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 0; color: var(--hero-text); font-size: 16px; }
+.heroMeta { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 0; color: var(--hero-text); font-size: 14px; }
 .heroMeta svg { width: 22px; height: 22px; }
 .heroFaces { display: flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; color: var(--text); }
 .heroFaces span:first-child { display: flex; }
@@ -260,6 +241,8 @@ svg { width: 1em; height: 1em; }
   list-style: none;
 }
 .therapist {
+  /* Contiene el texto solo para lectores de pantalla del botón: sin esto se sale del carrusel y ensancha la página. */
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -284,32 +267,27 @@ svg { width: 1em; height: 1em; }
   scroll-snap-align: start;
 }
 .therapistInitial { display: grid; place-items: center; color: var(--brown); font-family: var(--serif); font-size: 96px; }
-.therapistBody { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 18px; }
-.therapistName { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink); font-size: 22px; font-weight: 700; }
-.therapistBio { margin: 0; }
+.therapistBody { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 16px; }
+.therapistName { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink); font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.1; }
+.therapistTrait { margin: 0; color: var(--ink); font-size: 17px; line-height: 1.4; }
+.therapistTags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.therapistMore summary { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--brown); font-size: 15px; font-weight: 700; cursor: pointer; list-style: none; }
+.therapistMore summary::-webkit-details-marker { display: none; }
+.therapistMore summary svg { width: 16px; height: 16px; transition: transform .2s ease; }
+.therapistMore[open] summary svg { transform: rotate(180deg); }
+.therapistMore p { margin: 0 0 8px; color: var(--ink); line-height: 1.55; }
 .therapist .btn { margin-top: auto; }
 .availableToday { color: var(--success); font-size: 14px; font-weight: 700; }
 .teamCount { display: none; justify-content: space-between; margin: 0 0 12px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 
 /* ---------- Cómo funciona / Reglas ---------- */
-.steps { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
-.steps li { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
-.steps li::before {
-  counter-increment: step;
-  content: counter(step);
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--brown);
-  color: #fff;
-  font-weight: 700;
-}
-.steps strong { display: block; color: var(--ink); font-size: 18px; }
-.stepsNote { margin: 24px 0 0; padding: 16px 18px; border-radius: var(--r-sm); background: var(--surface); }
+/* El orden lo da la posición: tres bloques de izquierda a derecha, sin números. */
+.steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.steps li { padding: 22px; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); }
+.steps strong { display: block; margin-bottom: 6px; color: var(--ink); font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.15; }
+.stepsNote { margin: 20px 0 0; max-width: 640px; color: var(--ink); font-size: 20px; line-height: 1.45; }
 .rules { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.rules li { padding: 16px 18px; border-left: 3px solid var(--brown); border-radius: 0 var(--r-sm) var(--r-sm) 0; background: var(--surface); }
+.rules li { padding: 22px; border-radius: var(--r-lg); background: var(--accent); color: var(--ink); font-size: 20px; line-height: 1.45; }
 .rules strong { color: var(--ink); }
 
 /* ---------- Tu primera visita ---------- */
@@ -320,7 +298,8 @@ svg { width: 1em; height: 1em; }
   border-radius: var(--r-lg);
   background: var(--surface);
 }
-.firstVisit h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 32px; font-weight: 400; line-height: 1.1; }
+.firstVisit h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 36px; font-weight: 400; line-height: 1.1; }
+.firstVisit .btn { justify-self: start; }
 .firstVisit p { margin: 0; }
 .priceLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
 .price { color: var(--brown); font-family: var(--serif); font-size: 36px; line-height: 1; }
@@ -329,16 +308,16 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 
 /* ---------- Carta ---------- */
 .cartaSummary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 18px; color: var(--ink); font-size: 17px; font-weight: 700; }
-.cartaSummary .price { font-size: 28px; }
+.cartaSummary .price { font-size: 36px; }
 .cartaActions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
 .cartaGroup { margin-top: 36px; }
 .cartaGroup h3 { margin: 0 0 14px; color: var(--ink); font-family: var(--serif); font-size: 26px; font-weight: 400; }
 .services { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
 .service { display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: var(--r-lg); background: var(--surface); }
-.service h4 { margin: 0; color: var(--ink); font-size: 19px; font-weight: 700; }
+.service h4 { margin: 0; color: var(--ink); font-size: 20px; font-weight: 700; }
 .service p { margin: 0; }
 .service .btn { margin-top: auto; }
-.howTo { border-top: 1px solid var(--line); }
+.howTo { margin-top: 4px; }
 .howTo summary {
   display: flex;
   align-items: center;
@@ -357,7 +336,7 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 /* ---------- Testimonios y FAQ ---------- */
 .quotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
 .quotes figure { margin: 0; padding: 20px; border-radius: var(--r-lg); background: var(--surface); }
-.quotes blockquote { margin: 0; color: var(--ink); font-size: 17px; }
+.quotes blockquote { margin: 0; color: var(--ink); font-size: 20px; }
 .quotes figcaption { margin-top: 10px; color: var(--muted); font-weight: 700; }
 .faq { display: grid; gap: 10px; }
 .faq details { padding: 0 18px; border-radius: var(--r-sm); background: var(--surface); }
@@ -369,20 +348,23 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .membership h2 { color: #fff; }
 .membership .label { color: var(--on-dark-muted); }
 .membershipPrice { margin: 18px 0 4px; color: #fff; font-family: var(--serif); font-size: clamp(56px, 16vw, 96px); line-height: 1; }
-.membershipHighlight { margin: 20px 0; padding: 16px 18px; border-radius: var(--r-sm); background: var(--brown); color: #fff; font-size: 18px; }
+.membershipHighlight { margin: 20px 0; max-width: 640px; padding: 18px 20px; border-radius: var(--r-sm); background: var(--brown); color: #fff; font-size: 20px; line-height: 1.45; }
 .membership ul { margin: 0 0 24px; padding-left: 20px; }
 .membership li { margin: 8px 0; }
 
 /* ---------- Complementa tu visita ---------- */
-.complements { display: grid; gap: 32px; }
-.complementGroup h3 { margin: 0 0 6px; color: var(--ink); font-family: var(--serif); font-size: 26px; font-weight: 400; }
-.complementGroup > p { margin: 0 0 12px; }
-.compactList { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
-.compactItem { display: grid; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--line); }
-.compactItem h4 { margin: 0; color: var(--ink); font-size: 17px; font-weight: 700; }
-.compactItem .memberPrice { font-weight: 600; }
-.compactItem p { margin: 0; font-size: 16px; }
-.compactItem .btn { justify-self: start; min-height: 44px; margin-top: 4px; padding: 0 18px; font-size: 14px; }
+/* Lista de precios: renglones con tono alterno, sin líneas; un botón de WhatsApp por grupo. */
+.complements { display: grid; gap: 64px; }
+.complementGroup { display: grid; align-content: start; gap: 12px; }
+.complementGroup h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 36px; font-weight: 400; line-height: 1.1; }
+.complementGroup > p { margin: 0; color: var(--ink); }
+.complementGroup > .btn { justify-self: start; margin-top: 8px; }
+.priceList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.priceItem { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 14px; border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.priceName { font-weight: 700; }
+.priceAmount { display: grid; justify-items: end; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.priceMeta { color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
+a.priceMeta { text-underline-offset: 3px; }
 
 /* ---------- Cómo llegar ---------- */
 .location { display: grid; gap: 24px; align-items: center; }
@@ -393,7 +375,7 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .facts strong { display: block; color: var(--ink); }
 
 /* ---------- Footer ---------- */
-.clubFooter { padding: 32px 0 24px; border-top: 1px solid var(--line); }
+.clubFooter { padding: 32px 0 24px; background: var(--accent); }
 .clubFooter img { width: 150px; height: 44px; object-fit: contain; object-position: left; mix-blend-mode: multiply; }
 .footerLinks { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 16px 0; padding: 0; list-style: none; }
 .footerLinks a { display: inline-flex; align-items: center; min-height: 44px; padding-right: 12px; color: var(--ink); font-weight: 600; text-decoration: none; }
@@ -408,7 +390,6 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   gap: 10px;
   padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
   background: var(--surface);
-  border-top: 1px solid var(--line);
   box-shadow: 0 -8px 24px rgba(27, 24, 22, .08);
   transition: transform .25s ease, visibility 0s;
 }
@@ -416,7 +397,7 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .bottomBarHidden { visibility: hidden; transform: translateY(110%); transition: transform .25s ease, visibility 0s .25s; }
 .bottomBar .btn { flex: 1; min-height: 44px; }
 /* WhatsApp como canal secundario: contorno en la paleta de la marca, no verde. */
-.bottomBarWhatsapp { flex: 0 0 auto !important; width: 44px; padding: 0; background: transparent; border-color: var(--line); color: var(--brown); }
+.bottomBarWhatsapp { flex: 0 0 auto !important; width: 44px; padding: 0; background: var(--accent); border-color: var(--accent); color: var(--brown); }
 .bottomBarWhatsapp:hover { background: var(--accent); }
 .bottomBarWhatsapp svg { width: 22px; height: 22px; }
 
@@ -424,8 +405,6 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .clubHeaderRow .clubNav { display: none; }
   .clubMenuButton { display: inline-flex; }
   .bottomBar { display: flex; }
-  /* La flecha a terapeutas sobra cuando el video queda debajo del botón. */
-  .heroScroll { display: none; }
   .teamCount { display: flex; }
   .team {
     grid-template-columns: none;
@@ -443,22 +422,33 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
   .club { padding-bottom: 0; }
   .clubMenu { display: none; }
   .section { padding: 88px 0; }
-  .hero { padding: 56px 0 56px; }
-  /* Texto a la izquierda y la foto vertical completa a la derecha. */
+  .hero { padding: 32px 0 56px; }
+  /* El título manda a la izquierda; el video ocupa la otra mitad, de arriba a abajo del primer pantallazo. */
   .heroGrid {
     grid-template-areas: "copy media" "actions media";
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 1fr 1fr;
-    column-gap: 56px;
+    grid-template-columns: minmax(0, 1fr) min(560px, 44%);
+    grid-template-rows: auto 1fr;
+    column-gap: 48px;
   }
-  .heroCopy { align-self: end; }
-  .heroActions { align-self: start; max-width: 520px; }
+  .hero h1 { font-size: clamp(52px, 6.1vw, 96px); }
+  .heroCopy { align-self: end; padding-top: 12vh; }
+  .heroActions { align-self: start; padding-top: 28px; }
+  .heroCta { display: inline-flex; margin-top: 0; padding: 0 32px; }
+  .heroMeta { justify-content: flex-start; }
   .heroMedia { margin: 0; }
-  .heroMedia video { width: auto; height: min(78vh, 760px); }
+  .heroMedia video { width: 100%; height: min(calc(100svh - 120px), 780px); }
+  .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .location { grid-template-columns: 1.1fr .9fr; gap: 48px; }
-  .complements { grid-template-columns: 1fr 1fr; gap: 48px; }
-  .firstVisit { grid-template-columns: 1fr auto; align-items: center; padding: 32px; }
-  .firstVisit .btn { grid-column: 2; grid-row: 1 / span 4; }
+  /* Estética tiene casi el doble de renglones: su lista va en dos columnas para que los grupos midan lo mismo. */
+  .complements { grid-template-columns: 1fr 2fr; gap: 48px; }
+  .complementWide .priceList { grid-template-columns: 1fr 1fr; column-gap: 16px; }
+  .firstVisit { padding: 32px; max-width: 760px; }
+}
+
+@media (min-width: 1200px) {
+  /* Los diez terapeutas en dos filas de cinco: el equipo cabe en una pantalla. */
+  .team { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 /* =====================================================================

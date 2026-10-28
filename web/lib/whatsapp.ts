@@ -9,5 +9,7 @@ export const WHATSAPP_MESSAGES = {
   member: 'Hola, soy miembro y quiero reservar.',
   membership: 'Hola, quiero información de la membresía Private Club.',
   help: 'Hola, ¿me ayudan a elegir mi masaje?',
+  barber: 'Hola SSENSUUM, quiero reservar en barbería.',
+  aesthetics: 'Hola SSENSUUM, quiero agendar una valoración de medicina estética.',
   therapist: (name: string) => `Hola, quiero reservar con ${name}.`,
 };

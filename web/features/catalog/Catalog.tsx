@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDownIcon, ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PauseIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
+import { ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PauseIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
 import { BUSINESS } from '../../lib/business';
 import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
@@ -96,13 +96,6 @@ export function Catalog() {
   const barber = useMemo(() => services.filter((service) => service.category === BARBER), [services]);
   const aesthetics = useMemo(() => services.filter((service) => service.category === AESTHETICS), [services]);
 
-  // Barbería y medicina estética se coordinan por WhatsApp.
-  const reserveByWhatsapp = (service: Service) => {
-    track('whatsapp_click', service.id);
-    const intent = service.category === AESTHETICS ? 'agendar una valoración para' : 'reservar';
-    window.open(whatsappUrl(`Hola SSENSUUM, quiero ${intent}: ${service.name}.`), '_blank', 'noopener');
-  };
-
   return (
     <main className="club">
       {/* 1. Header */}
@@ -141,9 +134,8 @@ export function Catalog() {
       <section className="hero" id="inicio">
         <div className="wrap heroGrid">
           <div className="heroCopy">
-            <p className="heroLabel">Private Massage Club · Guadalajara</p>
-            <h1>Tú eliges <em>quién te&nbsp;atiende.</em></h1>
-            <p className="heroLead">Masajes privados para hombres. Elige a tu terapeuta y reserva una experiencia a tu medida.</p>
+            <h1>Tú eliges quién te&nbsp;atiende.</h1>
+            <p className="heroLead">Club privado de masaje para hombres en la Col. Americana, Guadalajara. Elige a tu terapeuta y reserva tu hora.</p>
           </div>
           <figure className="heroMedia">
             <video
@@ -177,7 +169,6 @@ export function Catalog() {
             <a className="heroCta" ref={heroCtaRef} href="#equipo" onClick={() => track('reserve_click', 'hero')}>
               Elegir terapeuta <ArrowIcon />
             </a>
-            <a className="heroScroll" href="#equipo" aria-label="Ver a los terapeutas"><ArrowDownIcon /></a>
             <p className="heroMeta">
               <PeopleIcon />
               {therapists.length ? `${therapists.length} terapeutas · ` : ''}Atención personalizada
@@ -195,18 +186,12 @@ export function Catalog() {
       <section className="section" aria-labelledby="como-title">
         <div className="wrap">
           <div className="sectionHead">
-            <p className="label">Cómo funciona</p>
             <h2 id="como-title">Tres pasos y es tu hora.</h2>
           </div>
           <ol className="steps">
-            <li><div><strong>Eliges terapeuta y técnica.</strong></div></li>
-            <li>
-              <div>
-                <strong>Apartas con {money(special?.deposit ?? 300)}, que se descuentan de tu total.</strong>
-                Reserva con 3 horas de anticipación.
-              </div>
-            </li>
-            <li><div><strong>Llegas, te estacionas en los cajones 1, 2 o 3 frente al club y empieza tu hora.</strong></div></li>
+            <li><strong>Eliges terapeuta y técnica.</strong> Por su foto y su trato, o con el quiz de un minuto.</li>
+            <li><strong>Apartas con {money(special?.deposit ?? 300)}.</strong> Se descuentan de tu total. Reserva con 3 horas de anticipación.</li>
+            <li><strong>Llegas y empieza tu hora.</strong> Te estacionas en los cajones 1, 2 o 3, frente al club.</li>
           </ol>
           <p className="stepsNote">Si la presión o el ambiente no son lo que esperabas, lo ajustamos en los primeros 10 minutos.</p>
         </div>
@@ -216,7 +201,6 @@ export function Catalog() {
       <section className="section" aria-labelledby="reglas-title">
         <div className="wrap">
           <div className="sectionHead">
-            <p className="label">Reglas del club</p>
             <h2 id="reglas-title">Lo que cuida tu experiencia.</h2>
           </div>
           <ul className="rules">
@@ -232,13 +216,11 @@ export function Catalog() {
         <section className="section" aria-labelledby="primera-title">
           <div className="wrap">
             <div className="sectionHead">
-              <p className="label">Tu primera visita</p>
-              <h2 id="primera-title">Empieza por el favorito.</h2>
+                <h2 id="primera-title">Empieza por el favorito.</h2>
             </div>
             <article className="firstVisit" data-testid="service-card">
-              <span><span className="tag">El más elegido</span></span>
               <h3>{special.name}</h3>
-              <p>Recomendado para tu primera visita. {special.description}</p>
+              <p>El más elegido para una primera visita. {special.description}</p>
               <p className="priceLine">
                 <span className="price">{money(special.publicPrice)}</span>
                 <span>1 h · anticipo {money(special.deposit)}</span>
@@ -257,8 +239,7 @@ export function Catalog() {
         <section className="section" aria-labelledby="testimonios-title">
           <div className="wrap">
             <div className="sectionHead">
-              <p className="label">Testimonios</p>
-              <h2 id="testimonios-title">Lo que dicen del club.</h2>
+                <h2 id="testimonios-title">Lo que dicen del club.</h2>
             </div>
             <ul className="quotes">
               {TESTIMONIALS.map((item) => (
@@ -274,7 +255,6 @@ export function Catalog() {
       {/* 9. Membresía */}
       <section className="section membership" id="membresia" aria-labelledby="membresia-title">
         <div className="wrap">
-          <p className="label">Private Club</p>
           <h2 id="membresia-title">Membresía Private Club</h2>
           <p className="membershipPrice">$3,000</p>
           <p>al año, para una persona</p>
@@ -296,22 +276,23 @@ export function Catalog() {
       <section className="section" aria-labelledby="complementa-title">
         <div className="wrap">
           <div className="sectionHead">
-            <p className="label">También en el club</p>
             <h2 id="complementa-title">Complementa tu visita</h2>
           </div>
           <div className="complements">
             <div className="complementGroup" id="barberia">
               <h3>Barbería</h3>
-              <ul className="compactList">
-                {barber.map((service) => <ServiceRow key={service.id} service={service} onReserve={() => reserveByWhatsapp(service)} />)}
+              <ul className="priceList">
+                {barber.map((service) => <ServiceRow key={service.id} service={service} />)}
               </ul>
+              <WhatsAppLink className="btn" message={WHATSAPP_MESSAGES.barber} label="barberia">Reservar barbería</WhatsAppLink>
             </div>
-            <div className="complementGroup" id="estetica">
+            <div className="complementGroup complementWide" id="estetica">
               <h3>Medicina estética</h3>
-              <p>Con valoración previa.</p>
-              <ul className="compactList">
-                {aesthetics.map((service) => <ServiceRow key={service.id} service={service} onReserve={() => reserveByWhatsapp(service)} />)}
+              <p>Cada tratamiento empieza con una valoración.</p>
+              <ul className="priceList">
+                {aesthetics.map((service) => <ServiceRow key={service.id} service={service} />)}
               </ul>
+              <WhatsAppLink className="btn" message={WHATSAPP_MESSAGES.aesthetics} label="estetica">Agendar valoración</WhatsAppLink>
             </div>
           </div>
         </div>
@@ -322,7 +303,6 @@ export function Catalog() {
         <div className="wrap location">
           <div>
             <div className="sectionHead">
-              <p className="label">Col. Americana</p>
               <h2 id="llegar-title">Cómo llegar</h2>
             </div>
             <ul className="facts">
@@ -341,8 +321,7 @@ export function Catalog() {
         <section className="section" aria-labelledby="faq-title">
           <div className="wrap">
             <div className="sectionHead">
-              <p className="label">Preguntas frecuentes</p>
-              <h2 id="faq-title">Antes de tu visita</h2>
+                <h2 id="faq-title">Antes de tu visita</h2>
             </div>
             <div className="faq">
               {FAQ.map((item) => (
