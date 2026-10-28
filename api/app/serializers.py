@@ -110,6 +110,8 @@ def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documen
         "hiredOn": profile.hired_on if profile else None,
         "emergencyContact": profile.emergency_contact if profile else None,
         "notes": profile.notes if profile else None,
+        "leftOn": profile.left_on if profile else None,
+        "leaveReason": profile.leave_reason if profile else None,
         "documents": documents,
         "missingDocuments": [{"category": category, "label": DOCUMENT_CATEGORIES[category]} for category in missing],
         "documentationComplete": not missing,

@@ -119,3 +119,97 @@ def test_templates_live_apart_from_the_repository(client):
     assert template["id"] in [row["id"] for row in client.get("/admin/rh/documents", params={"category": "plantilla"}).json()]
     assert template["id"] not in [row["id"] for row in client.get("/admin/rh/documents").json()]
     assert upload(client, first_therapist(client), category="plantilla").status_code == 422
+
+
+JPEG = b"\xff\xd8\xff\xe0" + b"0" * 64
+
+
+def hire(client, name="Nuevo Prueba", photo=JPEG, **fields):
+    data = {"name": name, "strengths": "Calma, Técnica, Escucha", "bio": "Bio de prueba.", "fullName": "Nuevo Prueba López", "phone": "3312345678", **fields}
+    return client.post("/admin/rh/staff", data=data, files={"photo": ("foto.jpg", photo, "image/jpeg")})
+
+
+def test_hire_publishes_the_new_therapist_with_photo(client):
+    created = hire(client, name="Ximena Alta")
+    assert created.status_code == 201, created.text
+    member = created.json()
+    assert member["id"] == "ximena-alta" and member["active"] and member["isNew"]
+    assert member["strengths"] == "Calma · Técnica · Escucha"
+    assert member["fullName"] == "Nuevo Prueba López" and member["phone"] == "3312345678"
+    assert member["photoUrl"].startswith("/therapists/ximena-alta/photo?v=")
+
+    photo = client.get(member["photoUrl"])
+    assert photo.status_code == 200 and photo.content == JPEG
+    assert "ximena-alta" in {row["id"] for row in client.get("/therapists").json()}
+
+
+def test_hire_validates_before_creating_anything(client):
+    assert hire(client, name="Sin Foto", photo=b"no es imagen").status_code == 422
+    assert hire(client, name="Mal Tel", phone="123").status_code == 422
+    assert hire(client, name="  ").status_code == 422
+    ids = {row["id"] for row in client.get("/admin/rh/staff").json()}
+    assert not ids & {"sin-foto", "mal-tel"}
+    # Un nombre que ya existe se reactiva, no se duplica.
+    assert hire(client, name="jessy").status_code == 409
+
+
+def test_photo_endpoint_rejects_odd_ids(client):
+    assert client.get("/therapists/*/photo").status_code == 404
+    assert client.get("/therapists/nadie/photo").status_code == 404
+
+
+def test_replace_photo_changes_the_url(client):
+    member = hire(client, name="Foto Cambio").json()
+    png = b"\x89PNG\r\n\x1a\n" + b"1" * 32
+    updated = client.put(f"/admin/rh/staff/{member['id']}/photo", files={"photo": ("f.png", png, "image/png")})
+    assert updated.status_code == 200
+    assert client.get(updated.json()["photoUrl"]).content == png
+
+
+def test_leave_and_rehire(client):
+    member = hire(client, name="Baja Prueba").json()
+    check = client.get(f"/admin/rh/staff/{member['id']}/offboarding").json()
+    assert check == {"upcomingReservations": [], "pendingPayouts": 0, "pendingAmount": 0}
+
+    left = client.post(f"/admin/rh/staff/{member['id']}/leave", json={"leftOn": "2026-10-28", "reason": "Renuncia"})
+    assert left.status_code == 200
+    assert not left.json()["active"] and left.json()["leftOn"] == "2026-10-28" and left.json()["leaveReason"] == "Renuncia"
+    assert member["id"] not in {row["id"] for row in client.get("/therapists").json()}
+    assert client.post(f"/admin/rh/staff/{member['id']}/leave", json={"leftOn": "2026-10-28"}).status_code == 409
+
+    back = client.post(f"/admin/rh/staff/{member['id']}/rehire").json()
+    assert back["active"] and back["leftOn"] is None
+    assert member["id"] in {row["id"] for row in client.get("/therapists").json()}
+
+
+def test_public_profile_can_be_edited(client):
+    member = hire(client, name="Perfil Edit").json()
+    body = {"name": "Perfil Editado", "strengths": "Uno · Dos", "bio": "Nueva bio", "phone": member["phone"]}
+    row = client.put(f"/admin/rh/staff/{member['id']}", json=body).json()
+    assert row["name"] == "Perfil Editado" and row["strengths"] == "Uno · Dos" and row["bio"] == "Nueva bio"
+
+
+def test_leave_is_blocked_while_there_are_upcoming_reservations(client):
+    import json
+    import uuid
+    from datetime import datetime, timedelta
+
+    from app.db import SessionLocal
+    from app.domain.rules import TZ
+    from app.models import Reservation
+
+    member = hire(client, name="Con Agenda").json()
+    starts = (datetime.now(TZ) + timedelta(days=5)).replace(hour=11, minute=0, second=0, microsecond=0)
+    with SessionLocal() as db:
+        db.add(Reservation(
+            id=str(uuid.uuid4()), service_id="massage-special", therapist_ids_json=json.dumps([member["id"]]),
+            starts_at=starts, ends_at=starts + timedelta(hours=1), status="CONFIRMED", deposit_amount=300, source="admin",
+        ))
+        db.commit()
+
+    check = client.get(f"/admin/rh/staff/{member['id']}/offboarding").json()
+    assert len(check["upcomingReservations"]) == 1
+    blocked = client.post(f"/admin/rh/staff/{member['id']}/leave", json={"leftOn": "2026-10-28"})
+    assert blocked.status_code == 409 and "1 reserva próxima" in blocked.json()["detail"]
+    handled = client.post(f"/admin/rh/staff/{member['id']}/leave", json={"leftOn": "2026-10-28", "reservationsHandled": True})
+    assert handled.status_code == 200 and not handled.json()["active"]

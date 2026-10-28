@@ -3,7 +3,7 @@ import os
 import tempfile
 import uuid
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 from typing import Optional
 
@@ -13,20 +13,28 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..domain.customers import normalize_email, normalize_phone
-from ..domain.errors import NotFoundError, ValidationError
+from ..domain.errors import ConflictError, NotFoundError, ValidationError
 from ..domain.hr import (
     DOCUMENT_CATEGORIES,
     MAX_DOCUMENT_BYTES,
+    MAX_PHOTO_BYTES,
     REQUIRED_DOCUMENTS,
     TEMPLATE_CATEGORY,
     clean_file_name,
     content_type_for,
     extension,
     folder_name,
+    photo_extension,
+    therapist_slug,
 )
-from ..models import HrDocument, StaffProfile, Therapist
+from ..domain.rules import TZ, ensure_tz
+from ..models import HrDocument, Reservation, StaffProfile, Therapist
+from ..repositories import catalog as catalog_repo
+from ..repositories import customers as customers_repo
 from ..repositories import hr as hr_repo
-from ..schemas import StaffProfileUpdate
+from ..repositories import reservations as reservations_repo
+from ..schemas import StaffLeave, StaffProfileUpdate
+from . import payroll as payroll_service
 
 
 def files_dir() -> Path:
@@ -65,8 +73,17 @@ def staff_overview(db: Session) -> list[dict]:
     ]
 
 
-def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) -> dict:
-    therapist = _therapist(db, therapist_id)
+def _member(db: Session, therapist: Therapist) -> dict:
+    return {
+        "therapist": therapist,
+        "profile": hr_repo.get_profile(db, therapist.id),
+        "documents": hr_repo.document_counts(db).get(therapist.id, 0),
+        "missing": missing_documents(hr_repo.categories_by_therapist(db).get(therapist.id, set())),
+    }
+
+
+def _apply_profile(profile: StaffProfile, payload: StaffProfileUpdate) -> None:
+    """Valida y copia los datos del expediente; lanza ValidationError antes de tocar nada."""
     phone = None
     if (payload.phone or "").strip():
         phone = normalize_phone(payload.phone)
@@ -78,7 +95,6 @@ def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) 
         if not email:
             raise ValidationError("El correo no es válido")
 
-    profile = hr_repo.get_profile(db, therapist_id) or StaffProfile(therapist_id=therapist_id)
     profile.full_name = " ".join((payload.full_name or "").split()) or None
     profile.phone = phone
     profile.email = email
@@ -87,13 +103,154 @@ def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) 
     profile.emergency_contact = (payload.emergency_contact or "").strip() or None
     profile.notes = (payload.notes or "").strip() or None
     profile.updated_at = datetime.now(timezone.utc)
+
+
+def _apply_public(therapist: Therapist, payload: StaffProfileUpdate) -> None:
+    if payload.name is not None:
+        name = " ".join(payload.name.split())
+        if not name:
+            raise ValidationError("Escribe el nombre con el que aparece en el sitio")
+        therapist.name = name
+    if payload.strengths is not None:
+        therapist.strengths = " · ".join(part.strip() for part in payload.strengths.replace("·", ",").split(",") if part.strip())
+    if payload.bio is not None:
+        therapist.bio = " ".join(payload.bio.split()) or None
+
+
+def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) -> dict:
+    therapist = _therapist(db, therapist_id)
+    profile = hr_repo.get_profile(db, therapist_id) or StaffProfile(therapist_id=therapist_id)
+    _apply_public(therapist, payload)
+    _apply_profile(profile, payload)
+    db.add(therapist)
     hr_repo.save(db, profile)
+    return _member(db, therapist)
+
+
+def photos_dir() -> Path:
+    path = Path(settings.team_photos_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def photo_path(therapist_id: str) -> Optional[Path]:
+    # El id llega de la URL: solo se aceptan ids con forma de slug para que el patrón no se salga de la carpeta.
+    if therapist_slug(therapist_id) != therapist_id:
+        return None
+    for candidate in photos_dir().glob(f"{therapist_id}.*"):
+        return candidate
+    return None
+
+
+def _check_photo(content: bytes) -> str:
+    if not content:
+        raise ValidationError("Toma o elige la foto del masajista")
+    if len(content) > MAX_PHOTO_BYTES:
+        raise ValidationError("La foto pesa más de 5 MB")
+    suffix = photo_extension(content)
+    if not suffix:
+        raise ValidationError("La foto debe ser JPG, PNG o WebP")
+    return suffix
+
+
+def _store_photo(therapist: Therapist, content: bytes, suffix: str) -> None:
+    for old in photos_dir().glob(f"{therapist.id}.*"):
+        old.unlink(missing_ok=True)
+    (photos_dir() / f"{therapist.id}{suffix}").write_bytes(content)
+    # La versión en la URL obliga a los navegadores a dejar la foto anterior.
+    therapist.photo_url = f"/therapists/{therapist.id}/photo?v={int(datetime.now(timezone.utc).timestamp())}"
+
+
+def set_photo(db: Session, therapist_id: str, content: bytes) -> dict:
+    therapist = _therapist(db, therapist_id)
+    _store_photo(therapist, content, _check_photo(content))
+    hr_repo.save(db, therapist)
+    return _member(db, therapist)
+
+
+def hire(db: Session, payload: StaffProfileUpdate, photo: bytes) -> dict:
+    """Alta completa: perfil público, foto y expediente. Queda activo y visible en el sitio y en las reservas."""
+    name = " ".join((payload.name or "").split())
+    if not name:
+        raise ValidationError("Escribe el nombre con el que aparece en el sitio")
+    slug = therapist_slug(name)
+    if not slug:
+        raise ValidationError("El nombre debe tener al menos una letra o número")
+    for row in hr_repo.list_therapists(db):
+        if therapist_slug(row.name) == slug:
+            state = "activo" if row.active else "de baja: reactívalo desde la lista"
+            raise ConflictError(f"{row.name} ya está en el equipo ({state})")
+    suffix = _check_photo(photo)
+
+    therapist_id, copy = slug, 2
+    while hr_repo.get_therapist(db, therapist_id):
+        therapist_id, copy = f"{slug}-{copy}", copy + 1
+    therapist = Therapist(id=therapist_id, name=name, strengths="", photo_url="", is_new=True, active=True)
+    profile = StaffProfile(therapist_id=therapist_id)
+    _apply_public(therapist, payload)
+    _apply_profile(profile, payload)
+    _store_photo(therapist, photo, suffix)
+    db.add(therapist)
+    hr_repo.save(db, profile)
+    return _member(db, therapist)
+
+
+def upcoming_reservations(db: Session, therapist_id: str) -> list[Reservation]:
+    now = datetime.now(TZ)
+    rows = reservations_repo.list_active_starting_between(db, now, now + timedelta(days=3650))
+    return sorted((row for row in rows if therapist_id in reservations_repo.therapist_ids(row)), key=lambda row: row.starts_at)
+
+
+def offboarding(db: Session, therapist_id: str) -> dict:
+    """Lo que hay que resolver antes de dar de baja: reservas por atender y pagos por hacerle."""
+    _therapist(db, therapist_id)
+    services = {row.id: row.name for row in catalog_repo.list_active_services(db)}
+    reservations = []
+    for row in upcoming_reservations(db, therapist_id):
+        customer = customers_repo.get(db, row.customer_id) if row.customer_id else None
+        reservations.append({
+            "id": row.id,
+            "startsAt": ensure_tz(row.starts_at).isoformat(),
+            "serviceName": services.get(row.service_id, row.service_id),
+            "customerName": " ".join(filter(None, [customer.first_name, customer.last_name])) if customer else None,
+        })
+    payouts = [line for line in payroll_service.pending_payouts(db) if line["therapistId"] == therapist_id]
     return {
-        "therapist": therapist,
-        "profile": profile,
-        "documents": hr_repo.document_counts(db).get(therapist_id, 0),
-        "missing": missing_documents(hr_repo.categories_by_therapist(db).get(therapist_id, set())),
+        "upcomingReservations": reservations,
+        "pendingPayouts": len(payouts),
+        "pendingAmount": sum(line["pay"] for line in payouts),
     }
+
+
+def leave(db: Session, therapist_id: str, payload: StaffLeave) -> dict:
+    therapist = _therapist(db, therapist_id)
+    if not therapist.active:
+        raise ConflictError(f"{therapist.name} ya está de baja")
+    upcoming = upcoming_reservations(db, therapist_id)
+    if upcoming and not payload.reservations_handled:
+        count = "1 reserva próxima" if len(upcoming) == 1 else f"{len(upcoming)} reservas próximas"
+        raise ConflictError(f"{therapist.name} tiene {count}: avisa a esos clientes antes de darlo de baja")
+    profile = hr_repo.get_profile(db, therapist_id) or StaffProfile(therapist_id=therapist_id)
+    profile.left_on = payload.left_on.isoformat()
+    profile.leave_reason = " ".join((payload.reason or "").split()) or None
+    profile.updated_at = datetime.now(timezone.utc)
+    therapist.active = False
+    db.add(therapist)
+    hr_repo.save(db, profile)
+    return _member(db, therapist)
+
+
+def rehire(db: Session, therapist_id: str) -> dict:
+    therapist = _therapist(db, therapist_id)
+    profile = hr_repo.get_profile(db, therapist_id)
+    if profile:
+        profile.left_on = None
+        profile.leave_reason = None
+        profile.updated_at = datetime.now(timezone.utc)
+        db.add(profile)
+    therapist.active = True
+    hr_repo.save(db, therapist)
+    return _member(db, therapist)
 
 
 def list_documents(db: Session, therapist_id: Optional[str], category: Optional[str] = None) -> list[HrDocument]:

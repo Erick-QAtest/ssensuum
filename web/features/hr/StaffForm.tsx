@@ -1,8 +1,9 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { saveStaffProfile } from '../../lib/api';
+import { saveStaffPhoto, saveStaffProfile } from '../../lib/api';
 import type { StaffMember } from '../../lib/types';
+import { PhotoCapture } from './PhotoCapture';
 
 type Props = {
   member: StaffMember;
@@ -11,6 +12,10 @@ type Props = {
 };
 
 export function StaffForm({ member, onSaved, onCancel }: Props) {
+  const [photo, setPhoto] = useState<Blob | null>(null);
+  const [name, setName] = useState('');
+  const [strengths, setStrengths] = useState('');
+  const [bio, setBio] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -22,6 +27,9 @@ export function StaffForm({ member, onSaved, onCancel }: Props) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setName(member.name);
+    setStrengths(member.strengths);
+    setBio(member.bio ?? '');
     setFullName(member.fullName ?? '');
     setPhone(member.phone ?? '');
     setEmail(member.email ?? '');
@@ -36,7 +44,9 @@ export function StaffForm({ member, onSaved, onCancel }: Props) {
     event.preventDefault();
     setSaving(true);
     setError('');
-    saveStaffProfile(member.id, { fullName, phone, email, birthday: birthday || null, hiredOn: hiredOn || null, emergencyContact, notes })
+    // La foto va primero: si falla, el expediente no se guarda a medias.
+    (photo ? saveStaffPhoto(member.id, photo) : Promise.resolve(member))
+      .then(() => saveStaffProfile(member.id, { name, strengths, bio, fullName, phone, email, birthday: birthday || null, hiredOn: hiredOn || null, emergencyContact, notes }))
       .then(onSaved)
       .catch((e: Error) => setError(e.message))
       .finally(() => setSaving(false));
@@ -46,6 +56,15 @@ export function StaffForm({ member, onSaved, onCancel }: Props) {
     <section className="adminCard" data-testid="staff-form">
       <h2>Expediente de {member.name}</h2>
       <form className="recordForm" onSubmit={submit}>
+        <h3 className="hrSubhead">Foto</h3>
+        <PhotoCapture key={member.id} onChange={setPhoto} currentUrl={member.photoUrl} />
+        <h3 className="hrSubhead">Perfil en el sitio</h3>
+        <div className="recordGrid">
+          <label>Nombre en el sitio<input value={name} onChange={(event) => setName(event.target.value)} autoComplete="off" required /></label>
+          <label>Fortalezas<input value={strengths} onChange={(event) => setStrengths(event.target.value)} placeholder="Separadas por comas" /></label>
+        </div>
+        <label className="recordNotes">Descripción<textarea rows={3} value={bio} onChange={(event) => setBio(event.target.value)} /></label>
+        <h3 className="hrSubhead">Expediente</h3>
         <div className="recordGrid">
           <label>Nombre completo<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="off" /></label>
           <label>Teléfono<input type="tel" inputMode="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="10 dígitos" /></label>

@@ -6,3 +6,4 @@ import tempfile
 _tmp = tempfile.mkdtemp(prefix="ssensuum-tests-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["HR_FILES_DIR"] = f"{_tmp}/rh"
+os.environ["TEAM_PHOTOS_DIR"] = f"{_tmp}/equipo"

@@ -58,8 +58,8 @@ SERVICE_DETAILS = {
     "bamboo": "Cañas de bambú templadas se ruedan y presionan sobre la musculatura. El cilindro permite una presión uniforme y profunda, deshace adherencias y deja una sensación de apertura.",
 }
 
-# Equipo actual. Al arrancar, la base se sincroniza con esta lista: quien ya no
-# aparece queda inactivo (sus reservas pasadas se conservan).
+# Equipo con el que arranca una base nueva. Después, altas, bajas y fotos se
+# manejan desde Recursos humanos: el arranque solo agrega a quien falte.
 THERAPISTS = [
     {
         "id": "aleman",
@@ -161,18 +161,18 @@ def seed(db: Session) -> None:
 
 
 def sync_therapists(db: Session) -> None:
-    current = {row["id"] for row in THERAPISTS}
     for row in THERAPISTS:
-        therapist = db.get(Therapist, row["id"]) or Therapist(id=row["id"])
-        therapist.name = row["name"]
-        therapist.photo_url = row.get("photo_url", "")
-        therapist.strengths = row.get("strengths", "")
-        therapist.bio = row.get("bio")
-        therapist.is_new = row.get("is_new", False)
-        therapist.active = True
-        db.add(therapist)
-    for therapist in db.scalars(select(Therapist).where(Therapist.id.not_in(current))).all():
-        therapist.active = False
+        if db.get(Therapist, row["id"]):
+            continue
+        db.add(Therapist(
+            id=row["id"],
+            name=row["name"],
+            photo_url=row.get("photo_url", ""),
+            strengths=row.get("strengths", ""),
+            bio=row.get("bio"),
+            is_new=row.get("is_new", False),
+            active=True,
+        ))
 
 
 def sync_service_details(db: Session) -> None:

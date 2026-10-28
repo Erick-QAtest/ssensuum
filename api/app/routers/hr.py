@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
 
 from ..db import get_db
-from ..domain.hr import MAX_DOCUMENT_BYTES
-from ..schemas import PayoutUpdate, StaffProfileUpdate
+from ..domain.hr import MAX_DOCUMENT_BYTES, MAX_PHOTO_BYTES
+from ..schemas import PayoutUpdate, StaffLeave, StaffProfileUpdate
 from ..serializers import hr_document_payload, staff_payload
 from ..services import hr as hr_service
 from ..services import payroll as payroll_service
@@ -39,9 +39,51 @@ def export_staff(db: Session = Depends(get_db)) -> Response:
     )
 
 
+@router.post("/staff", status_code=201)
+def hire_staff(
+    photo: UploadFile = File(...),
+    name: str = Form(...),
+    strengths: str = Form(default=""),
+    bio: str = Form(default=""),
+    full_name: str = Form(default="", alias="fullName"),
+    phone: str = Form(default=""),
+    email: str = Form(default=""),
+    birthday: Optional[date] = Form(default=None),
+    hired_on: Optional[date] = Form(default=None, alias="hiredOn"),
+    emergency_contact: str = Form(default="", alias="emergencyContact"),
+    notes: str = Form(default=""),
+    db: Session = Depends(get_db),
+) -> dict:
+    payload = StaffProfileUpdate(
+        name=name, strengths=strengths, bio=bio, fullName=full_name, phone=phone, email=email,
+        birthday=birthday, hiredOn=hired_on, emergencyContact=emergency_contact, notes=notes,
+    )
+    return staff_payload(**hr_service.hire(db, payload, photo.file.read(MAX_PHOTO_BYTES + 1)))
+
+
 @router.put("/staff/{therapist_id}")
 def update_staff(therapist_id: str, payload: StaffProfileUpdate, db: Session = Depends(get_db)) -> dict:
     return staff_payload(**hr_service.update_profile(db, therapist_id, payload))
+
+
+@router.put("/staff/{therapist_id}/photo")
+def update_photo(therapist_id: str, photo: UploadFile = File(...), db: Session = Depends(get_db)) -> dict:
+    return staff_payload(**hr_service.set_photo(db, therapist_id, photo.file.read(MAX_PHOTO_BYTES + 1)))
+
+
+@router.get("/staff/{therapist_id}/offboarding")
+def offboarding(therapist_id: str, db: Session = Depends(get_db)) -> dict:
+    return hr_service.offboarding(db, therapist_id)
+
+
+@router.post("/staff/{therapist_id}/leave")
+def leave(therapist_id: str, payload: StaffLeave, db: Session = Depends(get_db)) -> dict:
+    return staff_payload(**hr_service.leave(db, therapist_id, payload))
+
+
+@router.post("/staff/{therapist_id}/rehire")
+def rehire(therapist_id: str, db: Session = Depends(get_db)) -> dict:
+    return staff_payload(**hr_service.rehire(db, therapist_id))
 
 
 @router.get("/documents")

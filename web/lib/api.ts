@@ -1,4 +1,4 @@
-import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, CheckoutRequest, Customer, CustomerImportResult, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -12,8 +12,13 @@ export function getServices() {
   return getJson<Service[]>('/services', 'No se pudo cargar el catálogo');
 }
 
+// Las fotos que se suben desde Recursos humanos las sirve la API; las del equipo original viven en /public.
+function withPhoto<T extends Therapist>(therapist: T): T {
+  return therapist.photoUrl.startsWith('/therapists/') ? { ...therapist, photoUrl: `${API}${therapist.photoUrl}` } : therapist;
+}
+
 export function getTherapists() {
-  return getJson<Therapist[]>('/therapists', 'No se pudo cargar el equipo');
+  return getJson<Therapist[]>('/therapists', 'No se pudo cargar el equipo').then((rows) => rows.map(withPhoto));
 }
 
 export async function getAvailability(serviceId: string, date: string, therapistId?: string) {
@@ -121,11 +126,46 @@ export function deleteServiceRecord(id: string) {
 // Recursos humanos: expediente del equipo y repositorio de documentos.
 
 export function getStaff() {
-  return getJson<StaffMember[]>('/admin/rh/staff', 'No se pudo cargar el equipo');
+  return getJson<StaffMember[]>('/admin/rh/staff', 'No se pudo cargar el equipo').then((rows) => rows.map(withPhoto));
 }
 
 export function saveStaffProfile(therapistId: string, input: StaffProfileInput) {
-  return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}`, input, 'No se pudo guardar el expediente');
+  return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}`, input, 'No se pudo guardar el expediente').then(withPhoto);
+}
+
+async function sendForm<T>(method: string, path: string, body: FormData, errorMessage: string): Promise<T> {
+  const response = await fetch(`${API}${path}`, { method, body });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(typeof error?.detail === 'string' ? error.detail : response.status === 413 ? 'La foto es demasiado grande' : errorMessage);
+  }
+  return response.json();
+}
+
+// Alta completa: perfil del sitio, foto y expediente en una sola petición, para no dejar altas a medias.
+export function hireStaff(input: StaffProfileInput & { name: string }, photo: Blob) {
+  const body = new FormData();
+  for (const [key, value] of Object.entries(input)) if (value) body.append(key, value);
+  body.append('photo', photo, 'foto.jpg');
+  return sendForm<StaffMember>('POST', '/admin/rh/staff', body, 'No se pudo dar de alta').then(withPhoto);
+}
+
+export function saveStaffPhoto(therapistId: string, photo: Blob) {
+  const body = new FormData();
+  body.append('photo', photo, 'foto.jpg');
+  return sendForm<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}/photo`, body, 'No se pudo guardar la foto').then(withPhoto);
+}
+
+export function getStaffOffboarding(therapistId: string) {
+  return getJson<StaffOffboarding>(`/admin/rh/staff/${encodeURIComponent(therapistId)}/offboarding`, 'No se pudo revisar la agenda del masajista');
+}
+
+export function staffLeave(therapistId: string, leftOn: string, reason: string, reservationsHandled: boolean) {
+  return postJson<StaffMember>(`/admin/rh/staff/${encodeURIComponent(therapistId)}/leave`, { leftOn, reason, reservationsHandled }, 'No se pudo dar de baja').then(withPhoto);
+}
+
+export function staffRehire(therapistId: string) {
+  return postJson<StaffMember>(`/admin/rh/staff/${encodeURIComponent(therapistId)}/rehire`, undefined, 'No se pudo reactivar').then(withPhoto);
 }
 
 export function getHrDocuments(therapistId: string, category?: HrDocumentCategory) {

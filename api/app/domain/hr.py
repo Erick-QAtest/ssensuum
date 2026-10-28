@@ -64,3 +64,24 @@ def folder_name(value: str) -> str:
     """Nombre de carpeta dentro del ZIP de exportación."""
     text = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
     return re.sub(r"[^A-Za-z0-9 _-]+", "", text).strip() or "General"
+
+
+# La foto del equipo se recorta en el navegador; aquí solo se acepta una imagen ligera que el sitio pueda mostrar.
+MAX_PHOTO_BYTES = 5 * 1024 * 1024
+
+
+def photo_extension(content: bytes) -> Optional[str]:
+    """Extensión según el contenido real del archivo, no según su nombre."""
+    if content.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return ".webp"
+    return None
+
+
+def therapist_slug(name: str) -> str:
+    """Identificador de un masajista a partir de su nombre: "Alemán" → "aleman"."""
+    text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")[:60]

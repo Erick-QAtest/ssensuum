@@ -8,6 +8,7 @@ nginx, con HTTPS de certbot.
 |---|---|
 | Código | `/opt/ssensuum` (usuario de sistema `ssensuum`) |
 | Base de datos | `/opt/ssensuum/data/ssensuum.db` |
+| Fotos del equipo subidas desde RH | `/opt/ssensuum/data/equipo` |
 | API | `ssensuum-api.service` → `127.0.0.1:8100` |
 | Web | `ssensuum-web.service` → `127.0.0.1:3100` |
 | nginx | `/etc/nginx/sites-available/ssensuum` |

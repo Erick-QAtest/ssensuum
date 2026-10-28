@@ -126,12 +126,17 @@ export type StaffMember = Therapist & {
   hiredOn: string | null;
   emergencyContact: string | null;
   notes: string | null;
+  leftOn: string | null;
+  leaveReason: string | null;
   documents: number;
   missingDocuments: { category: HrDocumentCategory; label: string }[];
   documentationComplete: boolean;
 };
 
 export type StaffProfileInput = {
+  name?: string;
+  strengths?: string;
+  bio?: string;
   fullName: string;
   phone: string;
   email: string;
@@ -139,6 +144,12 @@ export type StaffProfileInput = {
   hiredOn: string | null;
   emergencyContact: string;
   notes: string;
+};
+
+export type StaffOffboarding = {
+  upcomingReservations: { id: string; startsAt: string; serviceName: string; customerName: string | null }[];
+  pendingPayouts: number;
+  pendingAmount: number;
 };
 
 export type HrDocumentCategory = 'contrato' | 'autorizacion_imagen' | 'autorizacion_descuento' | 'identificacion' | 'comprobante' | 'certificado' | 'nomina' | 'otro' | 'plantilla';

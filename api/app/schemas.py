@@ -79,6 +79,10 @@ class TipEntry(BaseModel):
 
 
 class StaffProfileUpdate(BaseModel):
+    # Perfil público (sitio y quiz); si no vienen, no se tocan.
+    name: Optional[str] = Field(default=None, max_length=120)
+    strengths: Optional[str] = Field(default=None, max_length=200)
+    bio: Optional[str] = Field(default=None, max_length=1000)
     full_name: Optional[str] = Field(default=None, alias="fullName", max_length=200)
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -86,6 +90,15 @@ class StaffProfileUpdate(BaseModel):
     hired_on: Optional[date] = Field(default=None, alias="hiredOn")
     emergency_contact: Optional[str] = Field(default=None, alias="emergencyContact", max_length=200)
     notes: Optional[str] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class StaffLeave(BaseModel):
+    left_on: date = Field(alias="leftOn")
+    reason: Optional[str] = Field(default=None, max_length=300)
+    # Confirma que ya se avisó a los clientes con reservas próximas con este masajista.
+    reservations_handled: bool = Field(default=False, alias="reservationsHandled")
 
     model_config = {"populate_by_name": True}
 

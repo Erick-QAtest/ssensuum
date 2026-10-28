@@ -2,19 +2,24 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getStaff, hrStaffExportUrl } from '../../lib/api';
+import { getStaff, hrStaffExportUrl, staffRehire } from '../../lib/api';
 import type { HrDocumentCategory, StaffMember } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
 import { TherapistAvatar } from '../../components/TherapistAvatar';
 import { DocumentsPanel } from './DocumentsPanel';
+import { HireWizard } from './HireWizard';
+import { LeaveFlow } from './LeaveFlow';
 import { PayrollPanel } from './PayrollPanel';
 import { StaffForm } from './StaffForm';
 import { TemplatesPanel } from './TemplatesPanel';
 import { UploadPreset, formatDate, formatPhone } from './hr';
 
+// Lo que se abre arriba de la tabla: el alta, la edición de un expediente o la baja.
+type Panel = { kind: 'hire' } | { kind: 'edit' | 'leave'; member: StaffMember } | null;
+
 export function HrPage() {
   const [staff, setStaff] = useState<StaffMember[] | null>(null);
-  const [editing, setEditing] = useState<StaffMember | null>(null);
+  const [panel, setPanel] = useState<Panel>(null);
   const [filter, setFilter] = useState('');
   const [preset, setPreset] = useState<UploadPreset | null>(null);
   const [version, setVersion] = useState(0);
@@ -31,6 +36,16 @@ export function HrPage() {
   function showDocuments(member: StaffMember) {
     setFilter(member.id);
     document.getElementById('documentos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function open(next: Panel) {
+    setPanel(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function rehire(member: StaffMember) {
+    if (!window.confirm(`¿Reactivar a ${member.name}? Vuelve a aparecer en el sitio y en las reservas.`)) return;
+    staffRehire(member.id).then(() => load()).catch((e: Error) => setError(e.message));
   }
 
   function capture(member: StaffMember, category: HrDocumentCategory) {
@@ -52,12 +67,18 @@ export function HrPage() {
         </div>
         <AdminNav current="equipo" />
 
-        {editing ? (
+        {panel?.kind === 'hire' ? (
+          <HireWizard onHired={() => load()} onCapture={capture} onClose={() => setPanel(null)} />
+        ) : null}
+        {panel?.kind === 'edit' ? (
           <StaffForm
-            member={editing}
-            onSaved={() => { setEditing(null); load(); }}
-            onCancel={() => setEditing(null)}
+            member={panel.member}
+            onSaved={() => { setPanel(null); load(); }}
+            onCancel={() => setPanel(null)}
           />
+        ) : null}
+        {panel?.kind === 'leave' ? (
+          <LeaveFlow member={panel.member} onDone={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
         ) : null}
 
         <TemplatesPanel version={version} />
@@ -65,7 +86,10 @@ export function HrPage() {
         <section className="adminCard">
           <div className="adminRow adminRowSpread">
             <h2>Masajistas</h2>
-            <a className="secondaryButton hrButtonLink" href={hrStaffExportUrl} data-testid="hr-export-staff">Exportar a Excel</a>
+            <div className="adminRow hrHeadActions">
+              <button type="button" className="primaryButton" onClick={() => open({ kind: 'hire' })} data-testid="hr-hire">Dar de alta</button>
+              <a className="secondaryButton hrButtonLink" href={hrStaffExportUrl} data-testid="hr-export-staff">Exportar a Excel</a>
+            </div>
           </div>
 
           {error ? <div className="errorBox" role="alert">{error}</div> : null}
@@ -86,7 +110,10 @@ export function HrPage() {
                           <div>{member.name}{member.fullName ? <span className="adminSub">{member.fullName}</span> : null}</div>
                         </div>
                       </td>
-                      <td><span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span></td>
+                      <td>
+                        <span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span>
+                        {!member.active && member.leftOn ? <span className="adminSub">Desde {formatDate(member.leftOn)}{member.leaveReason ? ` · ${member.leaveReason}` : ''}</span> : null}
+                      </td>
                       <td data-testid="staff-documentation">
                         {member.documentationComplete ? <span className="statusBadge ok">Completa</span> : (
                           <>
@@ -109,7 +136,12 @@ export function HrPage() {
                         </button>
                       </td>
                       <td className="recordActions">
-                        <button type="button" className="hrLink" onClick={() => { setEditing(member); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Editar expediente</button>
+                        <button type="button" className="hrLink" onClick={() => open({ kind: 'edit', member })}>Editar expediente</button>
+                        {member.active ? (
+                          <button type="button" className="hrLink hrLinkDanger" onClick={() => open({ kind: 'leave', member })} data-testid="hr-leave">Dar de baja</button>
+                        ) : (
+                          <button type="button" className="hrLink" onClick={() => rehire(member)} data-testid="hr-rehire">Reactivar</button>
+                        )}
                       </td>
                     </tr>
                   ))}

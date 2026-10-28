@@ -127,6 +127,8 @@ class StaffProfile(Base):
     hired_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     emergency_contact: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    left_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    leave_reason: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 

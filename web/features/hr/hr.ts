@@ -31,3 +31,12 @@ export function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+// Mismo tamaño que las fotos del equipo en /public/ssensuum/equipo.
+export const PHOTO_WIDTH = 640;
+export const PHOTO_HEIGHT = 800;
+
+export function todayInput() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
