@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getStaff, hrStaffExportUrl, staffRehire } from '../../lib/api';
+import { endStaffVacation, getStaff, hrStaffExportUrl, staffRehire } from '../../lib/api';
 import { scheduleSummary } from '../../lib/schedule';
 import type { HrDocumentCategory, StaffMember } from '../../lib/types';
 import { AdminNav } from '../../components/AdminNav';
@@ -14,10 +14,11 @@ import { PayrollPanel } from './PayrollPanel';
 import { ScheduleForm } from './ScheduleForm';
 import { StaffForm } from './StaffForm';
 import { TemplatesPanel } from './TemplatesPanel';
+import { VacationForm } from './VacationForm';
 import { UploadPreset, formatDate, formatPhone } from './hr';
 
 // Lo que se abre arriba de la tabla: el alta, la edición de un expediente o la baja.
-type Panel = { kind: 'hire' } | { kind: 'edit' | 'leave' | 'schedule'; member: StaffMember } | null;
+type Panel = { kind: 'hire' } | { kind: 'edit' | 'leave' | 'schedule' | 'vacation'; member: StaffMember } | null;
 
 export function HrPage() {
   const [staff, setStaff] = useState<StaffMember[] | null>(null);
@@ -48,6 +49,11 @@ export function HrPage() {
   function rehire(member: StaffMember) {
     if (!window.confirm(`¿Reactivar a ${member.name}? Vuelve a aparecer en el sitio y en las reservas.`)) return;
     staffRehire(member.id).then(() => load()).catch((e: Error) => setError(e.message));
+  }
+
+  function endVacation(member: StaffMember) {
+    if (!window.confirm(`¿Terminar las vacaciones de ${member.name}? Vuelve a aparecer en el sitio y en las reservas.`)) return;
+    endStaffVacation(member.id).then(() => load()).catch((e: Error) => setError(e.message));
   }
 
   function capture(member: StaffMember, category: HrDocumentCategory) {
@@ -81,6 +87,9 @@ export function HrPage() {
         ) : null}
         {panel?.kind === 'schedule' ? (
           <ScheduleForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
+        ) : null}
+        {panel?.kind === 'vacation' ? (
+          <VacationForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
         ) : null}
         {panel?.kind === 'leave' ? (
           <LeaveFlow member={panel.member} onDone={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
@@ -116,7 +125,17 @@ export function HrPage() {
                         </div>
                       </td>
                       <td>
-                        <span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span>
+                        {member.active && member.onVacation ? (
+                          <span className="statusBadge wait" data-testid="staff-vacation">Vacaciones</span>
+                        ) : (
+                          <span className={`statusBadge ${member.active ? 'ok' : 'wait'}`}>{member.active ? 'Activo' : 'Baja'}</span>
+                        )}
+                        {member.active && member.vacationFrom ? (
+                          <span className="adminSub">
+                            {member.onVacation ? '' : `Desde ${formatDate(member.vacationFrom)} · `}
+                            {member.vacationUntil ? `Regresa el ${formatDate(member.vacationUntil)}` : 'Sin fecha de regreso'}
+                          </span>
+                        ) : null}
                         {!member.active && member.leftOn ? <span className="adminSub">Desde {formatDate(member.leftOn)}{member.leaveReason ? ` · ${member.leaveReason}` : ''}</span> : null}
                       </td>
                       <td className="hrScheduleCell" data-testid="staff-schedule">
@@ -146,6 +165,13 @@ export function HrPage() {
                       </td>
                       <td className="recordActions">
                         <button type="button" className="hrLink" onClick={() => open({ kind: 'edit', member })}>Editar expediente</button>
+                        {member.active ? (
+                          member.vacationFrom ? (
+                            <button type="button" className="hrLink" onClick={() => endVacation(member)} data-testid="hr-end-vacation">Terminar vacaciones</button>
+                          ) : (
+                            <button type="button" className="hrLink" onClick={() => open({ kind: 'vacation', member })} data-testid="hr-vacation">Vacaciones</button>
+                          )
+                        ) : null}
                         {member.active ? (
                           <button type="button" className="hrLink hrLinkDanger" onClick={() => open({ kind: 'leave', member })} data-testid="hr-leave">Dar de baja</button>
                         ) : (

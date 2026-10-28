@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..domain.errors import NotFoundError
+from ..domain.rules import TZ
+from ..domain.schedule import on_vacation
 from ..repositories import catalog as catalog_repo
 from ..serializers import service_payload, therapist_payload
 from ..services import hr as hr_service
@@ -18,7 +22,12 @@ def services(db: Session = Depends(get_db)) -> list[dict]:
 
 @router.get("/therapists")
 def therapists(db: Session = Depends(get_db)) -> list[dict]:
-    return [therapist_payload(row) for row in catalog_repo.list_active_therapists(db)]
+    today = datetime.now(TZ).date()
+    return [
+        therapist_payload(row)
+        for row in catalog_repo.list_active_therapists(db)
+        if not on_vacation(row.vacation_from, row.vacation_until, today)
+    ]
 
 
 @router.get("/therapists/{therapist_id}/photo")

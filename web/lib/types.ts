@@ -132,6 +132,9 @@ export type StaffMember = Therapist & {
   notes: string | null;
   leftOn: string | null;
   leaveReason: string | null;
+  vacationFrom: string | null;
+  vacationUntil: string | null;
+  onVacation: boolean;
   documents: number;
   missingDocuments: { category: HrDocumentCategory; label: string }[];
   documentationComplete: boolean;

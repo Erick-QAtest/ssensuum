@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime, time
+from datetime import date, datetime, time
 from typing import Optional
 
 from .errors import ValidationError
@@ -59,3 +59,10 @@ def works(schedule: Optional[dict], starts_at: datetime, ends_at: datetime) -> b
     begin = start.strftime("%H:%M")
     finish = "24:00" if end.date() != start.date() else end.strftime("%H:%M")
     return any(window[0] <= begin and finish <= window[1] for window in schedule["days"].get(str(start.weekday()), []))
+
+
+def on_vacation(vacation_from: Optional[str], vacation_until: Optional[str], day: date) -> bool:
+    """True si ese día cae en sus vacaciones; vacation_until es el día en que regresa."""
+    if not vacation_from:
+        return False
+    return vacation_from <= day.isoformat() and (not vacation_until or day.isoformat() < vacation_until)

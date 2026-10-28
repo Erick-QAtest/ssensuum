@@ -10,7 +10,7 @@ from starlette.background import BackgroundTask
 
 from ..db import get_db
 from ..domain.hr import MAX_DOCUMENT_BYTES, MAX_PHOTO_BYTES
-from ..schemas import PayoutUpdate, StaffLeave, StaffProfileUpdate, StaffSchedule
+from ..schemas import PayoutUpdate, StaffLeave, StaffProfileUpdate, StaffSchedule, StaffVacation
 from ..serializers import hr_document_payload, staff_payload
 from ..services import hr as hr_service
 from ..services import payroll as payroll_service
@@ -69,6 +69,16 @@ def update_staff(therapist_id: str, payload: StaffProfileUpdate, db: Session = D
 @router.put("/staff/{therapist_id}/schedule")
 def update_schedule(therapist_id: str, payload: StaffSchedule, db: Session = Depends(get_db)) -> dict:
     return staff_payload(**hr_service.set_schedule(db, therapist_id, payload))
+
+
+@router.put("/staff/{therapist_id}/vacation")
+def set_vacation(therapist_id: str, payload: StaffVacation, db: Session = Depends(get_db)) -> dict:
+    return staff_payload(**hr_service.set_vacation(db, therapist_id, payload))
+
+
+@router.delete("/staff/{therapist_id}/vacation")
+def end_vacation(therapist_id: str, db: Session = Depends(get_db)) -> dict:
+    return staff_payload(**hr_service.end_vacation(db, therapist_id))
 
 
 @router.put("/staff/{therapist_id}/photo")

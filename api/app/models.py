@@ -36,6 +36,9 @@ class Therapist(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # Días y horas en que atiende (ver domain/schedule.py); vacío = aún no se captura.
     schedule_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Vacaciones: no se le reserva desde vacation_from hasta el día antes de vacation_until (sin fecha = hasta nuevo aviso).
+    vacation_from: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    vacation_until: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
 
 
 class Customer(Base):

@@ -54,11 +54,14 @@ def has_conflict(
 
 
 def off_schedule(db: Session, therapist_ids: list[str], starts_at: datetime, ends_at: datetime) -> list[str]:
-    """Nombres de quienes no trabajan en ese horario según su horario de RH."""
+    """Nombres de quienes no trabajan en ese horario según su horario y vacaciones de RH."""
     names = []
     for therapist_id in therapist_ids:
         therapist = catalog_repo.get_therapist(db, therapist_id)
-        if therapist and not schedule_rules.works(schedule_rules.load(therapist.schedule_json), starts_at, ends_at):
+        if not therapist:
+            continue
+        away = schedule_rules.on_vacation(therapist.vacation_from, therapist.vacation_until, ensure_tz(starts_at).date())
+        if away or not schedule_rules.works(schedule_rules.load(therapist.schedule_json), starts_at, ends_at):
             names.append(therapist.name)
     return names
 

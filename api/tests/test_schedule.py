@@ -76,3 +76,38 @@ def test_hr_edits_the_schedule(client):
     assert saved.status_code == 200 and saved.json()["schedule"] == {"days": {"5": [["10:00", "14:00"]]}}
     assert client.put("/admin/rh/staff/paul/schedule", json={"days": {}}).status_code == 422
     assert client.put("/admin/rh/staff/paul/schedule", json={"always": True}).json()["schedule"] == {"always": True}
+
+
+def test_vacation_hides_and_blocks_until_return(client):
+    today = datetime.now(TZ).date()
+    returns = next_weekday(4) + timedelta(days=7)
+    set_away = client.put("/admin/rh/staff/dany/vacation", json={"startsOn": today.isoformat(), "returnsOn": returns.isoformat()})
+    assert set_away.status_code == 200
+    member = set_away.json()
+    assert member["onVacation"] and member["vacationUntil"] == returns.isoformat() and member["active"]
+    assert "dany" not in {row["id"] for row in client.get("/therapists").json()}
+
+    during = next_weekday(4)
+    params = {"serviceId": "swedish", "therapistId": "dany"}
+    assert client.get("/availability", params={**params, "date": during.isoformat()}).json()["slots"] == []
+    assert client.get("/availability", params={**params, "date": returns.isoformat()}).json()["slots"]
+    booked = client.post("/reservations", json={"serviceId": "swedish", "therapistIds": ["dany"], "startsAt": at(during, 11).isoformat()})
+    assert booked.status_code == 409
+
+    back = client.delete("/admin/rh/staff/dany/vacation").json()
+    assert not back["onVacation"] and back["vacationFrom"] is None
+    assert "dany" in {row["id"] for row in client.get("/therapists").json()}
+
+
+def test_vacation_needs_return_after_start_and_warns_on_bookings(client):
+    today = datetime.now(TZ).date()
+    bad = client.put("/admin/rh/staff/paul/vacation", json={"startsOn": today.isoformat(), "returnsOn": today.isoformat()})
+    assert bad.status_code == 422
+
+    day = next_weekday(5)
+    made = client.post("/reservations", json={"serviceId": "swedish", "therapistIds": ["paul"], "startsAt": at(day, 12).isoformat()})
+    assert made.status_code == 201, made.text
+    body = {"startsOn": today.isoformat()}
+    assert client.put("/admin/rh/staff/paul/vacation", json=body).status_code == 409
+    assert client.put("/admin/rh/staff/paul/vacation", json={**body, "reservationsHandled": True}).json()["onVacation"]
+    client.delete("/admin/rh/staff/paul/vacation")

@@ -160,6 +160,14 @@ export function saveStaffSchedule(therapistId: string, schedule: Schedule) {
   return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}/schedule`, schedule, 'No se pudo guardar el horario').then(withPhoto);
 }
 
+export function setStaffVacation(therapistId: string, startsOn: string, returnsOn: string | null, reservationsHandled: boolean) {
+  return sendJson<StaffMember>('PUT', `/admin/rh/staff/${encodeURIComponent(therapistId)}/vacation`, { startsOn, returnsOn, reservationsHandled }, 'No se pudieron guardar las vacaciones').then(withPhoto);
+}
+
+export function endStaffVacation(therapistId: string) {
+  return sendJson<StaffMember>('DELETE', `/admin/rh/staff/${encodeURIComponent(therapistId)}/vacation`, undefined, 'No se pudieron terminar las vacaciones').then(withPhoto);
+}
+
 export function getStaffOffboarding(therapistId: string) {
   return getJson<StaffOffboarding>(`/admin/rh/staff/${encodeURIComponent(therapistId)}/offboarding`, 'No se pudo revisar la agenda del masajista');
 }

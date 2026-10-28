@@ -100,6 +100,15 @@ class StaffSchedule(BaseModel):
     days: dict[str, list[list[str]]] = Field(default_factory=dict)
 
 
+class StaffVacation(BaseModel):
+    starts_on: date = Field(alias="startsOn")
+    # Día en que regresa; sin fecha = hasta que se terminen a mano.
+    returns_on: Optional[date] = Field(default=None, alias="returnsOn")
+    reservations_handled: bool = Field(default=False, alias="reservationsHandled")
+
+    model_config = {"populate_by_name": True}
+
+
 class StaffLeave(BaseModel):
     left_on: date = Field(alias="leftOn")
     reason: Optional[str] = Field(default=None, max_length=300)

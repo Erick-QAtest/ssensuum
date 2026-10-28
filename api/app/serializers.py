@@ -3,7 +3,11 @@ from typing import Optional
 
 from .domain.finance import CASH_ACCOUNTS, EXPENSE_CATEGORIES, MOVEMENT_KINDS, OTHER_INCOME_CATEGORIES
 from .domain.hr import DOCUMENT_CATEGORIES
+from datetime import datetime
+
+from .domain.rules import TZ
 from .domain.schedule import load as load_schedule
+from .domain.schedule import on_vacation
 from .domain.rules import ensure_tz, hold_expired
 from .models import Customer, FinanceMovement, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
 from .repositories import records as records_repo
@@ -102,6 +106,8 @@ def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> di
 
 
 def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documents: int, missing: list[str]) -> dict:
+    today = datetime.now(TZ).date()
+    vacation_over = bool(therapist.vacation_until) and today.isoformat() >= therapist.vacation_until
     return {
         **therapist_payload(therapist),
         "active": therapist.active,
@@ -114,6 +120,10 @@ def staff_payload(therapist: Therapist, profile: Optional[StaffProfile], documen
         "notes": profile.notes if profile else None,
         "leftOn": profile.left_on if profile else None,
         "leaveReason": profile.leave_reason if profile else None,
+        # Unas vacaciones que ya terminaron (pasó el día de regreso) ya no se muestran.
+        "vacationFrom": None if vacation_over else therapist.vacation_from,
+        "vacationUntil": None if vacation_over else therapist.vacation_until,
+        "onVacation": on_vacation(therapist.vacation_from, therapist.vacation_until, today),
         "documents": documents,
         "missingDocuments": [{"category": category, "label": DOCUMENT_CATEGORIES[category]} for category in missing],
         "documentationComplete": not missing,

@@ -34,7 +34,7 @@ from ..repositories import catalog as catalog_repo
 from ..repositories import customers as customers_repo
 from ..repositories import hr as hr_repo
 from ..repositories import reservations as reservations_repo
-from ..schemas import StaffLeave, StaffProfileUpdate, StaffSchedule
+from ..schemas import StaffLeave, StaffProfileUpdate, StaffSchedule, StaffVacation
 from . import payroll as payroll_service
 
 
@@ -131,6 +131,32 @@ def update_profile(db: Session, therapist_id: str, payload: StaffProfileUpdate) 
 def set_schedule(db: Session, therapist_id: str, payload: StaffSchedule) -> dict:
     therapist = _therapist(db, therapist_id)
     therapist.schedule_json = schedule_rules.dump(schedule_rules.normalize(payload.model_dump()))
+    hr_repo.save(db, therapist)
+    return _member(db, therapist)
+
+
+def set_vacation(db: Session, therapist_id: str, payload: StaffVacation) -> dict:
+    therapist = _therapist(db, therapist_id)
+    if not therapist.active:
+        raise ConflictError(f"{therapist.name} está de baja")
+    if payload.returns_on and payload.returns_on <= payload.starts_on:
+        raise ValidationError("El regreso debe ser después del inicio de las vacaciones")
+    start, until = payload.starts_on.isoformat(), payload.returns_on.isoformat() if payload.returns_on else None
+    clashes = [
+        row for row in upcoming_reservations(db, therapist_id)
+        if schedule_rules.on_vacation(start, until, ensure_tz(row.starts_at).date())
+    ]
+    if clashes and not payload.reservations_handled:
+        count = "1 reserva" if len(clashes) == 1 else f"{len(clashes)} reservas"
+        raise ConflictError(f"{therapist.name} tiene {count} durante sus vacaciones: avisa a esos clientes primero")
+    therapist.vacation_from, therapist.vacation_until = start, until
+    hr_repo.save(db, therapist)
+    return _member(db, therapist)
+
+
+def end_vacation(db: Session, therapist_id: str) -> dict:
+    therapist = _therapist(db, therapist_id)
+    therapist.vacation_from = therapist.vacation_until = None
     hr_repo.save(db, therapist)
     return _member(db, therapist)
 
