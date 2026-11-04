@@ -9,6 +9,7 @@ type Props = {
   member: StaffMember;
   onSaved: () => void;
   onCancel: () => void;
+  onLeave: () => void;
 };
 
 type Window = [string, string];
@@ -19,7 +20,7 @@ function initialDays(schedule: Schedule | null): Window[][] {
 }
 
 // Fuera de estas franjas el sitio no ofrece horarios con este masajista y la API rechaza la reserva.
-export function ScheduleForm({ member, onSaved, onCancel }: Props) {
+export function ScheduleForm({ member, onSaved, onCancel, onLeave }: Props) {
   const [always, setAlways] = useState(!member.schedule || 'always' in member.schedule);
   const [days, setDays] = useState<Window[][]>(() => initialDays(member.schedule));
   const [error, setError] = useState('');
@@ -81,6 +82,9 @@ export function ScheduleForm({ member, onSaved, onCancel }: Props) {
         <div className="adminRow">
           <button type="submit" className="primaryButton" disabled={saving} data-testid="schedule-save">{saving ? 'Guardando…' : 'Guardar horario'}</button>
           <button type="button" className="secondaryButton" disabled={saving} onClick={onCancel}>Cancelar</button>
+          {member.active ? (
+            <button type="button" className="secondaryButton hrLinkDanger" disabled={saving} onClick={onLeave} data-testid="schedule-form-leave">Dar de baja</button>
+          ) : null}
         </div>
       </form>
     </section>

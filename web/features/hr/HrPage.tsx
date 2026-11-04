@@ -83,10 +83,11 @@ export function HrPage() {
             member={panel.member}
             onSaved={() => { setPanel(null); load(); }}
             onCancel={() => setPanel(null)}
+            onLeave={() => open({ kind: 'leave', member: panel.member })}
           />
         ) : null}
         {panel?.kind === 'schedule' ? (
-          <ScheduleForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
+          <ScheduleForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} onLeave={() => open({ kind: 'leave', member: panel.member })} />
         ) : null}
         {panel?.kind === 'vacation' ? (
           <VacationForm member={panel.member} onSaved={() => { setPanel(null); load(); }} onCancel={() => setPanel(null)} />
