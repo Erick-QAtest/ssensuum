@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Carga en el calendario de Marketing el plan del 9 de noviembre al 6 de diciembre de 2026.
 
-Cada publicación lleva su objetivo y un prompt listo para pegar en una IA.
+Cada publicación se adapta a Instagram, TikTok, Facebook y X, con su objetivo y un prompt listo para pegar en una IA.
 Uso: python3 scripts/load_marketing_plan.py --api http://127.0.0.1:8100
-Se puede correr varias veces: lo que ya está (misma fecha y titular) no se duplica ni se sobrescribe.
+Se puede correr varias veces: lo que ya está (misma red, fecha y titular) no se duplica ni se sobrescribe.
 """
 
 import argparse
@@ -12,8 +12,8 @@ import urllib.parse
 import urllib.request
 
 FROM, TO = "2026-11-09", "2026-12-06"
-QUIZ = "Haz el quiz y descubre qué sesión va contigo (enlace en la bio)."
-CHOOSE = "Elige a tu terapeuta (enlace en la bio)."
+QUIZ = "Haz el quiz y descubre qué sesión va contigo."
+CHOOSE = "Elige a tu terapeuta."
 WHATSAPP = "Resuelve tus dudas por WhatsApp: 33 1068 1307."
 
 BRAND = """SSENSUUM es un club privado de masaje para hombres en la Col. Americana, Guadalajara (Mexicaltzingo 2122-B). Abre todos los días de 9:00 a.m. a 8:30 p.m.
@@ -40,23 +40,74 @@ LIMITS = """- Nada sugerente: sin torsos aceitados, sin dobles sentidos, sin ins
 - No menciones medicina estética."""
 
 TASKS = {
-    "reel": """Escribe un Reel vertical de 15 a 25 segundos:
+    "reel": """Escribe un video vertical de 15 a 25 segundos:
 1. Tres ganchos alternativos para los primeros 2 segundos; marca el que recomiendas y di por qué.
 2. Guion en tabla, toma por toma: tiempo, imagen, texto en pantalla y voz o sonido.
 3. El momento en que aparece La Ficha y su texto exacto.
-4. Texto de la publicación: máximo 150 caracteres, más el llamado a la acción.
-5. Ajustes para TikTok, si hacen falta.
-6. Si alguna toma es solo de objetos o del lugar, un prompt en inglés para generarla con IA de video.""",
+4. Texto de la publicación, más el llamado a la acción.
+5. Si alguna toma es solo de objetos o del lugar, un prompt en inglés para generarla con IA de video.""",
     "carrusel": """Escribe un carrusel vertical 4:5 de 5 a 7 láminas:
 1. Lámina por lámina: titular (máximo 7 palabras), texto (máximo 20 palabras) y qué imagen lleva.
 2. La primera lámina debe detener el scroll; la última lleva La Ficha y el llamado a la acción.
-3. Texto de la publicación: máximo 150 caracteres, más el llamado a la acción.
+3. Texto de la publicación, más el llamado a la acción.
 4. Un prompt en inglés para generar con IA cada fondo que sea solo de objetos o del lugar.""",
     "foto": """Escribe una pieza fija vertical 4:5:
 1. Texto exacto sobre la imagen y su jerarquía.
 2. Dirección de arte: encuadre, luz y lugar de La Ficha.
-3. Texto de la publicación: máximo 150 caracteres, más el llamado a la acción.
+3. Texto de la publicación, más el llamado a la acción.
 4. Si la imagen es solo de objetos o del lugar, un prompt en inglés para generarla con IA.""",
+    "texto": """Escribe para X:
+1. Tres versiones de la publicación principal, de máximo 280 caracteres cada una; marca la que recomiendas y di por qué.
+2. Un hilo opcional de 3 a 5 publicaciones, solo si la idea lo necesita.
+3. La Ficha como una línea de texto, por ejemplo "Presión: suave · media · firme".
+4. El llamado a la acción con el enlace, dentro del límite de caracteres.""",
+}
+
+# Cómo cambia cada publicación según la red. "format" dice en qué se convierte cada formato del plan.
+CHANNELS = {
+    "instagram": {
+        "label": "Instagram",
+        "code": "ig",
+        "link": "en la bio",
+        "format": {},
+        "goal": "",
+        "rules": """- Red: Instagram. Prioriza que se guarde y se comparta por mensaje.
+- Texto de la publicación: máximo 150 caracteres.
+- Sin hashtags de relleno: máximo 3, locales o del tema.""",
+    },
+    "tiktok": {
+        "label": "TikTok",
+        "code": "tt",
+        "link": "en el perfil",
+        "format": {"foto": "reel"},
+        "goal": "En TikTok: llegar a quien aún no sigue la cuenta y lograr que vea el video completo.",
+        "rules": """- Red: TikTok. Debe sentirse nativo: una persona hablando o una toma real, sin aspecto de anuncio.
+- El gancho se entiende en el primer segundo, con texto en pantalla, y el ritmo es más rápido que en Instagram.
+- Si la pieza original era una imagen fija, conviértela en un video corto con la misma idea.
+- Texto de la publicación: máximo 100 caracteres, con máximo 3 hashtags.
+- Extrema el cuidado con el cuerpo: solo manos y zonas como cuello u hombros, porque esta red limita fácil este tipo de contenido.""",
+    },
+    "facebook": {
+        "label": "Facebook",
+        "code": "fb",
+        "link": "en la publicación",
+        "format": {},
+        "goal": "En Facebook: llegar a hombres de Guadalajara de mayor edad y provocar mensajes por WhatsApp.",
+        "rules": """- Red: Facebook. Habla a un público local y algo mayor: más claro y explicativo, con menos jerga de redes.
+- Menciona la ubicación en la Col. Americana y deja visible el WhatsApp 33 1068 1307.
+- Texto de la publicación: máximo 400 caracteres, sin hashtags.
+- Está pensada para que se comparta o se recomiende a un amigo.""",
+    },
+    "x": {
+        "label": "X",
+        "code": "x",
+        "link": "en la publicación",
+        "format": {"reel": "texto", "carrusel": "texto"},
+        "goal": "En X: abrir conversación con una opinión breve y llevar clics al enlace.",
+        "rules": """- Red: X. El texto hace todo el trabajo: una observación breve, con criterio y sin tono de anuncio.
+- Sin hashtags ni emojis. Si es una imagen, va una sola pieza y el texto debe funcionar sin ella.
+- Esta red admite contenido más explícito que las otras, pero SSENSUUM no: mantén el mismo tono sobrio.""",
+    },
 }
 
 OUTPUT_CHECK = """Antes de responder, revisa en silencio: ¿se entiende sin sonido?, ¿cumple el objetivo y una sola idea?, ¿respeta cada restricción?, ¿el titular tiene máximo 7 palabras? Corrige lo que no cumpla.
@@ -114,7 +165,16 @@ POSTS = [
 ]
 
 
-def build_prompt(post: dict) -> str:
+def format_for(channel: str, post: dict) -> str:
+    return CHANNELS[channel]["format"].get(post["format"], post["format"])
+
+
+def objective_for(channel: str, post: dict) -> str:
+    return " ".join(part for part in (post["objective"], CHANNELS[channel]["goal"]) if part)
+
+
+def build_prompt(channel: str, post: dict) -> str:
+    settings = CHANNELS[channel]
     return f"""# Rol
 Eres director creativo y copywriter senior de redes sociales, especializado en marcas locales de bienestar para hombres.
 
@@ -122,18 +182,22 @@ Eres director creativo y copywriter senior de redes sociales, especializado en m
 {BRAND}
 
 # Esta publicación
+- Red: {settings["label"]}
 - Titular: {post["title"]}
-- Objetivo: {post["objective"]}
+- Objetivo: {objective_for(channel, post)}
 - Ángulo: {post["angle"]}
 - La Ficha: {post["ficha"]}
 - Llamado a la acción: {post["cta"]}
-- Redes: Instagram primero; se replica en TikTok y Facebook.
+- Enlace ({settings["link"]}): https://ssensuum.mx/quiz?utm_source={settings["code"]}
 
 # Línea gráfica
 {VISUAL}
 
 # Tarea
-{TASKS[post["format"]]}
+{TASKS[format_for(channel, post)]}
+
+# Reglas de esta red
+{settings["rules"]}
 
 # Restricciones
 {LIMITS}
@@ -145,15 +209,16 @@ Eres director creativo y copywriter senior de redes sociales, especializado en m
 def plan() -> list[dict]:
     return [
         {
-            "channel": "instagram",
+            "channel": channel,
             "publishOn": post["date"],
             "status": "idea",
-            "format": post["format"],
+            "format": format_for(channel, post),
             "pillar": post["pillar"],
             "title": post["title"],
-            "objective": post["objective"],
-            "aiPrompt": build_prompt(post),
+            "objective": objective_for(channel, post),
+            "aiPrompt": build_prompt(channel, post),
         }
+        for channel in CHANNELS
         for post in POSTS
     ]
 
@@ -171,10 +236,11 @@ def main() -> None:
     api = parser.parse_args().api.rstrip("/")
 
     query = urllib.parse.urlencode({"from": FROM, "to": TO})
-    existing = {(row["publishOn"], row["title"]) for row in request("GET", f"{api}/admin/marketing/posts?{query}")}
+    existing = {(row["channel"], row["publishOn"], row["title"]) for row in request("GET", f"{api}/admin/marketing/posts?{query}")}
     created = 0
-    for post in plan():
-        if (post["publishOn"], post["title"]) in existing:
+    posts = plan()
+    for post in posts:
+        if (post["channel"], post["publishOn"], post["title"]) in existing:
             continue
         saved = request("POST", f"{api}/admin/marketing/posts", post)
         if saved.get("aiPrompt") != post["aiPrompt"]:
@@ -183,7 +249,7 @@ def main() -> None:
             urllib.request.urlopen(request_delete, timeout=15).close()
             raise SystemExit("La API no guardó el prompt: despliega la versión nueva antes de cargar el plan.")
         created += 1
-    print(f"Creadas: {created}. Ya existían: {len(POSTS) - created}. Total del plan: {len(POSTS)}.")
+    print(f"Creadas: {created}. Ya existían: {len(posts) - created}. Total del plan: {len(posts)}.")
 
 
 if __name__ == "__main__":

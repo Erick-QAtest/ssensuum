@@ -66,7 +66,7 @@ export function MarketingPage() {
         {!meta && !error ? <p className="muted">Cargando…</p> : null}
         {meta && tab === 'atribucion' ? <AttributionPanel meta={meta} /> : null}
         {meta && tab === 'calendario' ? <CalendarPanel meta={meta} draft={draft} onDraftUsed={draftUsed} /> : null}
-        {meta && tab === 'plan' ? <PlanPanel /> : null}
+        {meta && tab === 'plan' ? <PlanPanel meta={meta} /> : null}
         {meta && tab === 'metricas' ? <MetricsPanel meta={meta} /> : null}
         {meta && tab === 'ideas' ? <IdeasPanel meta={meta} onSchedule={schedule} /> : null}
       </div>

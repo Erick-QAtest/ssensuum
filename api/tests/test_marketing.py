@@ -199,10 +199,13 @@ def test_content_plan_is_valid(client):
     spec.loader.exec_module(module)
 
     posts = module.plan()
-    assert len(posts) == 16
-    assert len({(post["publishOn"], post["title"]) for post in posts}) == 16
+    assert len(posts) == 16 * 4
+    assert len({(post["channel"], post["publishOn"], post["title"]) for post in posts}) == len(posts)
+    assert {post["format"] for post in posts if post["channel"] == "x"} == {"texto", "foto"}
+    assert "reel" in {post["format"] for post in posts if post["channel"] == "tiktok"}
     for post in posts:
         assert module.FROM <= post["publishOn"] <= module.TO
+        assert f"utm_source={module.CHANNELS[post['channel']]['code']}" in post["aiPrompt"]
         saved = client.post("/admin/marketing/posts", json=post)
         assert saved.status_code == 201, saved.text
         assert saved.json()["objective"] == post["objective"] and post["title"] in saved.json()["aiPrompt"]

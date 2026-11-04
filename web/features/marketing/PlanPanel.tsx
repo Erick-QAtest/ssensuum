@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { getMarketingPosts } from '../../lib/api';
-import type { MarketingPost } from '../../lib/types';
+import type { MarketingMeta, MarketingPost } from '../../lib/types';
 import { localIsoDate } from '../booking/dates';
 import { shortDay } from './marketing';
 
@@ -23,7 +23,8 @@ function copyWithSelection(text: string) {
 }
 
 // Qué se publica, para qué y cómo pedírselo a la IA. Se edita desde el Calendario.
-export function PlanPanel() {
+export function PlanPanel({ meta }: { meta: MarketingMeta }) {
+  const [channel, setChannel] = useState(meta.channels[0]?.id ?? '');
   const [posts, setPosts] = useState<MarketingPost[] | null>(null);
   const [copied, setCopied] = useState('');
   const [error, setError] = useState('');
@@ -35,7 +36,10 @@ export function PlanPanel() {
     getMarketingPosts(from, to).then(setPosts).catch((e: Error) => setError(e.message));
   }, []);
 
-  const sorted = useMemo(() => [...(posts ?? [])].sort((a, b) => a.publishOn.localeCompare(b.publishOn)), [posts]);
+  const sorted = useMemo(
+    () => (posts ?? []).filter((post) => post.channel === channel).sort((a, b) => a.publishOn.localeCompare(b.publishOn)),
+    [posts, channel],
+  );
 
   function copy(post: MarketingPost) {
     setError('');
@@ -53,15 +57,30 @@ export function PlanPanel() {
       <h2>Plan y prompts</h2>
       <p className="muted">Cada publicación con su objetivo y el prompt para pedírsela a la IA. Revisa siempre el resultado antes de publicar; para cambiar algo, edítala en Calendario.</p>
 
+      <div className="adminRow" role="group" aria-label="Red">
+        {meta.channels.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={`secondaryButton ${channel === option.id ? 'selected' : ''}`}
+            aria-pressed={channel === option.id}
+            onClick={() => setChannel(option.id)}
+            data-testid="plan-channel"
+          >
+            {option.label} ({(posts ?? []).filter((post) => post.channel === option.id).length})
+          </button>
+        ))}
+      </div>
+
       {error ? <div className="errorBox" role="alert">{error}</div> : null}
       {posts === null && !error ? <p className="muted">Cargando…</p> : null}
-      {posts?.length === 0 ? <p className="muted">No hay publicaciones planeadas en los próximos meses.</p> : null}
+      {posts && sorted.length === 0 ? <p className="muted">No hay publicaciones planeadas en esta red.</p> : null}
 
       <ul className="planPosts">
         {sorted.map((post) => (
           <li key={post.id} className="planPost" data-testid="plan-post">
             <span className="adminSub">
-              {shortDay(post.publishOn)} · {post.channelLabel} · {post.formatLabel}{post.pillarLabel ? ` · ${post.pillarLabel}` : ''} · {post.statusLabel}
+              {shortDay(post.publishOn)} · {post.formatLabel}{post.pillarLabel ? ` · ${post.pillarLabel}` : ''} · {post.statusLabel}
             </span>
             <h3>{post.title}</h3>
             <p className="planLabel">Objetivo</p>
