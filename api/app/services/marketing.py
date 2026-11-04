@@ -78,6 +78,8 @@ def _apply_post(db: Session, post: MarketingPost, payload: MarketingPostCreate) 
     post.pillar = payload.pillar or None
     post.title = title
     post.caption = _clean_text(payload.caption)
+    post.objective = _clean_text(payload.objective)
+    post.ai_prompt = _clean_text(payload.ai_prompt)
     post.url = url
     post.idea_id = payload.idea_id or None
     return marketing_repo.save(db, post)

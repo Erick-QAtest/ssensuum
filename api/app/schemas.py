@@ -183,6 +183,8 @@ class MarketingPostCreate(BaseModel):
     caption: Optional[str] = Field(default=None, max_length=5000)
     url: Optional[str] = Field(default=None, max_length=500)
     idea_id: Optional[str] = Field(default=None, alias="ideaId")
+    objective: Optional[str] = Field(default=None, max_length=500)
+    ai_prompt: Optional[str] = Field(default=None, alias="aiPrompt", max_length=10000)
 
     model_config = {"populate_by_name": True}
 

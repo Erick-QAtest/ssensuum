@@ -222,6 +222,8 @@ class MarketingPost(Base):
     caption: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     idea_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    objective: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    ai_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 

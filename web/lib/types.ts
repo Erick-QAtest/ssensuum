@@ -416,6 +416,8 @@ export type MarketingPostInput = {
   caption: string | null;
   url: string | null;
   ideaId: string | null;
+  objective: string | null;
+  aiPrompt: string | null;
 };
 
 export type MarketingPost = MarketingPostInput & {

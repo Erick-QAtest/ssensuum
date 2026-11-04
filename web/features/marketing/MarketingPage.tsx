@@ -9,10 +9,12 @@ import { AttributionPanel } from './AttributionPanel';
 import { CalendarPanel, type PostDraft } from './CalendarPanel';
 import { IdeasPanel } from './IdeasPanel';
 import { MetricsPanel } from './MetricsPanel';
+import { PlanPanel } from './PlanPanel';
 
 const TABS = [
   { id: 'atribucion', label: 'Atribución' },
   { id: 'calendario', label: 'Calendario' },
+  { id: 'plan', label: 'Plan y prompts' },
   { id: 'metricas', label: 'Métricas' },
   { id: 'ideas', label: 'Ideas' },
 ] as const;
@@ -64,6 +66,7 @@ export function MarketingPage() {
         {!meta && !error ? <p className="muted">Cargando…</p> : null}
         {meta && tab === 'atribucion' ? <AttributionPanel meta={meta} /> : null}
         {meta && tab === 'calendario' ? <CalendarPanel meta={meta} draft={draft} onDraftUsed={draftUsed} /> : null}
+        {meta && tab === 'plan' ? <PlanPanel /> : null}
         {meta && tab === 'metricas' ? <MetricsPanel meta={meta} /> : null}
         {meta && tab === 'ideas' ? <IdeasPanel meta={meta} onSchedule={schedule} /> : null}
       </div>

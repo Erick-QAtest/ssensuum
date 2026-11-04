@@ -19,6 +19,8 @@ function blank(meta: MarketingMeta, draft?: PostDraft): MarketingPostInput {
     caption: null,
     url: null,
     ideaId: null,
+    objective: null,
+    aiPrompt: null,
     ...draft,
   };
 }
@@ -72,7 +74,7 @@ export function CalendarPanel({ meta, draft, onDraftUsed }: { meta: MarketingMet
 
   function edit(post: MarketingPost) {
     setEditing(post.id);
-    setForm({ channel: post.channel, publishOn: post.publishOn, status: post.status, format: post.format, pillar: post.pillar, title: post.title, caption: post.caption, url: post.url, ideaId: post.ideaId });
+    setForm({ channel: post.channel, publishOn: post.publishOn, status: post.status, format: post.format, pillar: post.pillar, title: post.title, caption: post.caption, url: post.url, ideaId: post.ideaId, objective: post.objective, aiPrompt: post.aiPrompt });
     document.getElementById('post-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -86,7 +88,7 @@ export function CalendarPanel({ meta, draft, onDraftUsed }: { meta: MarketingMet
     setSaving(true);
     setError('');
     try {
-      await saveMarketingPost({ ...form, caption: form.caption?.trim() || null, url: form.url?.trim() || null }, editing ?? undefined);
+      await saveMarketingPost({ ...form, caption: form.caption?.trim() || null, url: form.url?.trim() || null, objective: form.objective?.trim() || null, aiPrompt: form.aiPrompt?.trim() || null }, editing ?? undefined);
       cancel();
       load();
     } catch (e) {
@@ -220,6 +222,12 @@ export function CalendarPanel({ meta, draft, onDraftUsed }: { meta: MarketingMet
         </label>
         <label className="recordNotes">Texto de la publicación
           <textarea value={form.caption ?? ''} onChange={(event) => set('caption', event.target.value)} rows={4} placeholder="Opcional" />
+        </label>
+        <label className="recordNotes">Objetivo
+          <input value={form.objective ?? ''} onChange={(event) => set('objective', event.target.value)} maxLength={500} placeholder="Para qué se publica" data-testid="post-objective" />
+        </label>
+        <label className="recordNotes">Prompt para la IA
+          <textarea value={form.aiPrompt ?? ''} onChange={(event) => set('aiPrompt', event.target.value)} rows={6} maxLength={10000} placeholder="Opcional" data-testid="post-prompt" />
         </label>
         <div className="adminRow">
           <button type="submit" className="primaryButton" disabled={saving || !form.title.trim()} data-testid="post-save">{editing ? 'Guardar cambios' : 'Agregar al calendario'}</button>

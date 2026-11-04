@@ -905,6 +905,14 @@ a.priceMeta { text-underline-offset: 3px; }
 .marketingLink code { flex: 1 1 auto; min-width: 0; overflow: hidden; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .marketingCounts { grid-template-columns: repeat(4, 1fr); }
 .marketingGap { margin-left: 12px; }
+.planPosts { display: grid; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.planPost { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); }
+.planPost h3 { margin: 6px 0 0; color: var(--ink); font-size: 18px; }
+.planPost p { margin: 4px 0 0; }
+.planPost .planLabel { margin-top: 12px; color: var(--label); font-size: 13px; font-weight: 700; }
+.planPrompt { margin-top: 12px; }
+.planPrompt summary { color: var(--brown); font-size: 14px; font-weight: 700; cursor: pointer; }
+.planPrompt pre { margin: 10px 0 0; padding: 14px; overflow-x: auto; border-radius: var(--r-sm); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .marketingChannels { display: grid; gap: 0; }
 .marketingChannels .adminCard { min-width: 0; }
 .marketingFollowers { color: var(--muted); font-size: 14px; }

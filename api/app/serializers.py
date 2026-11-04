@@ -219,6 +219,8 @@ def marketing_post_payload(post: MarketingPost) -> dict:
         "caption": post.caption,
         "url": post.url,
         "ideaId": post.idea_id,
+        "objective": post.objective,
+        "aiPrompt": post.ai_prompt,
     }
 
 
