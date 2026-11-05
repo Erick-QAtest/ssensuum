@@ -1,4 +1,4 @@
-import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll } from './types';
+import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
 
 import { currentChannel } from './channel';
 
@@ -333,4 +333,74 @@ export function saveChannelSnapshot(input: ChannelSnapshotInput) {
 
 export function deleteChannelSnapshot(id: string) {
   return sendJson<void>('DELETE', `/admin/marketing/metrics/${encodeURIComponent(id)}`, undefined, 'No se pudo borrar la captura');
+}
+
+// --- Operación ---
+
+function withZonePhoto(zone: OpsZone): OpsZone {
+  return zone.photoUrl ? { ...zone, photoUrl: `${API}${zone.photoUrl}` } : zone;
+}
+
+function withDayPhotos(day: OpsDay): OpsDay {
+  return { ...day, tasks: day.tasks.map((task) => ({ ...task, zones: task.zones.map(withZonePhoto) })) };
+}
+
+export function getOpsMeta() {
+  return getJson<OpsMeta>('/admin/ops/meta', 'No se pudo cargar Operación');
+}
+
+export function getOpsDay(day: string) {
+  return getJson<OpsDay>(`/admin/ops/days/${day}`, 'No se pudo cargar el día').then(withDayPhotos);
+}
+
+export function checkOpsItem(day: string, itemKey: string, status: 'hecho' | 'no_se_pudo', reason?: string) {
+  return postJson<OpsDay>(`/admin/ops/days/${day}/checks`, { itemKey, status, reason }, 'No se pudo marcar').then(withDayPhotos);
+}
+
+export function uncheckOpsItem(day: string, itemKey: string) {
+  return sendJson<OpsDay>('DELETE', `/admin/ops/days/${day}/checks/${encodeURIComponent(itemKey)}`, undefined, 'No se pudo desmarcar').then(withDayPhotos);
+}
+
+export function closeOpsDay(day: string) {
+  return postJson<OpsDay>(`/admin/ops/days/${day}/close`, undefined, 'No se pudo cerrar el día').then(withDayPhotos);
+}
+
+export function reopenOpsDay(day: string) {
+  return postJson<OpsDay>(`/admin/ops/days/${day}/reopen`, undefined, 'No se pudo reabrir el día').then(withDayPhotos);
+}
+
+export function getOpsZones() {
+  return getJson<OpsZone[]>('/admin/ops/zones', 'No se pudieron cargar las zonas').then((rows) => rows.map(withZonePhoto));
+}
+
+export function uploadOpsZonePhoto(zoneId: string, photo: File) {
+  const body = new FormData();
+  body.append('photo', photo);
+  return sendForm<OpsZone[]>('PUT', `/admin/ops/zones/${encodeURIComponent(zoneId)}/photo`, body, 'No se pudo subir la foto').then((rows) => rows.map(withZonePhoto));
+}
+
+export function addOpsPoint(zoneId: string, point: { x: number; y: number; kind: string; label: string }) {
+  return postJson<OpsZone[]>(`/admin/ops/zones/${encodeURIComponent(zoneId)}/points`, point, 'No se pudo agregar el punto').then((rows) => rows.map(withZonePhoto));
+}
+
+export function deleteOpsPoint(pointId: string) {
+  return sendJson<OpsZone[]>('DELETE', `/admin/ops/points/${encodeURIComponent(pointId)}`, undefined, 'No se pudo borrar el punto').then((rows) => rows.map(withZonePhoto));
+}
+
+export function getOpsSupplies() {
+  return getJson<OpsSupply[]>('/admin/ops/supplies', 'No se pudieron cargar los insumos');
+}
+
+export function saveOpsSupply(input: OpsSupplyInput, id?: string) {
+  return id
+    ? sendJson<OpsSupply[]>('PUT', `/admin/ops/supplies/${encodeURIComponent(id)}`, input, 'No se pudo guardar el insumo')
+    : postJson<OpsSupply[]>('/admin/ops/supplies', input, 'No se pudo guardar el insumo');
+}
+
+export function countOpsSupplies(counts: Record<string, number>) {
+  return postJson<OpsSupply[]>('/admin/ops/supplies/count', { counts }, 'No se pudo guardar el inventario');
+}
+
+export function receiveOpsSupply(id: string, quantity: number) {
+  return postJson<OpsSupply[]>(`/admin/ops/supplies/${encodeURIComponent(id)}/receive`, { quantity }, 'No se pudo registrar lo recibido');
 }

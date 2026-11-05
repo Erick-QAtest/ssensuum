@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     hr_files_dir: str = "./storage/rh"
     # Fotos del equipo que se suben desde Recursos humanos; se sirven en /therapists/{id}/photo.
     team_photos_dir: str = "./storage/equipo"
+    # Fotos de las zonas del club para el checklist de Operación; se sirven bajo /admin/ops.
+    ops_photos_dir: str = "./storage/operacion"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

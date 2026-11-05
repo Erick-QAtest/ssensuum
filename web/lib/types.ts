@@ -446,3 +446,61 @@ export type ChannelSnapshotInput = {
   interactions: number | null;
   linkClicks: number | null;
 };
+
+export type OpsStatus = 'pendiente' | 'hecho' | 'no_se_pudo';
+
+export type OpsPoint = { id: string; x: number; y: number; kind: string; kindLabel: string; label: string; status?: OpsStatus; reason?: string | null };
+
+export type OpsZone = { id: string; name: string; photoUrl: string | null; points: OpsPoint[] };
+
+export type OpsTask = {
+  key: string;
+  label: string;
+  minutes: number;
+  shift: string;
+  shiftLabel: string;
+  detail: string | null;
+  status: OpsStatus;
+  reason: string | null;
+  zones: OpsZone[];
+  zonesWithoutPoints?: string[];
+  posts: { id: string; title: string; channel: string; status: string }[];
+  supplies: { name: string; quantity: number | null; unit: string; status: string }[];
+};
+
+export type OpsDay = {
+  day: string;
+  weekday: string;
+  cycleWeek: string;
+  isToday: boolean;
+  closed: boolean;
+  closedAt: string | null;
+  pending: number;
+  minutes: number;
+  canClose: boolean;
+  tasks: OpsTask[];
+};
+
+export type OpsMeta = { pointKinds: { id: string; label: string }[]; today: string };
+
+export type OpsSupplyInput = {
+  name: string;
+  unit: string;
+  packSize: number;
+  dailyUse: number;
+  leadDays: number;
+  safetyDays: number;
+  price: number | null;
+};
+
+export type OpsSupply = OpsSupplyInput & {
+  id: string;
+  countedStock: number | null;
+  countedOn: string | null;
+  estimate: number | null;
+  status: 'sin_contar' | 'bien' | 'pedir' | 'urgente';
+  orderOn: string | null;
+  quantity: number | null;
+  daysLeft: number | null;
+  runsOutOn: string | null;
+};

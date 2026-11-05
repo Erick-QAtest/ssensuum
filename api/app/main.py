@@ -7,8 +7,9 @@ from fastapi.responses import JSONResponse
 from .config import settings
 from .db import Base, SessionLocal, add_missing_columns, engine
 from .domain.errors import DomainError
-from .routers import admin, availability, catalog, checkout, customers, events, finance, health, hr, marketing, records, reservations
+from .routers import admin, availability, catalog, checkout, customers, events, finance, health, hr, marketing, operations, records, reservations
 from .seed import seed
+from .services.operations import ensure_zones
 
 
 @asynccontextmanager
@@ -17,6 +18,7 @@ async def lifespan(_: FastAPI):
     add_missing_columns()
     with SessionLocal() as db:
         seed(db)
+        ensure_zones(db)
     yield
 
 
@@ -47,3 +49,4 @@ app.include_router(records.router)
 app.include_router(hr.router)
 app.include_router(finance.router)
 app.include_router(marketing.router)
+app.include_router(operations.router)

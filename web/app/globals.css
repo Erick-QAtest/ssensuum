@@ -913,6 +913,30 @@ a.priceMeta { text-underline-offset: 3px; }
 .planPrompt { margin-top: 12px; }
 .planPrompt summary { color: var(--brown); font-size: 14px; font-weight: 700; cursor: pointer; }
 .planPrompt pre { margin: 10px 0 0; padding: 14px; overflow-x: auto; border-radius: var(--r-sm); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.opsDayNav { margin: 16px 0 0; }
+.opsTasks { display: grid; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.opsTask { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); }
+.opsTask.status-hecho { border-color: rgba(70, 87, 63, .35); }
+.opsTask h3 { margin: 0; color: var(--ink); font-size: 17px; }
+.opsTaskHead { margin-top: 0; align-items: flex-start; }
+.opsReason { margin: 8px 0 0; color: var(--danger); font-size: 14px; }
+.opsPosts { margin: 10px 0 0; padding-left: 18px; font-size: 14px; }
+.opsZone { margin-top: 14px; }
+.opsPhoto { position: relative; max-width: 520px; margin-top: 8px; overflow: hidden; border-radius: var(--r-sm); user-select: none; }
+.opsPhoto img { display: block; width: 100%; height: auto; }
+.opsPhotoPlacing { cursor: crosshair; }
+.opsDot { position: absolute; display: grid; place-items: center; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0; border: 3px solid #fff; border-radius: 50%; color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 1px 4px rgba(0, 0, 0, .45); cursor: pointer; }
+.opsDot.status-hecho { opacity: .55; }
+.opsDot.status-no_se_pudo { border-color: var(--danger); }
+.kind-limpiar { background: #2f6fde; }
+.kind-rellenar { background: #d64545; }
+.kind-regar { background: #3a9a4a; }
+.kind-bolsa { background: #8a4fc4; }
+.opsPointList { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.opsPointList li { display: flex; align-items: center; gap: 8px; }
+.opsPointList li.status-hecho span:not(.opsKind) { color: var(--muted); text-decoration: line-through; }
+.opsKind { flex: none; width: 12px; height: 12px; border-radius: 50%; }
+.opsCountInput { width: 90px; min-height: 40px; margin-right: 4px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font: inherit; }
 .marketingChannels { display: grid; gap: 0; }
 .marketingChannels .adminCard { min-width: 0; }
 .marketingFollowers { color: var(--muted); font-size: 14px; }
