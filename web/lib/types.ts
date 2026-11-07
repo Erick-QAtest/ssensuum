@@ -466,7 +466,20 @@ export type OpsTask = {
   zonesWithoutPoints?: string[];
   posts: { id: string; title: string; channel: string; status: string }[];
   supplies: { name: string; quantity: number | null; unit: string; status: string }[];
+  evidence: { zoneId: string; zoneName: string; pointId: string | null; pointLabel: string | null; photo: OpsEvidence | null }[];
 };
+
+export type OpsEvidence = {
+  id: string;
+  url: string | null;
+  referenceUrl: string | null;
+  uploadedAt: string;
+  review: 'pendiente' | 'bien' | 'repetir';
+  reviewLabel: string;
+  reviewNote: string | null;
+};
+
+export type OpsEvidenceRow = OpsEvidence & { day: string; taskLabel: string; zoneName: string; pointLabel: string | null };
 
 export type OpsDay = {
   day: string;

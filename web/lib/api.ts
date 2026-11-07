@@ -1,4 +1,4 @@
-import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
+import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsEvidence, OpsEvidenceRow, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
 
 import { currentChannel } from './channel';
 
@@ -341,8 +341,19 @@ function withZonePhoto(zone: OpsZone): OpsZone {
   return zone.photoUrl ? { ...zone, photoUrl: `${API}${zone.photoUrl}` } : zone;
 }
 
+function withEvidencePhotos<T extends OpsEvidence>(row: T): T {
+  return { ...row, url: row.url ? `${API}${row.url}` : null, referenceUrl: row.referenceUrl ? `${API}${row.referenceUrl}` : null };
+}
+
 function withDayPhotos(day: OpsDay): OpsDay {
-  return { ...day, tasks: day.tasks.map((task) => ({ ...task, zones: task.zones.map(withZonePhoto) })) };
+  return {
+    ...day,
+    tasks: day.tasks.map((task) => ({
+      ...task,
+      zones: task.zones.map(withZonePhoto),
+      evidence: task.evidence.map((row) => ({ ...row, photo: row.photo ? withEvidencePhotos(row.photo) : null })),
+    })),
+  };
 }
 
 export function getOpsMeta() {
@@ -403,4 +414,22 @@ export function countOpsSupplies(counts: Record<string, number>) {
 
 export function receiveOpsSupply(id: string, quantity: number) {
   return postJson<OpsSupply[]>(`/admin/ops/supplies/${encodeURIComponent(id)}/receive`, { quantity }, 'No se pudo registrar lo recibido');
+}
+
+export function uploadOpsEvidence(day: string, taskKey: string, zoneId: string, pointId: string | null, photo: Blob) {
+  const body = new FormData();
+  body.append('taskKey', taskKey);
+  body.append('zoneId', zoneId);
+  body.append('pointId', pointId ?? '');
+  body.append('photo', photo, 'evidencia.jpg');
+  return sendForm<OpsDay>('POST', `/admin/ops/days/${day}/evidence`, body, 'No se pudo subir la foto').then(withDayPhotos);
+}
+
+export function getOpsEvidence(from: string, to: string) {
+  const params = new URLSearchParams({ from, to });
+  return getJson<OpsEvidenceRow[]>(`/admin/ops/evidence?${params.toString()}`, 'No se pudieron cargar las fotos').then((rows) => rows.map(withEvidencePhotos));
+}
+
+export function reviewOpsEvidence(id: string, review: 'bien' | 'repetir', note?: string) {
+  return postJson<OpsEvidenceRow>(`/admin/ops/evidence/${encodeURIComponent(id)}/review`, { review, note }, 'No se pudo guardar la revisión').then(withEvidencePhotos);
 }

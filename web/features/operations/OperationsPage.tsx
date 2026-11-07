@@ -6,6 +6,7 @@ import { AdminNav } from '../../components/AdminNav';
 import { getOpsMeta } from '../../lib/api';
 import type { OpsMeta } from '../../lib/types';
 import { DayPanel } from './DayPanel';
+import { ReviewPanel } from './ReviewPanel';
 import { SuppliesPanel } from './SuppliesPanel';
 import { ZonesPanel } from './ZonesPanel';
 
@@ -24,7 +25,7 @@ function longDay(day: string) {
 export function OperationsPage() {
   const [meta, setMeta] = useState<OpsMeta | null>(null);
   const [day, setDay] = useState('');
-  const [tab, setTab] = useState<'dia' | 'insumos' | 'zonas'>('dia');
+  const [tab, setTab] = useState<'dia' | 'insumos' | 'revision' | 'zonas'>('dia');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export function OperationsPage() {
         <div className="adminRow" role="tablist" aria-label="Secciones de operación">
           <button type="button" role="tab" aria-selected={tab === 'dia'} className={`secondaryButton ${tab === 'dia' ? 'selected' : ''}`} onClick={() => setTab('dia')}>Día</button>
           <button type="button" role="tab" aria-selected={tab === 'insumos'} className={`secondaryButton ${tab === 'insumos' ? 'selected' : ''}`} onClick={() => setTab('insumos')}>Insumos</button>
+          <button type="button" role="tab" aria-selected={tab === 'revision'} className={`secondaryButton ${tab === 'revision' ? 'selected' : ''}`} onClick={() => setTab('revision')}>Revisión</button>
           <button type="button" role="tab" aria-selected={tab === 'zonas'} className={`secondaryButton ${tab === 'zonas' ? 'selected' : ''}`} onClick={() => setTab('zonas')}>Zonas y puntos</button>
         </div>
 
@@ -63,6 +65,7 @@ export function OperationsPage() {
           </>
         ) : null}
         {meta && tab === 'insumos' ? <SuppliesPanel /> : null}
+        {meta && tab === 'revision' ? <ReviewPanel today={meta.today} /> : null}
         {meta && tab === 'zonas' ? <ZonesPanel meta={meta} /> : null}
       </div>
     </main>

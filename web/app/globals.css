@@ -937,6 +937,17 @@ a.priceMeta { text-underline-offset: 3px; }
 .opsPointList li.status-hecho span:not(.opsKind) { color: var(--muted); text-decoration: line-through; }
 .opsKind { flex: none; width: 12px; height: 12px; border-radius: 50%; }
 .opsCountInput { width: 90px; min-height: 40px; margin-right: 4px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font: inherit; }
+.opsEvidence { display: grid; gap: 12px; margin-top: 14px; }
+.opsEvidenceItem { padding: 12px; border: 1px dashed var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.opsEvidenceThumb { display: block; width: 160px; height: auto; margin: 8px 0; border-radius: var(--r-sm); }
+.opsCamera { position: relative; display: inline-flex; align-items: center; margin-top: 8px; cursor: pointer; }
+.opsCamera input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.opsCamera.disabled { opacity: .5; pointer-events: none; }
+.opsReviewList { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.opsReviewItem { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); }
+.opsReviewItem h3 { margin: 0; color: var(--ink); font-size: 17px; }
+.opsCompare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.opsCompare img { display: block; width: 100%; height: auto; border-radius: var(--r-sm); }
 .marketingChannels { display: grid; gap: 0; }
 .marketingChannels .adminCard { min-width: 0; }
 .marketingFollowers { color: var(--muted); font-size: 14px; }

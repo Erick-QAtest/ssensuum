@@ -11,6 +11,13 @@ SUNDAY_A = date(2026, 11, 15)
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 64
 
 
+def upload(client, task_key, zone_id, point_id=None, day=SUNDAY_A):
+    data = {"taskKey": task_key, "zoneId": zone_id, "pointId": point_id or ""}
+    response = client.post(f"/admin/ops/days/{day}/evidence", data=data, files={"photo": ("e.png", PNG, "image/png")})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
 @pytest.fixture()
 def client(monkeypatch):
     monkeypatch.setattr(ops_service, "today", lambda: SUNDAY_A)
@@ -74,6 +81,10 @@ def test_day_closes_only_when_everything_is_marked(client):
     day = client.post(url, json={"itemKey": f"aseo-banos@{sink['id']}", "status": "hecho"}).json()
     assert next(task for task in day["tasks"] if task["key"] == "aseo-banos")["status"] == "pendiente"
     day = client.post(url, json={"itemKey": "aseo-banos", "status": "hecho"}).json()
+    deep = next(task for task in day["tasks"] if task["key"] == "aseo-banos")
+    # Todo marcado, pero falta la foto del después del Baño 1 (la única zona con foto de referencia).
+    assert deep["status"] == "pendiente" and [row["zoneId"] for row in deep["evidence"]] == ["bano-1"]
+    day = upload(client, "aseo-banos", "bano-1")
     assert next(task for task in day["tasks"] if task["key"] == "aseo-banos")["status"] == "hecho"
 
     assert client.post(f"/admin/ops/days/{SUNDAY_A}/close").status_code == 422
@@ -83,6 +94,8 @@ def test_day_closes_only_when_everything_is_marked(client):
         for zone in task["zones"]:
             for point in zone["points"]:
                 client.post(url, json={"itemKey": f"{task['key']}@{point['id']}", "status": "hecho"})
+        for row in task["evidence"]:
+            upload(client, task["key"], row["zoneId"], row["pointId"])
         day = client.post(url, json={"itemKey": task["key"], "status": "hecho"}).json()
     assert day["pending"] == 0 and day["canClose"] is True
 
@@ -116,3 +129,32 @@ def test_counts_learn_consumption_and_drive_the_order(client, monkeypatch):
 
     rows = {row["id"]: row for row in client.post("/admin/ops/supplies/agua/receive", json={"quantity": 3}).json()}
     assert rows["agua"]["estimate"] == 4 and rows["agua"]["status"] != "urgente"
+
+
+def test_evidence_is_required_and_reviewed(client):
+    day = client.get(f"/admin/ops/days/{SUNDAY_A}").json()
+    rounds = next(task for task in day["tasks"] if task["key"] == "ronda-tarde")
+    # La ronda pide la foto de un solo punto, el mismo durante todo el día.
+    assert len(rounds["evidence"]) == 1 and rounds["evidence"][0]["pointId"]
+    again = client.get(f"/admin/ops/days/{SUNDAY_A}").json()
+    assert next(task for task in again["tasks"] if task["key"] == "ronda-tarde")["evidence"] == rounds["evidence"]
+
+    target = rounds["evidence"][0]
+    bad = client.post(f"/admin/ops/days/{SUNDAY_A}/evidence", data={"taskKey": "ronda-tarde", "zoneId": "sala"}, files={"photo": ("e.png", PNG, "image/png")})
+    assert bad.status_code == 422
+    future = SUNDAY_A + timedelta(days=1)
+    assert client.post(f"/admin/ops/days/{future}/evidence", data={"taskKey": "abrir", "zoneId": "sala"}, files={"photo": ("e.png", PNG, "image/png")}).status_code == 422
+
+    day = upload(client, "ronda-tarde", target["zoneId"], target["pointId"])
+    photo = next(task for task in day["tasks"] if task["key"] == "ronda-tarde")["evidence"][0]["photo"]
+    assert photo["review"] == "pendiente" and client.get(photo["url"]).content == PNG
+    assert photo["referenceUrl"].startswith(f"/admin/ops/zones/{target['zoneId']}/photo")
+
+    listed = client.get("/admin/ops/evidence", params={"from": SUNDAY_A.isoformat(), "to": SUNDAY_A.isoformat()}).json()
+    assert photo["id"] in [row["id"] for row in listed]
+    assert client.post(f"/admin/ops/evidence/{photo['id']}/review", json={"review": "repetir"}).status_code == 422
+    reviewed = client.post(f"/admin/ops/evidence/{photo['id']}/review", json={"review": "repetir", "note": "El jabón quedó vacío"}).json()
+    assert reviewed["review"] == "repetir" and reviewed["taskLabel"] == "Ronda de baños"
+    day = client.get(f"/admin/ops/days/{SUNDAY_A}").json()
+    task = next(task for task in day["tasks"] if task["key"] == "ronda-tarde")
+    assert task["evidence"][0]["photo"]["reviewNote"] == "El jabón quedó vacío" and task["status"] == "pendiente"

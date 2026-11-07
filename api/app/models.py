@@ -331,3 +331,20 @@ class OpsStockMove(Base):
     kind: Mapped[str] = mapped_column(String(20), nullable=False)
     quantity: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class OpsEvidence(Base):
+    """Foto de evidencia: la zona terminada (aseo a fondo) o un punto elegido al azar (rondas)."""
+
+    __tablename__ = "ops_evidence"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    task_key: Mapped[str] = mapped_column(String(60), nullable=False)
+    zone_id: Mapped[str] = mapped_column(String(40), nullable=False)
+    point_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    # Archivo dentro de OPS_PHOTOS_DIR/evidencia; se borra a los 60 días y queda el registro.
+    file_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    review: Mapped[str] = mapped_column(String(20), nullable=False, default="pendiente")
+    review_note: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)

@@ -239,3 +239,8 @@ class OpsCountInput(BaseModel):
 
 class OpsReceiveInput(BaseModel):
     quantity: float = Field(gt=0)
+
+
+class OpsReviewInput(BaseModel):
+    review: str
+    note: Optional[str] = Field(default=None, max_length=300)

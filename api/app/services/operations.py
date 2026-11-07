@@ -1,7 +1,7 @@
 """Operación diaria: zonas con foto y puntos, tareas del día, marcas y cierre."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -13,7 +13,7 @@ from ..domain import operations as ops
 from ..domain.errors import ConflictError, NotFoundError, ValidationError
 from ..domain.hr import MAX_PHOTO_BYTES, photo_extension
 from ..domain.rules import TZ
-from ..models import MarketingPost, OpsCheck, OpsDay, OpsPoint, OpsStockMove, OpsSupply, OpsZone
+from ..models import MarketingPost, OpsCheck, OpsDay, OpsEvidence, OpsPoint, OpsStockMove, OpsSupply, OpsZone
 
 
 def ensure_zones(db: Session) -> None:
@@ -155,6 +155,7 @@ def day_overview(db: Session, day: date) -> dict:
     supplies = supplies_overview(db, day) if day == today() else []
     to_order = [row for row in supplies if row["status"] in ("pedir", "urgente")]
     urgent = [row for row in supplies if row["status"] == "urgente"]
+    evidence = _evidence_by_key(db, day)
     for task in ops.tasks_for(day, bool(posts), bool(urgent)):
         own = checks.get(task.key)
         item = {
@@ -167,6 +168,7 @@ def day_overview(db: Session, day: date) -> dict:
             "zones": [],
             "posts": [],
             "supplies": [],
+            "evidence": [],
         }
         relevant = [p for p in all_points if p.zone_id in task.zones and (not task.kinds or p.kind in task.kinds)]
         with_points = {p.zone_id for p in relevant}
@@ -192,6 +194,18 @@ def day_overview(db: Session, day: date) -> dict:
         else:
             # Sin puntos en la foto (o sin foto todavía) se marca la tarea completa.
             status = own.status if own else "pendiente"
+        for zone_id, point in _required_evidence(task, day, zones, relevant):
+            photo = evidence.get((task.key, zone_id, point.id if point else None))
+            item["evidence"].append({
+                "zoneId": zone_id,
+                "zoneName": zones[zone_id].name,
+                "pointId": point.id if point else None,
+                "pointLabel": point.label if point else None,
+                "photo": _evidence_payload(photo, zones) if photo else None,
+            })
+        # Sin la foto pedida (o con la foto marcada para repetir) la tarea no queda hecha.
+        if status == "hecho" and any(not row["photo"] or row["photo"]["review"] == "repetir" for row in item["evidence"]):
+            status = "pendiente"
         item.update({"status": status, "reason": own.reason if own else None})
         tasks.append(item)
 
@@ -369,3 +383,117 @@ def receive_supply(db: Session, supply_id: str, quantity: float) -> list[dict]:
         db.add(OpsStockMove(id=str(uuid.uuid4()), supply_id=supply.id, day=day, kind="recepcion", quantity=quantity))
     db.commit()
     return supplies_overview(db)
+
+
+# --- Evidencia ---
+
+
+def _required_evidence(task, day: date, zones: dict, relevant: list[OpsPoint]) -> list[tuple]:
+    """Aseo a fondo: una foto por zona que tenga foto de referencia. Rondas: un punto al azar del día."""
+    if task.source:
+        return []
+    if task.kinds:
+        if not relevant:
+            return []
+        ordered = sorted(relevant, key=lambda point: point.id)
+        point = ordered[ops.random_index(day, task.key, len(ordered))]
+        return [(point.zone_id, point)]
+    return [(zone_id, None) for zone_id in task.zones if zone_id in zones and zones[zone_id].photo_version]
+
+
+def _evidence_by_key(db: Session, day: date) -> dict:
+    rows = db.scalars(select(OpsEvidence).where(OpsEvidence.day == day.isoformat()).order_by(OpsEvidence.uploaded_at))
+    return {(row.task_key, row.zone_id, row.point_id): row for row in rows}  # la más reciente gana
+
+
+def _evidence_payload(row: OpsEvidence, zones: dict) -> dict:
+    zone = zones.get(row.zone_id)
+    return {
+        "id": row.id,
+        "url": f"/admin/ops/evidence/{row.id}/photo" if row.file_name else None,
+        "referenceUrl": f"/admin/ops/zones/{zone.id}/photo?v={zone.photo_version}" if zone and zone.photo_version else None,
+        "uploadedAt": row.uploaded_at.replace(tzinfo=timezone.utc).isoformat(),
+        "review": row.review,
+        "reviewLabel": ops.REVIEWS[row.review],
+        "reviewNote": row.review_note,
+    }
+
+
+def evidence_dir() -> Path:
+    path = Path(settings.ops_photos_dir) / "evidencia"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _prune_evidence(db: Session) -> None:
+    limit = (today() - timedelta(days=ops.EVIDENCE_DAYS)).isoformat()
+    for row in db.scalars(select(OpsEvidence).where(OpsEvidence.day < limit, OpsEvidence.file_name.is_not(None))):
+        (evidence_dir() / row.file_name).unlink(missing_ok=True)
+        row.file_name = None
+
+
+def add_evidence(db: Session, day: date, task_key: str, zone_id: str, point_id: Optional[str], content: bytes) -> dict:
+    _open_day(db, day)
+    task = ops.TASKS_BY_KEY.get(task_key)
+    if not task or task not in ops.tasks_for(day, True, True):
+        raise ValidationError("Esa tarea no toca este día")
+    zones = {zone.id: zone for zone in db.scalars(select(OpsZone))}
+    relevant = [p for p in points(db, list(task.zones)) if not task.kinds or p.kind in task.kinds]
+    required = {(z, p.id if p else None) for z, p in _required_evidence(task, day, zones, relevant)}
+    if (zone_id, point_id or None) not in required:
+        raise ValidationError("Esa foto no se pide en esta tarea")
+    if not content:
+        raise ValidationError("Toma la foto de evidencia")
+    if len(content) > MAX_PHOTO_BYTES:
+        raise ValidationError("La foto pesa más de 5 MB")
+    suffix = photo_extension(content)
+    if not suffix:
+        raise ValidationError("La foto debe ser JPG, PNG o WebP")
+    row = OpsEvidence(id=str(uuid.uuid4()), day=day.isoformat(), task_key=task_key, zone_id=zone_id, point_id=point_id or None)
+    row.file_name = f"{row.id}{suffix}"
+    (evidence_dir() / row.file_name).write_bytes(content)
+    db.add(row)
+    _prune_evidence(db)
+    db.commit()
+    return day_overview(db, day)
+
+
+def evidence_file(db: Session, evidence_id: str) -> Optional[Path]:
+    row = db.get(OpsEvidence, evidence_id)
+    if not row or not row.file_name:
+        return None
+    path = evidence_dir() / row.file_name
+    return path if path.exists() else None
+
+
+def review_evidence(db: Session, evidence_id: str, review: str, note: Optional[str]) -> dict:
+    row = db.get(OpsEvidence, evidence_id)
+    if not row:
+        raise NotFoundError("Foto no encontrada")
+    if review not in ("bien", "repetir"):
+        raise ValidationError("Elige bien o repetir")
+    note = " ".join((note or "").split()) or None
+    if review == "repetir" and not note:
+        raise ValidationError("Escribe qué hay que repetir")
+    row.review, row.review_note = review, note if review == "repetir" else None
+    db.commit()
+    return evidence_payload_full(db, row)
+
+
+def evidence_payload_full(db: Session, row: OpsEvidence) -> dict:
+    zones = {zone.id: zone for zone in db.scalars(select(OpsZone))}
+    task = ops.TASKS_BY_KEY.get(row.task_key)
+    point = db.get(OpsPoint, row.point_id) if row.point_id else None
+    return {
+        **_evidence_payload(row, zones),
+        "day": row.day,
+        "taskLabel": task.label if task else row.task_key,
+        "zoneName": zones[row.zone_id].name if row.zone_id in zones else row.zone_id,
+        "pointLabel": point.label if point else None,
+    }
+
+
+def list_evidence(db: Session, start: date, end: date) -> list[dict]:
+    rows = db.scalars(select(OpsEvidence).where(OpsEvidence.day >= start.isoformat(), OpsEvidence.day <= end.isoformat())
+                      .order_by(OpsEvidence.day.desc(), OpsEvidence.uploaded_at.desc())).all()
+    return [evidence_payload_full(db, row) for row in rows]

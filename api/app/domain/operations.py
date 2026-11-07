@@ -5,6 +5,7 @@ El reparto sale de un ciclo de dos semanas calculado para que ningún día quede
 """
 
 from dataclasses import dataclass, field
+import hashlib
 import math
 from datetime import date, timedelta
 from typing import Optional
@@ -203,3 +204,15 @@ def supply_plan(estimate: Optional[float], daily_use: float, lead_days: int, saf
 def smoothed_use(previous: float, observed: float) -> float:
     """El consumo se ajusta con cada inventario: mitad lo que se tenía, mitad lo observado."""
     return round(0.5 * previous + 0.5 * observed, 4)
+
+
+# --- Evidencia ---
+
+EVIDENCE_DAYS = 60  # las fotos de evidencia se borran después de este tiempo
+REVIEWS = {"pendiente": "Sin revisar", "bien": "Bien", "repetir": "Repetir"}
+
+
+def random_index(day: date, task_key: str, size: int) -> int:
+    """Punto al azar para la foto de la ronda: cambia cada día, pero es el mismo durante todo el día."""
+    digest = hashlib.sha256(f"{day.isoformat()}:{task_key}".encode()).hexdigest()
+    return int(digest, 16) % size

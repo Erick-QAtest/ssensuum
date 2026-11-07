@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { checkOpsItem, closeOpsDay, getOpsDay, reopenOpsDay, uncheckOpsItem } from '../../lib/api';
+import { checkOpsItem, closeOpsDay, getOpsDay, reopenOpsDay, uncheckOpsItem, uploadOpsEvidence } from '../../lib/api';
+import { compressPhoto } from './compress';
 import type { OpsDay, OpsPoint, OpsTask } from '../../lib/types';
 import { ZonePhoto } from './ZonePhoto';
 
@@ -48,6 +49,17 @@ export function DayPanel({ day, today }: { day: string; today: string }) {
 
   function undo(key: string) {
     run(uncheckOpsItem(day, key));
+  }
+
+  function uploadEvidence(task: OpsTask, zoneId: string, pointId: string | null, file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError('');
+    compressPhoto(file)
+      .then((photo) => uploadOpsEvidence(day, task.key, zoneId, pointId, photo))
+      .then(setData)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setBusy(false));
   }
 
   function togglePoint(task: OpsTask, point: OpsPoint) {
@@ -133,6 +145,35 @@ export function DayPanel({ day, today }: { day: string; today: string }) {
                       </ol>
                     </div>
                   ))}
+                  {task.evidence.length ? (
+                    <div className="opsEvidence">
+                      {task.evidence.map((row) => (
+                        <div key={`${row.zoneId}-${row.pointId ?? 'zona'}`} className="opsEvidenceItem" data-testid="ops-evidence">
+                          <p className="planLabel">
+                            {row.pointLabel ? `Foto al azar de hoy: ${row.zoneName} · ${row.pointLabel}` : `Foto del después: ${row.zoneName}, desde el mismo ángulo que la referencia`}
+                          </p>
+                          {row.photo?.url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img className="opsEvidenceThumb" src={row.photo.url} alt={`Evidencia de ${row.zoneName}`} />
+                          ) : null}
+                          {row.photo?.review === 'repetir' ? <p className="opsReason">Repetir: {row.photo.reviewNote}</p> : null}
+                          {!data.closed && !future ? (
+                            <label className={`secondaryButton opsCamera ${locked ? 'disabled' : ''}`}>
+                              {row.photo ? 'Tomar otra foto' : 'Tomar foto'}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                disabled={locked}
+                                onChange={(event) => { uploadEvidence(task, row.zoneId, row.pointId, event.target.files?.[0]); event.target.value = ''; }}
+                                data-testid="ops-evidence-input"
+                              />
+                            </label>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   {task.zonesWithoutPoints?.length && task.zones.length ? (
                     <p className="muted">Sin foto todavía: {task.zonesWithoutPoints.join(', ')}. Al terminarlas, marca la tarea como hecha.</p>
                   ) : null}

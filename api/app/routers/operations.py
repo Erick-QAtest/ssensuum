@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,7 @@ from ..db import get_db
 from ..domain import operations as ops
 from ..domain.errors import NotFoundError
 from ..domain.hr import MAX_PHOTO_BYTES
-from ..schemas import OpsCheckInput, OpsCountInput, OpsPointInput, OpsReceiveInput, OpsSupplyInput
+from ..schemas import OpsCheckInput, OpsCountInput, OpsPointInput, OpsReceiveInput, OpsReviewInput, OpsSupplyInput
 from ..services import operations as ops_service
 
 # Bajo /admin para que nginx lo proteja con el usuario y contraseña de administración.
@@ -103,3 +103,33 @@ def count_supplies(payload: OpsCountInput, db: Session = Depends(get_db)) -> lis
 @router.post("/supplies/{supply_id}/receive")
 def receive_supply(supply_id: str, payload: OpsReceiveInput, db: Session = Depends(get_db)) -> list[dict]:
     return ops_service.receive_supply(db, supply_id, payload.quantity)
+
+
+@router.post("/days/{day}/evidence")
+def upload_evidence(
+    day: date,
+    task_key: str = Form(alias="taskKey"),
+    zone_id: str = Form(alias="zoneId"),
+    point_id: str = Form(default="", alias="pointId"),
+    photo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> dict:
+    return ops_service.add_evidence(db, day, task_key, zone_id, point_id or None, photo.file.read(MAX_PHOTO_BYTES + 1))
+
+
+@router.get("/evidence")
+def list_evidence(start: date = Query(alias="from"), end: date = Query(alias="to"), db: Session = Depends(get_db)) -> list[dict]:
+    return ops_service.list_evidence(db, start, end)
+
+
+@router.get("/evidence/{evidence_id}/photo")
+def evidence_photo(evidence_id: str, db: Session = Depends(get_db)) -> FileResponse:
+    path = ops_service.evidence_file(db, evidence_id)
+    if not path:
+        raise NotFoundError("Foto no encontrada")
+    return FileResponse(path, headers={"Cache-Control": "private, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/evidence/{evidence_id}/review")
+def review_evidence(evidence_id: str, payload: OpsReviewInput, db: Session = Depends(get_db)) -> dict:
+    return ops_service.review_evidence(db, evidence_id, payload.review, payload.note)
