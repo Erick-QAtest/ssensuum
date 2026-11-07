@@ -1,5 +1,7 @@
+import importlib.util
 import uuid
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -180,3 +182,31 @@ def test_metrics_one_capture_per_channel_and_day(client):
     future = (datetime.now(TZ).date() + timedelta(days=2)).isoformat()
     assert client.post("/admin/marketing/metrics", json={"channel": "facebook", "day": future, "followers": 1}).status_code == 422
     assert client.post("/admin/marketing/metrics", json={"channel": "facebook", "day": "2026-09-15"}).status_code == 422
+
+
+def test_post_keeps_objective_and_ai_prompt(client):
+    body = {"channel": "instagram", "publishOn": "2026-11-09", "format": "reel", "title": "Con prompt", "objective": " Alcance ", "aiPrompt": "Eres copywriter"}
+    post = client.post("/admin/marketing/posts", json=body).json()
+    assert post["objective"] == "Alcance" and post["aiPrompt"] == "Eres copywriter"
+    updated = client.put(f"/admin/marketing/posts/{post['id']}", json={**body, "status": "listo"}).json()
+    assert updated["status"] == "listo" and updated["aiPrompt"] == "Eres copywriter"
+    assert client.delete(f"/admin/marketing/posts/{post['id']}").status_code == 204
+
+
+def test_content_plan_is_valid(client):
+    spec = importlib.util.spec_from_file_location("load_marketing_plan", Path(__file__).parents[2] / "scripts" / "load_marketing_plan.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    posts = module.plan()
+    assert len(posts) == 16 * 4
+    assert len({(post["channel"], post["publishOn"], post["title"]) for post in posts}) == len(posts)
+    assert {post["format"] for post in posts if post["channel"] == "x"} == {"texto", "foto"}
+    assert "reel" in {post["format"] for post in posts if post["channel"] == "tiktok"}
+    for post in posts:
+        assert module.FROM <= post["publishOn"] <= module.TO
+        assert f"utm_source={module.CHANNELS[post['channel']]['code']}" in post["aiPrompt"]
+        saved = client.post("/admin/marketing/posts", json=post)
+        assert saved.status_code == 201, saved.text
+        assert saved.json()["objective"] == post["objective"] and post["title"] in saved.json()["aiPrompt"]
+        assert client.delete(f"/admin/marketing/posts/{saved.json()['id']}").status_code == 204

@@ -64,6 +64,7 @@ WorkingDirectory=$APP/api
 Environment=DATABASE_URL=sqlite:///$APP/data/ssensuum.db
 Environment=HR_FILES_DIR=$APP/data/rh
 Environment=TEAM_PHOTOS_DIR=$APP/data/equipo
+Environment=OPS_PHOTOS_DIR=$APP/data/operacion
 Environment=WEB_ORIGIN=https://$DOMAIN
 Environment=PUBLIC_BASE_URL=https://$DOMAIN
 EnvironmentFile=$SECRETS

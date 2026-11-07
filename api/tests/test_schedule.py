@@ -81,8 +81,11 @@ def test_hr_edits_the_schedule(client):
 def test_vacation_hides_and_blocks_until_return(client):
     today = datetime.now(TZ).date()
     returns = next_weekday(4) + timedelta(days=7)
-    set_away = client.put("/admin/rh/staff/dany/vacation", json={"startsOn": today.isoformat(), "returnsOn": returns.isoformat()})
-    assert set_away.status_code == 200
+    # La base es compartida: otras pruebas pueden haber reservado a Dany en estas fechas. El aviso por
+    # reservas que chocan se prueba aparte (test_vacation_needs_return_after_start_and_warns_on_bookings).
+    away = {"startsOn": today.isoformat(), "returnsOn": returns.isoformat(), "reservationsHandled": True}
+    set_away = client.put("/admin/rh/staff/dany/vacation", json=away)
+    assert set_away.status_code == 200, set_away.text
     member = set_away.json()
     assert member["onVacation"] and member["vacationUntil"] == returns.isoformat() and member["active"]
     assert "dany" not in {row["id"] for row in client.get("/therapists").json()}

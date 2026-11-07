@@ -183,6 +183,8 @@ class MarketingPostCreate(BaseModel):
     caption: Optional[str] = Field(default=None, max_length=5000)
     url: Optional[str] = Field(default=None, max_length=500)
     idea_id: Optional[str] = Field(default=None, alias="ideaId")
+    objective: Optional[str] = Field(default=None, max_length=500)
+    ai_prompt: Optional[str] = Field(default=None, alias="aiPrompt", max_length=10000)
 
     model_config = {"populate_by_name": True}
 
@@ -202,3 +204,47 @@ class ChannelSnapshotCreate(BaseModel):
     link_clicks: Optional[int] = Field(default=None, ge=0, alias="linkClicks")
 
     model_config = {"populate_by_name": True}
+
+
+class OpsCheckInput(BaseModel):
+    item_key: str = Field(alias="itemKey", max_length=100)
+    status: str
+    reason: Optional[str] = Field(default=None, max_length=300)
+
+    model_config = {"populate_by_name": True}
+
+
+class OpsPointInput(BaseModel):
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    kind: str
+    label: str = Field(max_length=120)
+
+
+class OpsSupplyInput(BaseModel):
+    name: str = Field(max_length=80)
+    unit: str = Field(max_length=30)
+    pack_size: float = Field(alias="packSize", gt=0)
+    daily_use: float = Field(alias="dailyUse", ge=0)
+    lead_days: int = Field(alias="leadDays", ge=0, le=60)
+    safety_days: int = Field(alias="safetyDays", ge=0, le=60)
+    price: Optional[int] = Field(default=None, ge=0)
+
+    model_config = {"populate_by_name": True}
+
+
+class OpsCountInput(BaseModel):
+    counts: dict[str, float]
+
+
+class OpsReceiveInput(BaseModel):
+    quantity: float = Field(gt=0)
+
+
+class OpsReviewInput(BaseModel):
+    review: str
+    note: Optional[str] = Field(default=None, max_length=300)
+
+
+class ReservationNoticeInput(BaseModel):
+    target: str = Field(max_length=100)

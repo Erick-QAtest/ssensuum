@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -222,6 +222,8 @@ class MarketingPost(Base):
     caption: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     idea_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    objective: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    ai_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -249,3 +251,115 @@ class ChannelSnapshot(Base):
     reach: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     interactions: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     link_clicks: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+
+class OpsZone(Base):
+    """Zona del club que recepción revisa con su foto: baños, cabinas, cocina…"""
+
+    __tablename__ = "ops_zones"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    sort: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    photo_version: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+
+class OpsPoint(Base):
+    """Punto marcado sobre la foto de una zona: qué hacer ahí (limpiar, rellenar, regar, revisar bolsa)."""
+
+    __tablename__ = "ops_points"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    zone_id: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    x: Mapped[float] = mapped_column(Float, nullable=False)
+    y: Mapped[float] = mapped_column(Float, nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class OpsCheck(Base):
+    """Una tarea o un punto marcado en un día: hecho, o no se pudo con su motivo."""
+
+    __tablename__ = "ops_checks"
+    __table_args__ = (UniqueConstraint("day", "item_key"),)
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    item_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    reason: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class OpsDay(Base):
+    """Día cerrado por recepción: solo se cierra con todo marcado."""
+
+    __tablename__ = "ops_days"
+
+    day: Mapped[str] = mapped_column(String(10), primary_key=True)
+    closed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class OpsSupply(Base):
+    """Insumo del club con su consumo diario: el sistema calcula cuándo pedirlo antes de que se acabe."""
+
+    __tablename__ = "ops_supplies"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    unit: Mapped[str] = mapped_column(String(30), nullable=False)
+    pack_size: Mapped[float] = mapped_column(Float, nullable=False, default=1)
+    daily_use: Mapped[float] = mapped_column(Float, nullable=False)
+    lead_days: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    safety_days: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    price: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Último conteo físico; lo recibido después se suma y el consumo se descuenta por día.
+    stock: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    counted_on: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class OpsStockMove(Base):
+    """Conteo de inventario o mercancía recibida de un insumo."""
+
+    __tablename__ = "ops_stock_moves"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    supply_id: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class OpsEvidence(Base):
+    """Foto de evidencia: la zona terminada (aseo a fondo) o un punto elegido al azar (rondas)."""
+
+    __tablename__ = "ops_evidence"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    task_key: Mapped[str] = mapped_column(String(60), nullable=False)
+    zone_id: Mapped[str] = mapped_column(String(40), nullable=False)
+    point_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    # Archivo dentro de OPS_PHOTOS_DIR/evidencia; se borra a los 60 días y queda el registro.
+    file_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    review: Mapped[str] = mapped_column(String(20), nullable=False, default="pendiente")
+    review_note: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+
+
+class ReservationNotice(Base):
+    """Confirmación enviada de una cita pagada: al cliente o a cada masajista."""
+
+    __tablename__ = "reservation_notices"
+    __table_args__ = (UniqueConstraint("reservation_id", "target"),)
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    reservation_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    # "cliente" o "masajista:<id>"
+    target: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Día de operación en que se envió (hora de Guadalajara).
+    sent_on: Mapped[str] = mapped_column(String(10), nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

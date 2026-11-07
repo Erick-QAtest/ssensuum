@@ -27,7 +27,7 @@ const LOCAL_BUSINESS = {
   url: 'https://ssensuum.mx',
   image: 'https://ssensuum.mx/ssensuum/location.jpg',
   logo: 'https://ssensuum.mx/ssensuum/brand-logo.jpg',
-  telephone: '+52 33 1068 1307',
+  telephone: '+52 33 2943 4598',
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',

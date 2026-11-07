@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getReservation, getServices, retryCheckout, syncPayment } from '../../lib/api';
+import { getReservation, getServices, reservationCalendarUrl, retryCheckout, syncPayment } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Reservation, Service } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
@@ -132,7 +132,10 @@ export function PaymentResult({ reservationId, paymentId, returnStatus }: { rese
         ) : null}
         {action}
         {reservation?.status === 'CONFIRMED' ? (
-          <p className="summaryNote"><a className="summaryLink" href={help} target="_blank" rel="noreferrer">¿Necesitas cambiar algo? Escríbenos</a></p>
+          <>
+            <a className="secondaryButton paymentCalendar" href={reservationCalendarUrl(reservationId)} data-testid="add-to-calendar">Agregar a mi calendario</a>
+            <p className="summaryNote"><a className="summaryLink" href={help} target="_blank" rel="noreferrer">¿Necesitas cambiar algo? Escríbenos</a></p>
+          </>
         ) : null}
       </div>
     </main>

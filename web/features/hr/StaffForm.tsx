@@ -9,9 +9,10 @@ type Props = {
   member: StaffMember;
   onSaved: (member: StaffMember) => void;
   onCancel: () => void;
+  onLeave: () => void;
 };
 
-export function StaffForm({ member, onSaved, onCancel }: Props) {
+export function StaffForm({ member, onSaved, onCancel, onLeave }: Props) {
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [name, setName] = useState('');
   const [strengths, setStrengths] = useState('');
@@ -78,6 +79,9 @@ export function StaffForm({ member, onSaved, onCancel }: Props) {
         <div className="adminRow">
           <button type="submit" className="primaryButton" disabled={saving}>{saving ? 'Guardando…' : 'Guardar expediente'}</button>
           <button type="button" className="secondaryButton" disabled={saving} onClick={onCancel}>Cancelar</button>
+          {member.active ? (
+            <button type="button" className="secondaryButton hrLinkDanger" disabled={saving} onClick={onLeave} data-testid="staff-form-leave">Dar de baja</button>
+          ) : null}
         </div>
       </form>
     </section>

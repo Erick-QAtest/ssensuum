@@ -416,6 +416,8 @@ export type MarketingPostInput = {
   caption: string | null;
   url: string | null;
   ideaId: string | null;
+  objective: string | null;
+  aiPrompt: string | null;
 };
 
 export type MarketingPost = MarketingPostInput & {
@@ -443,4 +445,76 @@ export type ChannelSnapshotInput = {
   reach: number | null;
   interactions: number | null;
   linkClicks: number | null;
+};
+
+export type OpsStatus = 'pendiente' | 'hecho' | 'no_se_pudo';
+
+export type OpsPoint = { id: string; x: number; y: number; kind: string; kindLabel: string; label: string; status?: OpsStatus; reason?: string | null };
+
+export type OpsZone = { id: string; name: string; photoUrl: string | null; points: OpsPoint[] };
+
+export type OpsTask = {
+  key: string;
+  label: string;
+  minutes: number;
+  shift: string;
+  shiftLabel: string;
+  detail: string | null;
+  status: OpsStatus;
+  reason: string | null;
+  zones: OpsZone[];
+  zonesWithoutPoints?: string[];
+  posts: { id: string; title: string; channel: string; status: string }[];
+  supplies: { name: string; quantity: number | null; unit: string; status: string }[];
+  evidence: { zoneId: string; zoneName: string; pointId: string | null; pointLabel: string | null; photo: OpsEvidence | null }[];
+  notices?: { target: string; label: string; href: string | null; text: string; segments: number; sentAt: string | null }[];
+};
+
+export type OpsEvidence = {
+  id: string;
+  url: string | null;
+  referenceUrl: string | null;
+  uploadedAt: string;
+  review: 'pendiente' | 'bien' | 'repetir';
+  reviewLabel: string;
+  reviewNote: string | null;
+};
+
+export type OpsEvidenceRow = OpsEvidence & { day: string; taskLabel: string; zoneName: string; pointLabel: string | null };
+
+export type OpsDay = {
+  day: string;
+  weekday: string;
+  cycleWeek: string;
+  isToday: boolean;
+  closed: boolean;
+  closedAt: string | null;
+  pending: number;
+  minutes: number;
+  canClose: boolean;
+  tasks: OpsTask[];
+};
+
+export type OpsMeta = { pointKinds: { id: string; label: string }[]; today: string };
+
+export type OpsSupplyInput = {
+  name: string;
+  unit: string;
+  packSize: number;
+  dailyUse: number;
+  leadDays: number;
+  safetyDays: number;
+  price: number | null;
+};
+
+export type OpsSupply = OpsSupplyInput & {
+  id: string;
+  countedStock: number | null;
+  countedOn: string | null;
+  estimate: number | null;
+  status: 'sin_contar' | 'bien' | 'pedir' | 'urgente';
+  orderOn: string | null;
+  quantity: number | null;
+  daysLeft: number | null;
+  runsOutOn: string | null;
 };
