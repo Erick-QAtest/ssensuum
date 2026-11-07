@@ -14,7 +14,7 @@ import urllib.request
 FROM, TO = "2026-11-09", "2026-12-06"
 QUIZ = "Haz el quiz y descubre qué sesión va contigo."
 CHOOSE = "Elige a tu terapeuta."
-WHATSAPP = "Resuelve tus dudas por WhatsApp: 33 1068 1307."
+WHATSAPP = "Resuelve tus dudas por WhatsApp: 33 2943 4598."
 
 BRAND = """SSENSUUM es un club privado de masaje para hombres en la Col. Americana, Guadalajara (Mexicaltzingo 2122-B). Abre todos los días de 9:00 a.m. a 8:30 p.m.
 Promesa: "Tú eliges quién te atiende". El cliente elige terapeuta, técnica, presión y zonas.
@@ -94,7 +94,7 @@ CHANNELS = {
         "format": {},
         "goal": "En Facebook: llegar a hombres de Guadalajara de mayor edad y provocar mensajes por WhatsApp.",
         "rules": """- Red: Facebook. Habla a un público local y algo mayor: más claro y explicativo, con menos jerga de redes.
-- Menciona la ubicación en la Col. Americana y deja visible el WhatsApp 33 1068 1307.
+- Menciona la ubicación en la Col. Americana y deja visible el WhatsApp 33 2943 4598.
 - Texto de la publicación: máximo 400 caracteres, sin hashtags.
 - Está pensada para que se comparta o se recomiende a un amigo.""",
     },

@@ -37,7 +37,7 @@ def names(items: list[str]) -> str:
     return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} y {items[-1]}"
 
 
-CLUB_PHONE = "33 1068 1307"
+CLUB_PHONE = "33 2943 4598"
 # á, í, ó, ú no existen en el alfabeto básico de SMS (é, ñ, ¿ y ¡ sí): un solo acento parte el mensaje en trozos de 70.
 _SMS_PLAIN = str.maketrans("áíóúÁÍÓÚ", "aiouAIOU")
 SMS_SEGMENT = 153  # caracteres por segmento cuando el mensaje ocupa más de uno
