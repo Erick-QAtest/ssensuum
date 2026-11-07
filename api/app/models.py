@@ -348,3 +348,18 @@ class OpsEvidence(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     review: Mapped[str] = mapped_column(String(20), nullable=False, default="pendiente")
     review_note: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+
+
+class ReservationNotice(Base):
+    """Confirmación enviada de una cita pagada: al cliente o a cada masajista."""
+
+    __tablename__ = "reservation_notices"
+    __table_args__ = (UniqueConstraint("reservation_id", "target"),)
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    reservation_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    # "cliente" o "masajista:<id>"
+    target: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Día de operación en que se envió (hora de Guadalajara).
+    sent_on: Mapped[str] = mapped_column(String(10), nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

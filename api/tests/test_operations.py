@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -158,3 +158,51 @@ def test_evidence_is_required_and_reviewed(client):
     day = client.get(f"/admin/ops/days/{SUNDAY_A}").json()
     task = next(task for task in day["tasks"] if task["key"] == "ronda-tarde")
     assert task["evidence"][0]["photo"]["reviewNote"] == "El jabón quedó vacío" and task["status"] == "pendiente"
+
+
+def test_paid_booking_is_confirmed_to_customer_and_therapist(client):
+    import json as jsonlib
+    import uuid
+
+    from app.db import SessionLocal
+    from app.domain.rules import TZ
+    from app.models import Customer, Reservation, StaffProfile
+
+    starts = datetime(2026, 11, 16, 17, 0, tzinfo=TZ)
+    reservation_id = str(uuid.uuid4())
+    with SessionLocal() as db:
+        customer = Customer(id=str(uuid.uuid4()), phone="3312345678", first_name="Luis")
+        db.add(customer)
+        profile = db.get(StaffProfile, "mazer") or StaffProfile(therapist_id="mazer")
+        profile.phone = "3398765432"
+        db.merge(profile)
+        db.add(Reservation(id=reservation_id, customer_id=customer.id, service_id="swedish", therapist_ids_json=jsonlib.dumps(["mazer"]),
+                           starts_at=starts, ends_at=starts + timedelta(hours=1), status="CONFIRMED", deposit_amount=300, source="web"))
+        db.commit()
+
+    day = client.get(f"/admin/ops/days/{SUNDAY_A}").json()
+    task = next((task for task in day["tasks"] if task["key"] == f"cita:{reservation_id}"), None)
+    assert task, (day["closed"], [task["key"] for task in day["tasks"]][:4])
+    assert task["status"] == "pendiente" and task["label"].startswith("Confirmar cita: Masaje sueco relajante, lunes 16 de noviembre a las 5:00 p.m.")
+    customer_notice, therapist_notice = task["notices"]
+    assert customer_notice["href"].startswith("sms:+523312345678?&body=")
+    assert customer_notice["text"].startswith("SSENSUUM: Hola Luis, tu cita esta confirmada.") and not set("áíóú") & set(customer_notice["text"])
+    assert customer_notice["segments"] <= 2 and therapist_notice["segments"] == 1
+    assert f"/api/reservations/{reservation_id}/calendar.ics" in customer_notice["text"]
+    assert therapist_notice["target"] == "masajista:mazer" and therapist_notice["href"].startswith("sms:+523398765432")
+    assert "Llega 4:30 pm, sal antes de 6:30 pm." in therapist_notice["text"]
+    assert "3312345678" not in therapist_notice["text"]  # el masajista no recibe el teléfono del cliente
+
+    url = f"/admin/ops/reservations/{reservation_id}/notices"
+    assert client.post(url, json={"target": "masajista:paul"}).status_code == 422
+    client.post(url, json={"target": "cliente"})
+    day = client.post(url, json={"target": "masajista:mazer"}).json()
+    assert next(task for task in day["tasks"] if task["key"] == f"cita:{reservation_id}")["status"] == "hecho"
+
+    ics = client.get(f"/reservations/{reservation_id}/calendar.ics")
+    assert ics.status_code == 200 and ics.headers["content-type"].startswith("text/calendar")
+    assert "DTSTART:20261116T230000Z" in ics.text and "TRIGGER:-PT2H" in ics.text and "Luis" not in ics.text
+    with SessionLocal() as db:
+        db.get(Reservation, reservation_id).status = "CANCELLED"
+        db.commit()
+    assert client.get(f"/reservations/{reservation_id}/calendar.ics").status_code == 404

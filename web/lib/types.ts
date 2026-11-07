@@ -467,6 +467,7 @@ export type OpsTask = {
   posts: { id: string; title: string; channel: string; status: string }[];
   supplies: { name: string; quantity: number | null; unit: string; status: string }[];
   evidence: { zoneId: string; zoneName: string; pointId: string | null; pointLabel: string | null; photo: OpsEvidence | null }[];
+  notices?: { target: string; label: string; href: string | null; text: string; segments: number; sentAt: string | null }[];
 };
 
 export type OpsEvidence = {

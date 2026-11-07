@@ -433,3 +433,11 @@ export function getOpsEvidence(from: string, to: string) {
 export function reviewOpsEvidence(id: string, review: 'bien' | 'repetir', note?: string) {
   return postJson<OpsEvidenceRow>(`/admin/ops/evidence/${encodeURIComponent(id)}/review`, { review, note }, 'No se pudo guardar la revisión').then(withEvidencePhotos);
 }
+
+export function recordReservationNotice(reservationId: string, target: string) {
+  return postJson<OpsDay>(`/admin/ops/reservations/${encodeURIComponent(reservationId)}/notices`, { target }, 'No se pudo registrar el envío').then(withDayPhotos);
+}
+
+export function reservationCalendarUrl(reservationId: string) {
+  return `${API}/reservations/${encodeURIComponent(reservationId)}/calendar.ics`;
+}

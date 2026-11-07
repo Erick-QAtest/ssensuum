@@ -244,3 +244,7 @@ class OpsReceiveInput(BaseModel):
 class OpsReviewInput(BaseModel):
     review: str
     note: Optional[str] = Field(default=None, max_length=300)
+
+
+class ReservationNoticeInput(BaseModel):
+    target: str = Field(max_length=100)

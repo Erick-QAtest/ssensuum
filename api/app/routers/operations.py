@@ -8,7 +8,7 @@ from ..db import get_db
 from ..domain import operations as ops
 from ..domain.errors import NotFoundError
 from ..domain.hr import MAX_PHOTO_BYTES
-from ..schemas import OpsCheckInput, OpsCountInput, OpsPointInput, OpsReceiveInput, OpsReviewInput, OpsSupplyInput
+from ..schemas import OpsCheckInput, OpsCountInput, OpsPointInput, OpsReceiveInput, OpsReviewInput, OpsSupplyInput, ReservationNoticeInput
 from ..services import operations as ops_service
 
 # Bajo /admin para que nginx lo proteja con el usuario y contraseña de administración.
@@ -133,3 +133,8 @@ def evidence_photo(evidence_id: str, db: Session = Depends(get_db)) -> FileRespo
 @router.post("/evidence/{evidence_id}/review")
 def review_evidence(evidence_id: str, payload: OpsReviewInput, db: Session = Depends(get_db)) -> dict:
     return ops_service.review_evidence(db, evidence_id, payload.review, payload.note)
+
+
+@router.post("/reservations/{reservation_id}/notices")
+def record_notice(reservation_id: str, payload: ReservationNoticeInput, db: Session = Depends(get_db)) -> dict:
+    return ops_service.record_notice(db, reservation_id, payload.target)

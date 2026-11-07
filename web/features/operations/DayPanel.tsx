@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { checkOpsItem, closeOpsDay, getOpsDay, reopenOpsDay, uncheckOpsItem, uploadOpsEvidence } from '../../lib/api';
+import { checkOpsItem, closeOpsDay, getOpsDay, recordReservationNotice, reopenOpsDay, uncheckOpsItem, uploadOpsEvidence } from '../../lib/api';
 import { compressPhoto } from './compress';
 import type { OpsDay, OpsPoint, OpsTask } from '../../lib/types';
 import { ZonePhoto } from './ZonePhoto';
@@ -60,6 +60,11 @@ export function DayPanel({ day, today }: { day: string; today: string }) {
       .then(setData)
       .catch((e: Error) => setError(e.message))
       .finally(() => setBusy(false));
+  }
+
+  function sent(task: OpsTask, target: string) {
+    // El enlace abre Mensajes del celular con el SMS listo; aquí solo se registra que se envió.
+    run(recordReservationNotice(task.key.replace('cita:', ''), target));
   }
 
   function togglePoint(task: OpsTask, point: OpsPoint) {
@@ -120,6 +125,27 @@ export function DayPanel({ day, today }: { day: string; today: string }) {
                     </ul>
                   ) : null}
 
+                  {task.notices?.length ? (
+                    <ul className="opsNotices" data-testid="ops-notices">
+                      {task.notices.map((notice) => (
+                        <li key={notice.target}>
+                          <span>{notice.sentAt ? '✓ ' : ''}{notice.label}<span className="adminSub">{notice.segments === 1 ? '1 SMS' : `${notice.segments} SMS`}</span></span>
+                          {notice.href ? (
+                            <a
+                              className={notice.sentAt ? 'linkButton' : 'secondaryButton'}
+                              href={notice.href}
+                              onClick={() => { if (!notice.sentAt && !data.closed) sent(task, notice.target); }}
+                              data-testid="ops-notice-link"
+                            >
+                              {notice.sentAt ? 'Abrir de nuevo' : 'Enviar SMS'}
+                            </a>
+                          ) : (
+                            <span className="opsReason">Sin teléfono: captúralo en Equipo o márcalo como "no se pudo".</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                   {task.supplies.length ? (
                     <ul className="opsPosts" data-testid="ops-supplies">
                       {task.supplies.map((row) => (
@@ -180,7 +206,7 @@ export function DayPanel({ day, today }: { day: string; today: string }) {
 
                   {!data.closed ? (
                     <div className="adminRow">
-                      {task.status === 'pendiente' && !task.posts.length && (!task.zones.length || task.zonesWithoutPoints?.length) ? (
+                      {task.status === 'pendiente' && !task.posts.length && !task.notices?.length && (!task.zones.length || task.zonesWithoutPoints?.length) ? (
                         <button type="button" className="primaryButton" disabled={locked || future} onClick={() => mark(task.key)} data-testid="ops-done">
                           {task.zones.length ? 'Zonas sin foto: hechas' : 'Hecho'}
                         </button>

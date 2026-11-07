@@ -1,5 +1,6 @@
 """Operación diaria: zonas con foto y puntos, tareas del día, marcas y cierre."""
 
+import json
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -12,8 +13,12 @@ from ..config import settings
 from ..domain import operations as ops
 from ..domain.errors import ConflictError, NotFoundError, ValidationError
 from ..domain.hr import MAX_PHOTO_BYTES, photo_extension
-from ..domain.rules import TZ
-from ..models import MarketingPost, OpsCheck, OpsDay, OpsEvidence, OpsPoint, OpsStockMove, OpsSupply, OpsZone
+from ..domain import notices
+from ..domain.rules import TZ, ensure_tz
+from ..models import (
+    Customer, MarketingPost, OpsCheck, OpsDay, OpsEvidence, OpsPoint, OpsStockMove, OpsSupply, OpsZone, Reservation,
+    ReservationNotice, Service, StaffProfile, Therapist,
+)
 
 
 def ensure_zones(db: Session) -> None:
@@ -210,6 +215,8 @@ def day_overview(db: Session, day: date) -> dict:
         tasks.append(item)
 
     closed = db.get(OpsDay, day.isoformat())
+    if day == today() and not closed:
+        tasks[:0] = _confirmation_tasks(db, day, checks)
     pending = sum(1 for task in tasks if task.get("status") == "pendiente")
     return {
         "day": day.isoformat(),
@@ -233,6 +240,10 @@ def _open_day(db: Session, day: date) -> None:
 
 
 def _valid_key(db: Session, day: date, item_key: str) -> None:
+    if item_key.startswith(CONFIRM_PREFIX):
+        if day != today() or not db.get(Reservation, item_key[len(CONFIRM_PREFIX):]):
+            raise ValidationError("Esa cita no se confirma hoy")
+        return
     task_key, _, point_id = item_key.partition("@")
     task = ops.TASKS_BY_KEY.get(task_key)
     if not task or task not in ops.tasks_for(day, True, True):
@@ -497,3 +508,116 @@ def list_evidence(db: Session, start: date, end: date) -> list[dict]:
     rows = db.scalars(select(OpsEvidence).where(OpsEvidence.day >= start.isoformat(), OpsEvidence.day <= end.isoformat())
                       .order_by(OpsEvidence.day.desc(), OpsEvidence.uploaded_at.desc())).all()
     return [evidence_payload_full(db, row) for row in rows]
+
+
+# --- Confirmación de citas pagadas ---
+
+CONFIRM_PREFIX = "cita:"
+CONFIRM_STATUSES = ("CONFIRMED", "NEEDS_ATTENTION")
+
+
+def calendar_url(reservation_id: str) -> str:
+    return f"{settings.public_base_url.rstrip('/')}/api/reservations/{reservation_id}/calendar.ics"
+
+
+def _confirmation_targets(db: Session, reservation: Reservation) -> list[dict]:
+    """A quién hay que avisar de una cita y con qué SMS."""
+    service = db.get(Service, reservation.service_id)
+    service_name = service.name if service else reservation.service_id
+    customer = db.get(Customer, reservation.customer_id) if reservation.customer_id else None
+    first_name = (customer.first_name if customer else "") or "cliente"
+    ids = json.loads(reservation.therapist_ids_json)
+    team = {row.id: row.name for row in db.scalars(select(Therapist).where(Therapist.id.in_(ids)))}
+    phones = {row.therapist_id: row.phone for row in db.scalars(select(StaffProfile).where(StaffProfile.therapist_id.in_(ids)))}
+    starts = ensure_tz(reservation.starts_at)
+    ends = ensure_tz(reservation.ends_at)
+
+    if reservation.status == "NEEDS_ATTENTION":
+        text = notices.needs_attention_message(first_name, service_name)
+        return [{"target": "cliente", "label": f"Resolver con {first_name}", "phone": customer.phone if customer else None, "text": text}]
+
+    targets = [{
+        "target": "cliente",
+        "label": f"Cliente: {first_name}",
+        "phone": customer.phone if customer else None,
+        "text": notices.customer_message(first_name, service_name, [team.get(i, i) for i in ids], starts, reservation.deposit_amount, calendar_url(reservation.id)),
+    }]
+    for therapist_id in ids:
+        name = team.get(therapist_id, therapist_id)
+        partners = [team.get(i, i) for i in ids if i != therapist_id]
+        targets.append({
+            "target": f"masajista:{therapist_id}",
+            "label": f"Masajista: {name}",
+            "phone": phones.get(therapist_id),
+            "text": notices.therapist_message(name, service_name, first_name, starts, ends, partners),
+        })
+    return targets
+
+
+def _confirmation_tasks(db: Session, day: date, checks: dict) -> list[dict]:
+    """Una tarea por cita pagada que aún no se confirma: aparece hoy y se queda hasta que se envía."""
+    start = datetime(day.year, day.month, day.day, tzinfo=TZ)
+    rows = db.scalars(select(Reservation).where(Reservation.status.in_(CONFIRM_STATUSES)).order_by(Reservation.starts_at)).all()
+    sent = {(row.reservation_id, row.target): row for row in db.scalars(select(ReservationNotice))}
+    tasks = []
+    for reservation in rows:
+        if ensure_tz(reservation.ends_at) < start:
+            continue
+        key = f"{CONFIRM_PREFIX}{reservation.id}"
+        own = checks.get(key)
+        targets = _confirmation_targets(db, reservation)
+        items = []
+        for target in targets:
+            notice = sent.get((reservation.id, target["target"]))
+            items.append({
+                "target": target["target"],
+                "label": target["label"],
+                "href": notices.sms_link(target["phone"], target["text"]),
+                "segments": notices.sms_segments(target["text"]),
+                "text": target["text"],
+                "sentAt": notice.sent_at.replace(tzinfo=timezone.utc).isoformat() if notice else None,
+            })
+        all_sent = all(item["sentAt"] for item in items)
+        last_sent = max((sent[(reservation.id, t["target"])].sent_on for t in targets), default=None) if all_sent else None
+        if last_sent and not own and last_sent < day.isoformat():
+            continue  # ya se confirmó en un día anterior
+        status = own.status if own else ("hecho" if all_sent else "pendiente")
+        starts = ensure_tz(reservation.starts_at)
+        service = db.get(Service, reservation.service_id)
+        attention = reservation.status == "NEEDS_ATTENTION"
+        tasks.append({
+            "key": key,
+            "label": f"{'Resolver' if attention else 'Confirmar'} cita: {service.name if service else reservation.service_id}, {notices.day_label(starts)} a las {notices.time_label(starts)}",
+            "minutes": 5,
+            "shift": "apertura",
+            "shiftLabel": ops.SHIFTS["apertura"],
+            "detail": "El horario se ocupó mientras pagaba: ofrece otro horario o la devolución." if attention else "Pago recibido. Envía cada mensaje por SMS desde el celular.",
+            "zones": [], "posts": [], "supplies": [], "evidence": [], "zonesWithoutPoints": [],
+            "notices": items,
+            "status": status,
+            "reason": own.reason if own else None,
+        })
+    return tasks
+
+
+def record_notice(db: Session, reservation_id: str, target: str) -> dict:
+    reservation = db.get(Reservation, reservation_id)
+    if not reservation or reservation.status not in CONFIRM_STATUSES:
+        raise NotFoundError("Cita no encontrada")
+    if target not in {row["target"] for row in _confirmation_targets(db, reservation)}:
+        raise ValidationError("A esa persona no se le avisa de esta cita")
+    if not db.scalar(select(ReservationNotice).where(ReservationNotice.reservation_id == reservation_id, ReservationNotice.target == target)):
+        db.add(ReservationNotice(id=str(uuid.uuid4()), reservation_id=reservation_id, target=target, sent_on=today().isoformat()))
+        db.commit()
+    return day_overview(db, today())
+
+
+def calendar_for(db: Session, reservation_id: str) -> str:
+    reservation = db.get(Reservation, reservation_id)
+    if not reservation or reservation.status != "CONFIRMED":
+        raise NotFoundError("Cita no encontrada")
+    service = db.get(Service, reservation.service_id)
+    return notices.calendar_file(
+        reservation.id, service.name if service else reservation.service_id,
+        ensure_tz(reservation.starts_at), ensure_tz(reservation.ends_at), (reservation.created_at or datetime.utcnow()).replace(tzinfo=timezone.utc),
+    )
