@@ -13,6 +13,7 @@ import { CartaSection } from './CartaSection';
 import { CLUB_RULES, FAQ, SPECIAL_ID, TESTIMONIALS } from './content';
 import { ServiceRow } from './ServiceRow';
 import { TeamSection } from './TeamSection';
+import { landingOrder } from './teamOrder';
 
 const NAV = [
   { href: '#equipo', label: 'Terapeutas' },
@@ -47,7 +48,7 @@ export function Catalog() {
     Promise.all([getServices(), getTherapists()])
       .then(([serviceRows, therapistRows]) => {
         setServices(serviceRows);
-        setTherapists(therapistRows);
+        setTherapists(landingOrder(therapistRows));
       })
       .catch(() => setError('No pudimos cargar la carta. Intenta de nuevo en un momento.'));
     track('page_view', 'home');
