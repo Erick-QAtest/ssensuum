@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..domain.errors import ConflictError, InconsistentDataError, NotFoundError, ValidationError
 from ..domain.rules import (
-    DEFAULT_CABIN_ID,
+    CABIN_ID,
     can_reschedule,
     parse_iso_datetime,
     validate_minimum_lead_time,
@@ -44,7 +44,6 @@ def create_reservation(db: Session, payload: ReservationCreate, hold_expires_at:
 
     starts_at = parse_iso_datetime(payload.starts_at)
     ends_at = starts_at + timedelta(minutes=service.duration_minutes)
-    cabin_id = payload.cabin_id or DEFAULT_CABIN_ID
 
     if not validate_minimum_lead_time(starts_at):
         raise ValidationError("La cita debe reservarse con al menos 3 horas de anticipación")
@@ -58,8 +57,8 @@ def create_reservation(db: Session, payload: ReservationCreate, hold_expires_at:
     # MVP local: serializa check+insert para hacer visible la regla RF-055.
     # En producción debe reforzarse con locking/constraints transaccionales en PostgreSQL.
     with reservation_lock:
-        if has_conflict(db, starts_at, ends_at, payload.therapist_ids, cabin_id):
-            raise ConflictError("El terapeuta o la cabina ya están ocupados")
+        if has_conflict(db, starts_at, ends_at, payload.therapist_ids):
+            raise ConflictError("Ese horario ya está ocupado en la cabina")
 
         reservation = Reservation(
             id=str(uuid.uuid4()),
@@ -68,7 +67,7 @@ def create_reservation(db: Session, payload: ReservationCreate, hold_expires_at:
             therapist_ids_json=json.dumps(payload.therapist_ids),
             starts_at=starts_at,
             ends_at=ends_at,
-            cabin_id=cabin_id,
+            cabin_id=CABIN_ID,
             source=payload.source or "web",
             status="PENDING_PAYMENT",
             deposit_amount=service.deposit,
@@ -96,10 +95,11 @@ def reschedule_reservation(db: Session, reservation_id: str, payload: Reservatio
     absent = off_schedule(db, therapist_ids, new_start, new_end)
     if absent:
         raise ConflictError(f"{' y '.join(absent)} no atiende en ese horario")
-    if has_conflict(db, new_start, new_end, therapist_ids, reservation.cabin_id, reservation.id):
-        raise ConflictError("El nuevo horario ya está ocupado")
+    with reservation_lock:
+        if has_conflict(db, new_start, new_end, therapist_ids, reservation.id):
+            raise ConflictError("El nuevo horario ya está ocupado")
 
-    reservation.starts_at = new_start
-    reservation.ends_at = new_end
-    reservation.status = "PENDING_PAYMENT"
-    return reservations_repo.save(db, reservation)
+        reservation.starts_at = new_start
+        reservation.ends_at = new_end
+        reservation.status = "PENDING_PAYMENT"
+        return reservations_repo.save(db, reservation)

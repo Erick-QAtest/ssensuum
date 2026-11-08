@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 from sqlalchemy.orm import Session
 
 from ..domain.errors import NotFoundError, ValidationError
-from ..domain.rules import TZ, ensure_tz, parse_iso_datetime
+from ..domain.rules import CABIN_ID, TZ, ensure_tz, parse_iso_datetime
 from ..models import Reservation, ScheduleBlock
 from ..repositories import blocks as blocks_repo
 from ..repositories import catalog as catalog_repo
@@ -27,7 +27,7 @@ def create_block(db: Session, payload: ScheduleBlockCreate) -> ScheduleBlock:
     block = ScheduleBlock(
         id=str(uuid.uuid4()),
         therapist_id=payload.therapist_id,
-        cabin_id=payload.cabin_id,
+        cabin_id=CABIN_ID if payload.cabin_id else None,
         starts_at=starts_at,
         ends_at=ends_at,
         reason=payload.reason,

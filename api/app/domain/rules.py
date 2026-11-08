@@ -9,7 +9,10 @@ LAST_ONE_HOUR_START = time(19, 30)
 SLOT_STEP_MINUTES = 30
 MINIMUM_LEAD_TIME = timedelta(hours=3)
 RESCHEDULE_CUTOFF = timedelta(hours=3)
-DEFAULT_CABIN_ID = "cabin-1"
+# El club tiene una sola cabina: toda cita la ocupa, sin importar el terapeuta.
+CABIN_ID = "cabin-1"
+# Tiempo libre entre una cita y la siguiente para limpiar y preparar la cabina.
+CABIN_TURNOVER = timedelta(minutes=15)
 PAYMENT_HOLD = timedelta(minutes=15)
 
 

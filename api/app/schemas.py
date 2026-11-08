@@ -9,7 +9,6 @@ class ReservationCreate(BaseModel):
     service_id: str = Field(alias="serviceId")
     therapist_ids: list[str] = Field(alias="therapistIds")
     starts_at: str = Field(alias="startsAt")
-    cabin_id: Optional[str] = Field(default=None, alias="cabinId")
     source: Optional[str] = "web"
 
     model_config = {"populate_by_name": True}

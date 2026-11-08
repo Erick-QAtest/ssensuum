@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..domain import schedule as schedule_rules
 from ..domain.errors import NotFoundError
 from ..domain.rules import (
-    DEFAULT_CABIN_ID,
+    CABIN_TURNOVER,
     LAST_ONE_HOUR_START,
     OPEN_TIME,
     SLOT_STEP_MINUTES,
@@ -28,24 +28,25 @@ def has_conflict(
     starts_at: datetime,
     ends_at: datetime,
     therapist_ids: list[str],
-    cabin_id: str,
     exclude_reservation_id: Optional[str] = None,
 ) -> bool:
+    """True si la cabina o algún terapeuta no están libres en ese horario.
+
+    Con una sola cabina, cualquier cita activa del día choca si se traslapa con la nueva,
+    contando el tiempo de preparación de la cabina al terminar cada una.
+    """
     day_start = datetime.combine(ensure_tz(starts_at).date(), time.min, tzinfo=TZ)
     day_end = day_start + timedelta(days=1)
 
     for reservation in reservations_repo.list_active_starting_between(db, day_start, day_end):
         if exclude_reservation_id and reservation.id == exclude_reservation_id:
             continue
-        if not overlaps(starts_at, ends_at, ensure_tz(reservation.starts_at), ensure_tz(reservation.ends_at)):
-            continue
-        same_cabin = reservation.cabin_id == cabin_id
-        same_therapist = bool(set(therapist_ids) & set(reservations_repo.therapist_ids(reservation)))
-        if same_cabin or same_therapist:
+        other_start, other_end = ensure_tz(reservation.starts_at), ensure_tz(reservation.ends_at)
+        if overlaps(starts_at, ends_at + CABIN_TURNOVER, other_start, other_end + CABIN_TURNOVER):
             return True
 
     for block in blocks_repo.list_overlapping(db, starts_at, ends_at):
-        if block.cabin_id and block.cabin_id == cabin_id:
+        if block.cabin_id:
             return True
         if block.therapist_id and block.therapist_id in therapist_ids:
             return True
@@ -76,7 +77,7 @@ def free_therapists(
     """Primer grupo de `required` terapeutas libres en ese horario, o None."""
     working = [therapist_id for therapist_id in candidates if not off_schedule(db, [therapist_id], starts_at, ends_at)]
     for group in combinations(working, required):
-        if not has_conflict(db, starts_at, ends_at, list(group), DEFAULT_CABIN_ID):
+        if not has_conflict(db, starts_at, ends_at, list(group)):
             return list(group)
     return None
 
