@@ -140,7 +140,6 @@ def sync_payment(db: Session, payment_id: str) -> Optional[Reservation]:
                 ensure_tz(reservation.starts_at),
                 ensure_tz(reservation.ends_at),
                 reservations_repo.therapist_ids(reservation),
-                reservation.cabin_id,
                 reservation.id,
             )
             reservation.status = "NEEDS_ATTENTION" if taken else "CONFIRMED"

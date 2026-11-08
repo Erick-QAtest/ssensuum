@@ -50,7 +50,6 @@ export default function TermsPage() {
         <ul>
           <li>Si la presión o el ambiente no son lo que esperabas, dínoslo: lo ajustamos durante los primeros 10 minutos de tu sesión.</li>
           <li>El masaje de cumpleaños de la membresía Private Club es sin costo y sin anticipo, y se usa en la semana de tu cumpleaños. Si no asistes, se pierde el canje de ese año.</li>
-          <li>Los tratamientos de medicina estética requieren una valoración previa y solo se realizan si el profesional de salud los considera adecuados para ti.</li>
         </ul>
       </section>
 

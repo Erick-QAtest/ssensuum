@@ -352,20 +352,6 @@ a.memberPrice { display: inline-flex; align-items: center; min-height: 44px; }
 .membership ul { margin: 0 0 24px; padding-left: 20px; }
 .membership li { margin: 8px 0; }
 
-/* ---------- Complementa tu visita ---------- */
-/* Lista de precios: renglones con tono alterno, sin líneas; un botón de WhatsApp por grupo. */
-.complements { display: grid; gap: 64px; }
-.complementGroup { display: grid; align-content: start; gap: 12px; }
-.complementGroup h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 36px; font-weight: 400; line-height: 1.1; }
-.complementGroup > p { margin: 0; color: var(--ink); }
-.complementGroup > .btn { justify-self: start; margin-top: 8px; }
-.priceList { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.priceItem { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 14px; border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
-.priceName { font-weight: 700; }
-.priceAmount { display: grid; justify-items: end; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.priceMeta { color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
-a.priceMeta { text-underline-offset: 3px; }
-
 /* ---------- Cómo llegar ---------- */
 .location { display: grid; gap: 24px; align-items: center; }
 .location img { width: 100%; border-radius: var(--r-lg); }
@@ -440,9 +426,6 @@ a.priceMeta { text-underline-offset: 3px; }
   .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .location { grid-template-columns: 1.1fr .9fr; gap: 48px; }
-  /* Estética tiene casi el doble de renglones: su lista va en dos columnas para que los grupos midan lo mismo. */
-  .complements { grid-template-columns: 1fr 2fr; gap: 48px; }
-  .complementWide .priceList { grid-template-columns: 1fr 1fr; column-gap: 16px; }
   .firstVisit { padding: 32px; max-width: 760px; }
 }
 

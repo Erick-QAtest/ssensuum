@@ -8,10 +8,9 @@ import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl, WHATSAPP_MESSAGES } from '../../lib/whatsapp';
-import { AESTHETICS, BARBER, MASSAGE } from './categories';
+import { MASSAGE } from './categories';
 import { CartaSection } from './CartaSection';
 import { CLUB_RULES, FAQ, SPECIAL_ID, TESTIMONIALS } from './content';
-import { ServiceRow } from './ServiceRow';
 import { TeamSection } from './TeamSection';
 import { landingOrder } from './teamOrder';
 
@@ -94,8 +93,6 @@ export function Catalog() {
 
   const special = services.find((service) => service.id === SPECIAL_ID);
   const massages = useMemo(() => services.filter((service) => service.category === MASSAGE && service.id !== SPECIAL_ID), [services]);
-  const barber = useMemo(() => services.filter((service) => service.category === BARBER), [services]);
-  const aesthetics = useMemo(() => services.filter((service) => service.category === AESTHETICS), [services]);
 
   return (
     <main className="club">
@@ -265,7 +262,6 @@ export function Catalog() {
             </p>
           ) : null}
           <ul>
-            <li>Precio preferente en barbería y medicina estética.</li>
             <li>Un masaje de regalo en la semana de tu cumpleaños, sin costo y sin anticipo.</li>
             <li>Doce meses desde tu fecha de inicio.</li>
           </ul>
@@ -273,33 +269,7 @@ export function Catalog() {
         </div>
       </section>
 
-      {/* 10. Complementa tu visita */}
-      <section className="section" aria-labelledby="complementa-title">
-        <div className="wrap">
-          <div className="sectionHead">
-            <h2 id="complementa-title">Complementa tu visita</h2>
-          </div>
-          <div className="complements">
-            <div className="complementGroup" id="barberia">
-              <h3>Barbería</h3>
-              <ul className="priceList">
-                {barber.map((service) => <ServiceRow key={service.id} service={service} />)}
-              </ul>
-              <WhatsAppLink className="btn" message={WHATSAPP_MESSAGES.barber} label="barberia">Reservar barbería</WhatsAppLink>
-            </div>
-            <div className="complementGroup complementWide" id="estetica">
-              <h3>Medicina estética</h3>
-              <p>Cada tratamiento empieza con una valoración.</p>
-              <ul className="priceList">
-                {aesthetics.map((service) => <ServiceRow key={service.id} service={service} />)}
-              </ul>
-              <WhatsAppLink className="btn" message={WHATSAPP_MESSAGES.aesthetics} label="estetica">Agendar valoración</WhatsAppLink>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 11. Cómo llegar */}
+      {/* 10. Cómo llegar */}
       <section className="section" id="ubicacion" aria-labelledby="llegar-title">
         <div className="wrap location">
           <div>
@@ -317,7 +287,7 @@ export function Catalog() {
         </div>
       </section>
 
-      {/* 12. Preguntas frecuentes (solo con respuestas confirmadas) */}
+      {/* 11. Preguntas frecuentes (solo con respuestas confirmadas) */}
       {FAQ.length ? (
         <section className="section" aria-labelledby="faq-title">
           <div className="wrap">
@@ -336,7 +306,7 @@ export function Catalog() {
         </section>
       ) : null}
 
-      {/* 13. Footer */}
+      {/* 12. Footer */}
       <footer className="clubFooter">
         <div className="wrap">
           <img src="/ssensuum/brand-logo.webp" width={450} height={150} alt="SSENSUUM Private Massage Club" />
