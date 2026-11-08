@@ -29,3 +29,24 @@ def test_massages_include_how_it_works():
         services = {row["id"]: row for row in client.get("/services").json()}
         assert services["swedish"]["details"]
         assert services["massage-special"]["details"]
+
+
+def test_catalog_offers_only_massages():
+    with TestClient(app) as client:
+        categories = {row["category"] for row in client.get("/services").json()}
+        assert categories == {"Masajes"}
+
+
+def test_seed_retires_old_barber_and_aesthetics_services():
+    from app.db import SessionLocal
+    from app.models import Service
+    from app.seed import seed
+
+    with TestClient(app):
+        pass
+    with SessionLocal() as db:
+        db.merge(Service(id="botox", name="Botox", category="Medicina estética", description="", duration_minutes=60,
+                         public_price=2600, member_price=2050, deposit=300, therapists_required=1, active=True))
+        db.commit()
+        seed(db)
+        assert db.get(Service, "botox").active is False

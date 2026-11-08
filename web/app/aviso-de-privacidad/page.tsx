@@ -36,7 +36,7 @@ export default function PrivacyNoticePage() {
         </ul>
         <p>
           <strong>Datos sensibles.</strong> Para cuidar tu salud podemos preguntarte en el club sobre lesiones, alergias, embarazo,
-          padecimientos o tratamientos; en el caso de medicina estética, también tu historial clínico como parte de la valoración.
+          padecimientos o tratamientos.
           Estos datos se consideran sensibles: solo los recabamos en persona, con tu consentimiento expreso y por escrito, y los
           usamos únicamente para prestarte el servicio de forma segura. Por este sitio web no te pedimos datos de salud.
         </p>
