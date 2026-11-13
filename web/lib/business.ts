@@ -12,3 +12,11 @@ export const BUSINESS = {
   // Enlace al video de la experiencia (Instagram, YouTube…). Vacío = no se muestra en el hero.
   experienceVideoUrl: '',
 };
+
+// Perfiles oficiales del club, en el orden en que se muestran en el footer.
+export const SOCIAL_LINKS = [
+  { network: 'Instagram', handle: '@sensum.gdl', url: 'https://www.instagram.com/sensum.gdl/' },
+  { network: 'TikTok', handle: '@ssensuum', url: 'https://www.tiktok.com/@ssensuum' },
+  { network: 'Facebook', handle: 'SSENSUUM', url: 'https://www.facebook.com/profile.php?id=61595486577087' },
+  { network: 'X', handle: '@ssensuum', url: 'https://x.com/ssensuum' },
+] as const;
