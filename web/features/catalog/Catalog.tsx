@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowIcon, CarIcon, ClockIcon, CloseIcon, MenuIcon, PauseIcon, PeopleIcon, PinIcon, PlayIcon, WhatsAppIcon } from '../../components/icons';
-import { BUSINESS } from '../../lib/business';
+import { ArrowIcon, CarIcon, ClockIcon, CloseIcon, FacebookIcon, InstagramIcon, MenuIcon, PauseIcon, PeopleIcon, PinIcon, PlayIcon, TikTokIcon, WhatsAppIcon, XIcon } from '../../components/icons';
+import { BUSINESS, SOCIAL_LINKS } from '../../lib/business';
 import { getServices, getTherapists, track } from '../../lib/api';
 import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
@@ -21,6 +21,7 @@ const NAV = [
   { href: '#ubicacion', label: 'Cómo llegar' },
 ];
 const BOOK_HREF = `/reservar?service=${SPECIAL_ID}`;
+const SOCIAL_ICONS = { Instagram: InstagramIcon, TikTok: TikTokIcon, Facebook: FacebookIcon, X: XIcon };
 const MAPS_URL = 'https://maps.app.goo.gl/2CLVeFkfyoiGDQqv6';
 
 function WhatsAppLink({ message, label, className, children }: { message: string; label: string; className: string; children: React.ReactNode }) {
@@ -314,6 +315,18 @@ export function Catalog() {
             {NAV.map((item) => <li key={item.href}><a href={item.href}>{item.label}</a></li>)}
             <li><a href="/terminos">Términos de reserva</a></li>
             <li><a href="/aviso-de-privacidad">Aviso de privacidad</a></li>
+          </ul>
+          <ul className="socialLinks" aria-label="SSENSUUM en redes sociales">
+            {SOCIAL_LINKS.map(({ network, handle, url }) => {
+              const Icon = SOCIAL_ICONS[network];
+              return (
+                <li key={network}>
+                  <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`${network}: ${handle}`} title={`${network} · ${handle}`}>
+                    <Icon />
+                  </a>
+                </li>
+              );
+            })}
           </ul>
           <small>© {new Date().getFullYear()} SSENSUUM · Guadalajara</small>
         </div>

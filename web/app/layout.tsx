@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SOCIAL_LINKS } from '../lib/business';
 import './globals.css';
 
 const DESCRIPTION = 'Masaje privado para hombres en la Col. Americana, Guadalajara. Eliges terapeuta, técnica, presión y zonas, a tu ritmo.';
@@ -38,6 +39,7 @@ const LOCAL_BUSINESS = {
   },
   geo: { '@type': 'GeoCoordinates', latitude: 20.6684, longitude: -103.3757 },
   hasMap: 'https://maps.app.goo.gl/2CLVeFkfyoiGDQqv6',
+  sameAs: SOCIAL_LINKS.map((link) => link.url),
   openingHoursSpecification: [{
     '@type': 'OpeningHoursSpecification',
     dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
