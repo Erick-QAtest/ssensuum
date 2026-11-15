@@ -34,6 +34,9 @@ export type Customer = {
   membershipExpiresOn: string | null;
   notes: string | null;
   acquisitionSource: string | null;
+  // Permiso para promociones por WhatsApp: null = no se le ha preguntado.
+  whatsappOptIn: boolean | null;
+  whatsappOptInAt: string | null;
   createdAt: string;
 };
 
@@ -129,6 +132,7 @@ export type VisitFeedback = {
   visitId: string;
   massageRating: number;
   cleanlinessRating: number;
+  therapistRatings: { therapistId: string; rating: number }[];
   comment: string | null;
   createdAt: string;
 };
@@ -142,6 +146,20 @@ export type FeedbackContext = {
   therapistNames: string[];
   visitedAt: string;
   answered: boolean;
+  // Datos del cliente que faltan: solo esos se preguntan.
+  asks: { email: boolean; birthday: boolean; source: boolean };
+  sourceOptions: { id: string; label: string }[];
+};
+
+export type FeedbackInput = {
+  massageRating: number;
+  cleanlinessRating: number;
+  therapistRatings: { therapistId: string; rating: number }[];
+  comment: string;
+  email?: string;
+  birthday?: string;
+  source?: string;
+  whatsappOptIn: boolean;
 };
 
 export type AdminReservation = Reservation & {
@@ -177,7 +195,7 @@ export type ServiceRecord = ServiceRecordInput & {
   tipTotal: number;
   createdAt: string;
   feedback: VisitFeedback | null;
-  // SMS listo para pedir la calificación con un clic; null si ya calificó.
+  // WhatsApp listo para pedir la calificación con un clic; null si ya calificó.
   feedbackRequest: { href: string | null; text: string } | null;
   feedbackRequestedAt: string | null;
 };
@@ -188,7 +206,12 @@ export type ServiceRecordSummary = {
   tips: number;
   byPaymentMethod: Partial<Record<PaymentMethod, number>>;
   tipsByTherapist: { therapistId: string; therapistName: string; amount: number; count: number }[];
-  ratings: { count: number; massage: number | null; cleanliness: number | null };
+  ratings: {
+    count: number;
+    massage: number | null;
+    cleanliness: number | null;
+    byTherapist: { therapistId: string; therapistName: string; average: number; count: number }[];
+  };
 };
 
 export type StaffMember = Therapist & {

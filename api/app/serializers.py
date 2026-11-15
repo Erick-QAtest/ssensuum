@@ -1,3 +1,4 @@
+import json
 from datetime import timezone
 from typing import Optional
 
@@ -63,6 +64,7 @@ def feedback_payload(feedback: VisitFeedback) -> dict:
         "visitId": feedback.record_id,
         "massageRating": feedback.massage_rating,
         "cleanlinessRating": feedback.cleanliness_rating,
+        "therapistRatings": json.loads(feedback.therapist_ratings_json or "[]"),
         "comment": feedback.comment,
         "createdAt": ensure_tz(feedback.created_at).isoformat(),
     }
@@ -90,6 +92,8 @@ def customer_payload(customer: Customer) -> dict:
         "membershipExpiresOn": customer.membership_expires_on,
         "notes": customer.notes,
         "acquisitionSource": customer.acquisition_source,
+        "whatsappOptIn": customer.whatsapp_opt_in,
+        "whatsappOptInAt": ensure_tz(customer.whatsapp_opt_in_at).isoformat() if customer.whatsapp_opt_in_at else None,
         "createdAt": customer.created_at.isoformat(),
     }
 

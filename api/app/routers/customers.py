@@ -20,9 +20,12 @@ def search_customers(
     offset: int = Query(default=0, ge=0),
     stage: Optional[str] = Query(default=None),
     source: Optional[str] = Query(default=None),
+    # "si" = aceptan promociones por WhatsApp; "no" = las rechazaron.
+    whatsapp: Optional[str] = Query(default=None, pattern="^(si|no)$"),
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    return [{**customer_payload(row), **summary} for row, summary in customers_service.search_customers(db, query, limit, offset, stage, source)]
+    rows = customers_service.search_customers(db, query, limit, offset, stage, source, whatsapp)
+    return [{**customer_payload(row), **summary} for row, summary in rows]
 
 
 @router.get("/funnel")

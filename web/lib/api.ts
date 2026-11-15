@@ -1,4 +1,4 @@
-import type { AdminReservation, ChannelMetrics, FeedbackContext, VisitFeedback, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsEvidence, OpsEvidenceRow, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
+import type { AdminReservation, ChannelMetrics, FeedbackContext, FeedbackInput, VisitFeedback, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsEvidence, OpsEvidenceRow, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
 
 import { currentChannel } from './channel';
 
@@ -30,11 +30,12 @@ export async function getAvailability(serviceId: string, date: string, therapist
   return body.slots ?? [];
 }
 
-export function searchCustomers(query: string, stage?: FunnelStage, source?: string) {
+export function searchCustomers(query: string, stage?: FunnelStage, source?: string, whatsapp?: 'si' | 'no') {
   const params = new URLSearchParams({ limit: '200' });
   if (query.trim()) params.set('q', query.trim());
   if (stage) params.set('stage', stage);
   if (source) params.set('source', source);
+  if (whatsapp) params.set('whatsapp', whatsapp);
   return getJson<CustomerWithStage[]>(`/customers?${params.toString()}`, 'No se pudo cargar la lista de clientes');
 }
 
@@ -85,12 +86,12 @@ function postJson<T>(path: string, body: unknown, errorMessage: string) {
   return sendJson<T>('POST', path, body, errorMessage);
 }
 
-// Calificación de la visita: el id del servicio registrado llega en el SMS que manda recepción.
+// Calificación de la visita: el id del servicio registrado llega en el WhatsApp que manda recepción.
 export function getFeedbackContext(visitId: string) {
   return sendJson<FeedbackContext>('GET', `/feedback/${encodeURIComponent(visitId)}`, undefined, 'No encontramos tu visita');
 }
 
-export function sendFeedback(visitId: string, body: { massageRating: number; cleanlinessRating: number; comment: string }) {
+export function sendFeedback(visitId: string, body: FeedbackInput) {
   return postJson<VisitFeedback>(`/feedback/${encodeURIComponent(visitId)}`, body, 'No pudimos guardar tu calificación');
 }
 

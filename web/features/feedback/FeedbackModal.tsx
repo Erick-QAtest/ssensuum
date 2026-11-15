@@ -7,7 +7,7 @@ import type { FeedbackContext } from '../../lib/types';
 import { whatsappUrl } from '../../lib/whatsapp';
 import { StarRating } from './StarRating';
 
-// Se abre desde el SMS que recepción manda desde Registro de servicios: /?calificar=<id del servicio registrado>.
+// Se abre desde el WhatsApp que recepción manda desde Registro de servicios: /?calificar=<id del servicio registrado>.
 export const FEEDBACK_PARAM = 'calificar';
 
 type Step = 'form' | 'thanks' | 'answered';
@@ -23,7 +23,13 @@ export function FeedbackModal() {
   const [step, setStep] = useState<Step>('form');
   const [massage, setMassage] = useState(0);
   const [cleanliness, setCleanliness] = useState(0);
+  const [therapistStars, setTherapistStars] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [source, setSource] = useState('');
+  // Marcada de inicio; el cliente la puede quitar (aviso de privacidad: "No deseo recibir promociones").
+  const [whatsappOptIn, setWhatsappOptIn] = useState(true);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -59,13 +65,23 @@ export function FeedbackModal() {
   function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!context) return;
-    if (!massage || !cleanliness) {
-      setError('Califica el masaje y la limpieza con estrellas.');
+    const therapistRatings = context.therapistIds.map((id) => ({ therapistId: id, rating: therapistStars[id] ?? 0 }));
+    if (!massage || !cleanliness || therapistRatings.some((row) => !row.rating)) {
+      setError('Califica el masaje, a tu masajista y la limpieza con estrellas.');
       return;
     }
     setSending(true);
     setError('');
-    sendFeedback(context.visitId, { massageRating: massage, cleanlinessRating: cleanliness, comment })
+    sendFeedback(context.visitId, {
+      massageRating: massage,
+      cleanlinessRating: cleanliness,
+      therapistRatings,
+      comment,
+      email: context.asks.email && email.trim() ? email.trim() : undefined,
+      birthday: context.asks.birthday && birthday ? birthday : undefined,
+      source: context.asks.source && source ? source : undefined,
+      whatsappOptIn,
+    })
       .then(() => setStep('thanks'))
       .catch((e: unknown) => {
         if (e instanceof ApiError && e.status === 409) setStep('answered');
@@ -77,7 +93,10 @@ export function FeedbackModal() {
   if (!context) return null;
 
   const therapist = context.therapistNames.join(' y ');
-  const happy = massage >= 4 && cleanliness >= 4;
+  const ratedTherapists = context.therapistIds.map((id) => therapistStars[id] ?? 0);
+  const happy = massage >= 4 && cleanliness >= 4 && ratedTherapists.every((value) => value >= 4);
+  const asksData = context.asks.email || context.asks.birthday || context.asks.source;
+  const clearError = () => setError('');
 
   return (
     <div className="feedbackOverlay" onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
@@ -91,11 +110,50 @@ export function FeedbackModal() {
             <p className="feedbackLead">
               {context.serviceName}{therapist ? ` con ${therapist}` : ''}. Toma menos de un minuto y lo lee el equipo.
             </p>
-            <StarRating name="massage" label="¿Cómo calificarías tu masaje?" value={massage} onChange={(value) => { setMassage(value); setError(''); }} />
-            <StarRating name="cleanliness" label="¿Y la limpieza de la cabina?" value={cleanliness} onChange={(value) => { setCleanliness(value); setError(''); }} />
+            <StarRating name="massage" label="¿Cómo calificarías tu masaje?" value={massage} onChange={(value) => { setMassage(value); clearError(); }} />
+            {context.therapistIds.map((id, index) => (
+              <StarRating
+                key={id}
+                name={`therapist-${id}`}
+                label={`¿Cómo te atendió ${context.therapistNames[index]}?`}
+                value={therapistStars[id] ?? 0}
+                onChange={(value) => { setTherapistStars((current) => ({ ...current, [id]: value })); clearError(); }}
+              />
+            ))}
+            <StarRating name="cleanliness" label="¿Y la limpieza de la cabina?" value={cleanliness} onChange={(value) => { setCleanliness(value); clearError(); }} />
             <label className="feedbackComment">
               <span>¿Cómo mejoramos tu próxima visita? <em>(opcional)</em></span>
               <textarea value={comment} maxLength={1000} rows={3} placeholder="Música, temperatura, presión, toallas…" onChange={(event) => setComment(event.target.value)} />
+            </label>
+            {asksData ? (
+              <fieldset className="feedbackData">
+                <legend>Para conocerte mejor <em>(opcional)</em></legend>
+                {context.asks.birthday ? (
+                  <label>Tu cumpleaños
+                    <input type="date" value={birthday} max={new Date().toISOString().slice(0, 10)} onChange={(event) => { setBirthday(event.target.value); clearError(); }} />
+                  </label>
+                ) : null}
+                {context.asks.email ? (
+                  <label>Tu correo
+                    <input type="email" inputMode="email" autoComplete="email" value={email} placeholder="nombre@correo.com" onChange={(event) => { setEmail(event.target.value); clearError(); }} />
+                  </label>
+                ) : null}
+                {context.asks.source ? (
+                  <label>¿Cómo nos conociste?
+                    <select value={source} onChange={(event) => setSource(event.target.value)}>
+                      <option value="">Elige una opción</option>
+                      {context.sourceOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                    </select>
+                  </label>
+                ) : null}
+              </fieldset>
+            ) : null}
+            <label className="feedbackConsent">
+              <input type="checkbox" checked={whatsappOptIn} onChange={(event) => setWhatsappOptIn(event.target.checked)} />
+              <span>
+                Acepto recibir promociones y novedades de SSENSUUM por WhatsApp. Puedes darte de baja cuando quieras.{' '}
+                <a href="/aviso-de-privacidad" target="_blank" rel="noreferrer">Aviso de privacidad</a>
+              </span>
             </label>
             {error ? <p className="feedbackError" role="alert">{error}</p> : null}
             <button type="submit" className="btn btnBlock" disabled={sending}>{sending ? 'Enviando…' : 'Enviar calificación'}</button>

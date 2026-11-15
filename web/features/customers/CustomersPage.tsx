@@ -70,15 +70,17 @@ export function CustomersPage() {
   // Origen: red de la que llegó (?source=instagram desde Marketing) o "sin_origen".
   const [source, setSource] = useState('');
   const [sources, setSources] = useState<MarketingOption[]>([]);
+  // Lista para promociones: quienes aceptaron (o rechazaron) WhatsApp al calificar su visita.
+  const [whatsapp, setWhatsapp] = useState<'' | 'si' | 'no'>('');
   const [customers, setCustomers] = useState<CustomerWithStage[] | null>(null);
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const listRequest = useRef(0);
-  const load = useCallback((text: string, stageFilter: FunnelStage | null, sourceFilter: string) => {
+  const load = useCallback((text: string, stageFilter: FunnelStage | null, sourceFilter: string, whatsappFilter: '' | 'si' | 'no' = '') => {
     const request = ++listRequest.current;
-    return searchCustomers(text, stageFilter ?? undefined, sourceFilter || undefined)
+    return searchCustomers(text, stageFilter ?? undefined, sourceFilter || undefined, whatsappFilter || undefined)
       .then((rows) => { if (request === listRequest.current) { setCustomers(rows); setError(''); } })
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -93,9 +95,9 @@ export function CustomersPage() {
   }, [source]);
 
   useEffect(() => {
-    const timer = setTimeout(() => load(query, stage, source), 250);
+    const timer = setTimeout(() => load(query, stage, source, whatsapp), 250);
     return () => clearTimeout(timer);
-  }, [query, stage, source, load]);
+  }, [query, stage, source, whatsapp, load]);
 
   useEffect(loadFunnel, [loadFunnel]);
 
@@ -117,7 +119,7 @@ export function CustomersPage() {
         </div>
         <AdminNav current="clientes" />
 
-        <ImportPanel onImported={() => { load(query, stage, source); loadFunnel(); }} />
+        <ImportPanel onImported={() => { load(query, stage, source, whatsapp); loadFunnel(); }} />
 
         <div className="adminRow">
           <label className="adminSub" htmlFor="source-filter">Origen</label>
@@ -131,6 +133,18 @@ export function CustomersPage() {
             <option value="">Todas las redes y orígenes</option>
             {sources.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
             <option value="sin_origen">Sin origen registrado</option>
+          </select>
+          <label className="adminSub" htmlFor="whatsapp-filter">Promociones por WhatsApp</label>
+          <select
+            id="whatsapp-filter"
+            className="adminSearch adminSelect"
+            value={whatsapp}
+            onChange={(event) => { setCustomers(null); setWhatsapp(event.target.value as '' | 'si' | 'no'); }}
+            data-testid="whatsapp-filter"
+          >
+            <option value="">Todos</option>
+            <option value="si">Aceptan promociones</option>
+            <option value="no">No aceptan</option>
           </select>
         </div>
 
@@ -175,7 +189,7 @@ export function CustomersPage() {
           {customers && customers.length > 0 ? (
             <div className="adminTableWrap">
               <table className="adminTable">
-                <thead><tr><th>Nombre</th><th>Etapa</th><th>Visitas</th><th>Origen</th><th>Teléfono</th><th>Membresía</th><th>Correo</th><th>Cumpleaños</th><th>Notas</th></tr></thead>
+                <thead><tr><th>Nombre</th><th>Etapa</th><th>Visitas</th><th>Origen</th><th>Teléfono</th><th>WhatsApp promos</th><th>Membresía</th><th>Correo</th><th>Cumpleaños</th><th>Notas</th></tr></thead>
                 <tbody>
                   {customers.map((customer) => (
                     <tr key={customer.id} data-testid="customer-row">
@@ -191,6 +205,7 @@ export function CustomersPage() {
                       </td>
                       <td>{sourceLabel(customer.acquisitionSource)}</td>
                       <td>{formatPhone(customer.phone)}</td>
+                      <td>{customer.whatsappOptIn === null ? '—' : customer.whatsappOptIn ? 'Acepta' : 'No acepta'}</td>
                       <td>{(() => {
                         const status = membership(customer);
                         if (!status) return '—';

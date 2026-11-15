@@ -6,7 +6,7 @@ from ..schemas import FeedbackCreate
 from ..serializers import feedback_payload
 from ..services import feedback as feedback_service
 
-# Público: el id del servicio registrado es imposible de adivinar y solo llega al cliente por SMS.
+# Público: el id del servicio registrado es imposible de adivinar y solo llega al cliente por WhatsApp.
 router = APIRouter(prefix="/feedback", tags=["feedback"])
 
 

@@ -82,18 +82,33 @@ def _matches_source(customer: Customer, source: Optional[str]) -> bool:
     return customer.acquisition_source is None if source == NO_SOURCE else customer.acquisition_source == source
 
 
+def _matches_whatsapp(customer: Customer, whatsapp: Optional[str]) -> bool:
+    if not whatsapp:
+        return True
+    return customer.whatsapp_opt_in is (whatsapp == "si")
+
+
 def search_customers(
-    db: Session, query: Optional[str], limit: int, offset: int, stage: Optional[str] = None, source: Optional[str] = None
+    db: Session,
+    query: Optional[str],
+    limit: int,
+    offset: int,
+    stage: Optional[str] = None,
+    source: Optional[str] = None,
+    whatsapp: Optional[str] = None,
 ) -> list[tuple[Customer, dict]]:
-    """Clientes con su resumen de perfil; con etapa u origen, la paginación aplica después de filtrar."""
+    """Clientes con su resumen de perfil; con etapa, origen o permiso de WhatsApp, la paginación aplica después de filtrar."""
     if stage and stage not in profile.FUNNEL_STAGES:
         raise ValidationError("Etapa no reconocida")
     _check_source_filter(source)
     text = (query or "").strip()
     # Permite buscar por teléfono aunque venga con espacios, guiones o +52.
     phone = normalize_phone(text)
-    if stage or source:
-        customers = [row for row in customers_repo.search(db, phone or text or None) if _matches_source(row, source)]
+    if stage or source or whatsapp:
+        customers = [
+            row for row in customers_repo.search(db, phone or text or None)
+            if _matches_source(row, source) and _matches_whatsapp(row, whatsapp)
+        ]
         rows = [row for row in _with_summaries(db, customers) if not stage or row[1]["stage"] == stage]
         return rows[offset:offset + limit]
     return _with_summaries(db, customers_repo.search(db, phone or text or None, limit, offset))

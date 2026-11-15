@@ -985,3 +985,12 @@ td .financeDelta { display: inline; margin-left: 4px; white-space: nowrap; }
   .feedbackPanel { max-width: 460px; padding: 32px; border-radius: var(--r-lg); }
 }
 .adminRating { display: grid; gap: 2px; margin-bottom: 6px; color: var(--label); font-size: 14px; white-space: nowrap; }
+.feedbackData { display: grid; gap: 12px; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+.feedbackData legend { padding: 0 6px; font-weight: 700; }
+.feedbackData legend em { color: var(--muted); font-style: normal; font-weight: 400; }
+.feedbackData label { display: grid; gap: 6px; font-size: 15px; font-weight: 600; }
+.feedbackData input, .feedbackData select { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: #fff; color: var(--ink); font: inherit; font-weight: 400; }
+.feedbackData input:focus, .feedbackData select:focus { outline: 2px solid var(--brown); outline-offset: 1px; }
+.feedbackConsent { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; color: var(--text); font-size: 14px; line-height: 1.45; cursor: pointer; }
+.feedbackConsent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--brown); }
+.feedbackConsent a { color: var(--brown); }

@@ -23,12 +23,16 @@ function stars(rating: number) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
-// Calificación del servicio: estrellas si ya calificó; si no, el SMS listo para pedirla con un clic.
+// Calificación del servicio: estrellas si ya calificó; si no, el WhatsApp listo para pedirla con un clic.
 function FeedbackCell({ record, onSent }: { record: ServiceRecord; onSent: (record: ServiceRecord) => void }) {
   if (record.feedback) {
+    const nameOf = (id: string) => record.therapistNames[record.therapistIds.indexOf(id)] ?? id;
     return (
       <div className="adminRating" data-testid="record-rating">
         <span aria-label={`Masaje ${record.feedback.massageRating} de 5`}>Masaje {stars(record.feedback.massageRating)}</span>
+        {record.feedback.therapistRatings.map((entry) => (
+          <span key={entry.therapistId} aria-label={`${nameOf(entry.therapistId)} ${entry.rating} de 5`}>{nameOf(entry.therapistId)} {stars(entry.rating)}</span>
+        ))}
         <span aria-label={`Limpieza ${record.feedback.cleanlinessRating} de 5`}>Limpieza {stars(record.feedback.cleanlinessRating)}</span>
         {record.feedback.comment ? <small className="adminSub">“{record.feedback.comment}”</small> : null}
       </div>
@@ -43,8 +47,10 @@ function FeedbackCell({ record, onSent }: { record: ServiceRecord; onSent: (reco
       <a
         className={sent ? 'linkButton' : 'secondaryButton adminAction'}
         href={request.href}
+        target="_blank"
+        rel="noreferrer"
         title={request.text}
-        data-testid="record-feedback-sms"
+        data-testid="record-feedback-whatsapp"
         onClick={() => { if (!sent) markFeedbackRequested(record.id).then(onSent).catch(() => null); }}
       >
         {sent ? 'Abrir de nuevo' : 'Pedir calificación'}
@@ -143,6 +149,26 @@ export function RecordsPage() {
         ) : null}
 
         {error ? <div className="errorBox" role="alert">{error}</div> : null}
+
+        {summary && summary.ratings.byTherapist.length > 0 ? (
+          <section className="adminCard" data-testid="therapist-ratings">
+            <h2>Calificación por masajista</h2>
+            <div className="adminTableWrap">
+              <table className="adminTable">
+                <thead><tr><th>Masajista</th><th>Promedio</th><th>Calificaciones</th></tr></thead>
+                <tbody>
+                  {summary.ratings.byTherapist.map((entry) => (
+                    <tr key={entry.therapistId}>
+                      <td>{entry.therapistName}</td>
+                      <td><strong>{entry.average} ★</strong></td>
+                      <td>{entry.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         {summary && summary.tipsByTherapist.length > 0 ? (
           <section className="adminCard" data-testid="tips-summary">

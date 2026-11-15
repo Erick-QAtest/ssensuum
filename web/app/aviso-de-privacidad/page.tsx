@@ -55,12 +55,13 @@ export default function PrivacyNoticePage() {
         </ul>
         <p>Finalidades adicionales, que no son necesarias para el servicio:</p>
         <ul>
-          <li>Enviarte promociones, novedades y beneficios del club.</li>
+          <li>Enviarte promociones, novedades y beneficios del club, incluso por WhatsApp si lo aceptas al calificar tu visita.</li>
           <li>Pedirte tu opinión sobre la experiencia mediante encuestas de satisfacción.</li>
         </ul>
         <p>
           Si no quieres que usemos tus datos para estas finalidades adicionales, escríbenos {contact} con el mensaje
-          “No deseo recibir promociones”. Tu negativa no afecta tus reservas ni los servicios que contratas.
+          “No deseo recibir promociones”, o desmarca la casilla de promociones por WhatsApp al calificar tu visita. Tu negativa no
+          afecta tus reservas ni los servicios que contratas.
         </p>
       </section>
 

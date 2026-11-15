@@ -58,6 +58,9 @@ class Customer(Base):
     quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     # Cómo nos conoció (domain/marketing.SOURCES): la primera red registrada, no se sobrescribe sola.
     acquisition_source: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    # Permiso para mandarle promociones por WhatsApp: None = no se le ha preguntado.
+    whatsapp_opt_in: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    whatsapp_opt_in_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Reservation(Base):
@@ -80,13 +83,15 @@ class Reservation(Base):
 
 
 class VisitFeedback(Base):
-    """Calificación que deja el cliente de un servicio registrado, desde el SMS que le manda recepción."""
+    """Calificación que deja el cliente de un servicio registrado, desde el WhatsApp que le manda recepción."""
 
     __tablename__ = "visit_feedback"
 
     record_id: Mapped[str] = mapped_column(String(40), primary_key=True)
     massage_rating: Mapped[int] = mapped_column(Integer, nullable=False)
     cleanliness_rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    # [{"therapistId": "kevin", "rating": 5}]: una calificación por cada masajista que atendió.
+    therapist_ratings_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     # "¿Cómo mejoramos tu próxima visita?"
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

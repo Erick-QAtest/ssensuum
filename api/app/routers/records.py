@@ -35,7 +35,7 @@ def list_records(
     return {
         "from": start.isoformat(),
         "days": days,
-        "summary": {**overview["summary"], "ratings": feedback_service.ratings_summary(list(feedback.values()))},
+        "summary": {**overview["summary"], "ratings": feedback_service.ratings_summary(list(feedback.values()), overview["therapists"])},
         "items": [_payload(db, row, overview["therapists"], feedback.get(row.id)) for row in overview["rows"]],
     }
 
@@ -58,6 +58,6 @@ def delete_record(record_id: str, db: Session = Depends(get_db)) -> None:
 
 @router.post("/{record_id}/feedback-request")
 def mark_feedback_requested(record_id: str, db: Session = Depends(get_db)) -> dict:
-    """Recepción abrió el SMS para pedir la calificación: queda marcado como enviado."""
+    """Recepción abrió el WhatsApp para pedir la calificación: queda marcado como enviado."""
     record = feedback_service.mark_requested(db, record_id)
     return _payload(db, record, _names(db), feedback_service.feedback_by_record(db, [record.id]).get(record.id))
