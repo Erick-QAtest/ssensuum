@@ -79,6 +79,19 @@ class Reservation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
+class VisitFeedback(Base):
+    """Calificación que deja el cliente de un servicio registrado, desde el SMS que le manda recepción."""
+
+    __tablename__ = "visit_feedback"
+
+    record_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    massage_rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    cleanliness_rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    # "¿Cómo mejoramos tu próxima visita?"
+    comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 class ScheduleBlock(Base):
     __tablename__ = "schedule_blocks"
 
@@ -123,6 +136,8 @@ class ServiceRecord(Base):
     tips_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     tip_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Cuándo recepción le mandó al cliente el SMS para calificar este servicio.
+    feedback_requested_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 

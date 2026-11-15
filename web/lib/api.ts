@@ -1,4 +1,4 @@
-import type { AdminReservation, ChannelMetrics, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsEvidence, OpsEvidenceRow, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
+import type { AdminReservation, ChannelMetrics, FeedbackContext, VisitFeedback, CheckoutRequest, Customer, CustomerImportResult, MarketingAttribution, MarketingIdea, MarketingIdeaInput, MarketingMeta, MarketingPost, MarketingPostInput, ChannelSnapshotInput, CustomerProfile, CustomerWithStage, FunnelStage, FunnelSummary, FinanceDashboard, FinanceMeta, FinanceMovement, FinanceMovementInput, FinanceStatements, HrDocument, HrDocumentCategory, PendingPayout, RecurringExpense, RecurringExpenseInput, Reservation, Service, ServiceRecord, ServiceRecordInput, ServiceRecordSummary, Schedule, StaffMember, StaffOffboarding, StaffProfileInput, Therapist, WeeklyPayroll, OpsDay, OpsEvidence, OpsEvidenceRow, OpsMeta, OpsSupply, OpsSupplyInput, OpsZone } from './types';
 
 import { currentChannel } from './channel';
 
@@ -83,6 +83,19 @@ async function sendJson<T>(method: string, path: string, body: unknown, errorMes
 
 function postJson<T>(path: string, body: unknown, errorMessage: string) {
   return sendJson<T>('POST', path, body, errorMessage);
+}
+
+// Calificación de la visita: el id del servicio registrado llega en el SMS que manda recepción.
+export function getFeedbackContext(visitId: string) {
+  return sendJson<FeedbackContext>('GET', `/feedback/${encodeURIComponent(visitId)}`, undefined, 'No encontramos tu visita');
+}
+
+export function sendFeedback(visitId: string, body: { massageRating: number; cleanlinessRating: number; comment: string }) {
+  return postJson<VisitFeedback>(`/feedback/${encodeURIComponent(visitId)}`, body, 'No pudimos guardar tu calificación');
+}
+
+export function markFeedbackRequested(recordId: string) {
+  return postJson<ServiceRecord>(`/admin/records/${encodeURIComponent(recordId)}/feedback-request`, {}, 'No se pudo marcar como enviado');
 }
 
 export function startCheckout(request: CheckoutRequest) {

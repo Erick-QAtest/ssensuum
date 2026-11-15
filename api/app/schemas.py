@@ -20,6 +20,14 @@ class ReservationReschedule(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class FeedbackCreate(BaseModel):
+    massage_rating: int = Field(alias="massageRating", ge=1, le=5)
+    cleanliness_rating: int = Field(alias="cleanlinessRating", ge=1, le=5)
+    comment: Optional[str] = Field(default=None, max_length=1000)
+
+    model_config = {"populate_by_name": True}
+
+
 class ScheduleBlockCreate(BaseModel):
     therapist_id: Optional[str] = Field(default=None, alias="therapistId")
     cabin_id: Optional[str] = Field(default=None, alias="cabinId")

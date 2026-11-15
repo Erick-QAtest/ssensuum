@@ -10,7 +10,7 @@ from .domain.schedule import load as load_schedule
 from .domain.schedule import on_vacation
 from .domain.rules import ensure_tz, hold_expired
 from .domain.marketing import PILLARS, POST_FORMATS, POST_STATUSES, SOCIAL_CHANNELS
-from .models import Customer, FinanceMovement, MarketingIdea, MarketingPost, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist
+from .models import Customer, FinanceMovement, MarketingIdea, MarketingPost, RecurringExpense, HrDocument, Reservation, ScheduleBlock, Service, ServiceRecord, StaffProfile, Therapist, VisitFeedback
 from .repositories import records as records_repo
 from .repositories.reservations import therapist_ids
 
@@ -58,6 +58,16 @@ def reservation_payload(reservation: Reservation) -> dict:
     }
 
 
+def feedback_payload(feedback: VisitFeedback) -> dict:
+    return {
+        "visitId": feedback.record_id,
+        "massageRating": feedback.massage_rating,
+        "cleanlinessRating": feedback.cleanliness_rating,
+        "comment": feedback.comment,
+        "createdAt": ensure_tz(feedback.created_at).isoformat(),
+    }
+
+
 def block_payload(block: ScheduleBlock) -> dict:
     return {
         "id": block.id,
@@ -88,7 +98,12 @@ def customer_profile_payload(customer: Customer, profile: dict) -> dict:
     return {**customer_payload(customer), **profile}
 
 
-def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> dict:
+def record_payload(
+    record: ServiceRecord,
+    therapist_names: dict[str, str],
+    feedback: Optional[VisitFeedback] = None,
+    feedback_request: Optional[dict] = None,
+) -> dict:
     ids = records_repo.therapist_ids(record)
     tips = records_repo.tips(record)
     return {
@@ -108,6 +123,9 @@ def record_payload(record: ServiceRecord, therapist_names: dict[str, str]) -> di
         "tipMethod": record.tip_method,
         "notes": record.notes,
         "createdAt": record.created_at.isoformat(),
+        "feedback": feedback_payload(feedback) if feedback else None,
+        "feedbackRequest": feedback_request,
+        "feedbackRequestedAt": ensure_tz(record.feedback_requested_at).isoformat() if record.feedback_requested_at else None,
     }
 
 

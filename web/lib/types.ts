@@ -125,6 +125,25 @@ export type CheckoutRequest = {
   channel?: string;
 };
 
+export type VisitFeedback = {
+  visitId: string;
+  massageRating: number;
+  cleanlinessRating: number;
+  comment: string | null;
+  createdAt: string;
+};
+
+export type FeedbackContext = {
+  visitId: string;
+  firstName: string;
+  serviceId: string;
+  serviceName: string;
+  therapistIds: string[];
+  therapistNames: string[];
+  visitedAt: string;
+  answered: boolean;
+};
+
 export type AdminReservation = Reservation & {
   paymentId: string | null;
   serviceName: string;
@@ -157,6 +176,10 @@ export type ServiceRecord = ServiceRecordInput & {
   therapistNames: string[];
   tipTotal: number;
   createdAt: string;
+  feedback: VisitFeedback | null;
+  // SMS listo para pedir la calificación con un clic; null si ya calificó.
+  feedbackRequest: { href: string | null; text: string } | null;
+  feedbackRequestedAt: string | null;
 };
 
 export type ServiceRecordSummary = {
@@ -165,6 +188,7 @@ export type ServiceRecordSummary = {
   tips: number;
   byPaymentMethod: Partial<Record<PaymentMethod, number>>;
   tipsByTherapist: { therapistId: string; therapistName: string; amount: number; count: number }[];
+  ratings: { count: number; massage: number | null; cleanliness: number | null };
 };
 
 export type StaffMember = Therapist & {
