@@ -58,6 +58,9 @@ class Customer(Base):
     quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     # Cómo nos conoció (domain/marketing.SOURCES): la primera red registrada, no se sobrescribe sola.
     acquisition_source: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    # Permiso para mandarle promociones por WhatsApp: None = no se le ha preguntado.
+    whatsapp_opt_in: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    whatsapp_opt_in_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Reservation(Base):
@@ -76,6 +79,21 @@ class Reservation(Base):
     # Mientras la reserva espera su pago, el horario queda apartado solo hasta esta hora.
     hold_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     payment_id: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class VisitFeedback(Base):
+    """Calificación que deja el cliente de un servicio registrado, desde el WhatsApp que le manda recepción."""
+
+    __tablename__ = "visit_feedback"
+
+    record_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    massage_rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    cleanliness_rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    # [{"therapistId": "kevin", "rating": 5}]: una calificación por cada masajista que atendió.
+    therapist_ratings_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # "¿Cómo mejoramos tu próxima visita?"
+    comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
@@ -123,6 +141,8 @@ class ServiceRecord(Base):
     tips_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     tip_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Cuándo recepción le mandó al cliente el SMS para calificar este servicio.
+    feedback_requested_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 

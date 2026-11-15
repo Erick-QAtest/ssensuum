@@ -20,6 +20,27 @@ class ReservationReschedule(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class TherapistRating(BaseModel):
+    therapist_id: str = Field(alias="therapistId")
+    rating: int = Field(ge=1, le=5)
+
+    model_config = {"populate_by_name": True}
+
+
+class FeedbackCreate(BaseModel):
+    massage_rating: int = Field(alias="massageRating", ge=1, le=5)
+    cleanliness_rating: int = Field(alias="cleanlinessRating", ge=1, le=5)
+    therapist_ratings: list[TherapistRating] = Field(alias="therapistRatings")
+    comment: Optional[str] = Field(default=None, max_length=1000)
+    # Datos que faltan del cliente; todos opcionales.
+    email: Optional[str] = Field(default=None, max_length=254)
+    birthday: Optional[date] = None
+    source: Optional[str] = Field(default=None, max_length=40)
+    whatsapp_opt_in: bool = Field(alias="whatsappOptIn")
+
+    model_config = {"populate_by_name": True}
+
+
 class ScheduleBlockCreate(BaseModel):
     therapist_id: Optional[str] = Field(default=None, alias="therapistId")
     cabin_id: Optional[str] = Field(default=None, alias="cabinId")

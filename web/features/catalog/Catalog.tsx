@@ -9,6 +9,7 @@ import { money } from '../../lib/format';
 import type { Service, Therapist } from '../../lib/types';
 import { whatsappUrl, WHATSAPP_MESSAGES } from '../../lib/whatsapp';
 import { MASSAGE } from './categories';
+import { FeedbackModal } from '../feedback/FeedbackModal';
 import { CartaSection } from './CartaSection';
 import { CLUB_RULES, FAQ, SPECIAL_ID, TESTIMONIALS } from './content';
 import { TeamSection } from './TeamSection';
@@ -340,6 +341,8 @@ export function Catalog() {
           <span className="srOnly">Escríbenos por WhatsApp</span>
         </WhatsAppLink>
       </div>
+
+      <FeedbackModal />
     </main>
   );
 }

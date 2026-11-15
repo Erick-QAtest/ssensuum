@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AdminNav } from '../../components/AdminNav';
 import { getAdminReservations } from '../../lib/api';
-import { BUSINESS } from '../../lib/business';
 import { money } from '../../lib/format';
 import type { AdminReservation } from '../../lib/types';
 import { localIsoDate } from '../booking/dates';
@@ -47,8 +46,8 @@ function customerWhatsapp(item: AdminReservation) {
     label = 'Resolver';
     text = `Hola ${name}, recibimos tu anticipo para ${item.serviceName}, pero ese horario se ocupó mientras pagabas. ¿Te acomodamos en otro horario o prefieres el reembolso completo?`;
   } else if (new Date(item.endsAt) < new Date()) {
-    label = 'Pedir reseña';
-    text = `Hola ${name}, gracias por visitarnos en SSENSUUM. Nos ayudaría muchísimo que nos contaras cómo te fue, toma menos de un minuto: ${BUSINESS.reviewUrl}\nY si algo no fue como esperabas, respóndenos aquí y lo resolvemos.`;
+    // La calificación se pide con un clic desde Registro de servicios, al registrar el cobro.
+    return null;
   }
   return { label, href: `https://wa.me/52${item.customer.phone}?text=${encodeURIComponent(text)}` };
 }
